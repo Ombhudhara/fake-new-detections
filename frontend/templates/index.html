@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fake News Detector — Verify Any Claim</title>
+  <meta name="description"
+    content="Detect fake news in English, Hindi, Gujarati, Hinglish and Gujlish using AI and live web verification." />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f5f0e8;
+      --surface: #ffffff;
+      --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      --border: #e0d8c8;
+      --border-dark: #c4b89c;
+      --red: #c0392b;
+      --red-bg: #fdf2f0;
+      --green: #1a7a4c;
+      --green-bg: #edf7f0;
+      --amber: #b8860b;
+      --amber-bg: #fef9ec;
+      --navy: #1a1a2e;
+      --text: #2c2c2c;
+      --text-secondary: #6b6b6b;
+      --link: #2a5db0;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 20px 60px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+    }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      margin-bottom: 36px;
+      padding-bottom: 28px;
+      border-bottom: 2px solid var(--navy);
+    }
+
+    .header h1 {
+      font-family: 'Merriweather', Georgia, serif;
+      font-size: 34px;
+      font-weight: 900;
+      color: var(--navy);
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+    }
+
+    .header .subtitle {
+      margin-top: 10px;
+      font-size: 15px;
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    .lang-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      margin-top: 14px;
+    }
+
+    .lang-tag {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 3px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 28px;
+      box-shadow: var(--card-shadow);
+    }
+
+    /* How it works */
+    .how-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .how-box {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #faf8f4;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text-secondary);
+    }
+
+    .how-box strong {
+      display: block;
+      font-size: 13px;
+      color: var(--text);
+      margin-bottom: 2px;
+      font-weight: 600;
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      background: transparent;
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab:hover {
+      color: var(--text);
+    }
+
+    .tab.active {
+      color: var(--navy);
+      border-bottom-color: var(--navy);
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    textarea,
+    input[type="text"] {
+      width: 100%;
+      background: #faf8f4;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 14px;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    textarea {
+      resize: none;
+      height: 150px;
+    }
+
+    textarea:focus,
+    input[type="text"]:focus {
+      border-color: var(--navy);
+      background: #fff;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 6px;
+    }
+
+    .btn {
+      width: 100%;
+      margin-top: 18px;
+      padding: 13px;
+      background: var(--navy);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-family: 'Source Sans 3', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background: #2d2d4e;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* ── Error ── */
+    .error-box {
+      background: var(--red-bg);
+      border: 1px solid #e8c4c0;
+      border-radius: 6px;
+      padding: 12px 16px;
+      color: var(--red);
+      font-size: 14px;
+      margin-top: 20px;
+    }
+
+    /* ── Result ── */
+    .result {
+      margin-top: 24px;
+      border-radius: 8px;
+      padding: 24px;
+      border-left: 4px solid;
+    }
+
+    .result.fake {
+      background: var(--red-bg);
+      border-left-color: var(--red);
+    }
+
+    .result.real {
+      background: var(--green-bg);
+      border-left-color: var(--green);
+    }
+
+    .result.unsure {
+      background: var(--amber-bg);
+      border-left-color: var(--amber);
+    }
+
+    .result-top {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .verdict-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .result.fake .verdict-icon {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .result.real .verdict-icon {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .result.unsure .verdict-icon {
+      background: var(--amber);
+      color: #fff;
+    }
+
+    .verdict-label {
+      font-family: 'Merriweather', Georgia, serif;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .result.fake .verdict-label {
+      color: var(--red);
+    }
+
+    .result.real .verdict-label {
+      color: var(--green);
+    }
+
+    .result.unsure .verdict-label {
+      color: var(--amber);
+    }
+
+    .verdict-confidence {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    /* Bars */
+    .bars {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .bar-name {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      width: 38px;
+      color: var(--text-secondary);
+    }
+
+    .bar-track {
+      flex: 1;
+      height: 7px;
+      background: rgba(0, 0, 0, 0.06);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.8s ease;
+    }
+
+    .bar-fill.fake {
+      background: var(--red);
+    }
+
+    .bar-fill.real {
+      background: var(--green);
+    }
+
+    .bar-pct {
+      font-size: 13px;
+      font-weight: 600;
+      width: 42px;
+      text-align: right;
+    }
+
+    /* Meta tags */
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .meta-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      background: rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      color: var(--text-secondary);
+    }
+
+    /* Divider */
+    .divider {
+      border: none;
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+      margin: 18px 0;
+    }
+
+    /* Section header */
+    .section-h {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+
+    /* Sources */
+    .source-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .source-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 14px;
+      border: 1px solid #c8dfcc;
+      border-radius: 6px;
+      background: #f5faf6;
+    }
+
+    .source-marker {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+
+    .source-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .source-domain {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    .source-title {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .source-url {
+      font-size: 11px;
+      color: var(--link);
+      margin-top: 2px;
+      text-decoration: none;
+      word-break: break-all;
+    }
+
+    .source-url:hover {
+      text-decoration: underline;
+    }
+
+    .no-sources {
+      font-size: 13px;
+      color: var(--text-secondary);
+      padding: 14px;
+      text-align: center;
+      background: var(--red-bg);
+      border: 1px solid #e8c4c0;
+      border-radius: 6px;
+    }
+
+    .no-sources small {
+      display: block;
+      margin-top: 4px;
+      font-size: 11px;
+      color: #999;
+    }
+
+    /* Translation */
+    .translation-box {
+      background: #f0f4f8;
+      border: 1px solid #d0dbe5;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-top: 4px;
+    }
+
+    .translation-box p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* Text preview */
+    .preview-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-top: 4px;
+    }
+
+    .article-title {
+      font-family: 'Merriweather', Georgia, serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .article-date {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    /* AI Reason */
+    .ai-reason-box {
+      background: #f7f5f0;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin-top: 4px;
+    }
+
+    .ai-reason-box p {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .detail-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .detail-chip {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 4px;
+      background: #eef2e8;
+      border: 1px solid #d0d9c4;
+      color: #4a5c3a;
+      font-weight: 500;
+    }
+
+    .result.fake .detail-chip {
+      background: #fdf0ef;
+      border-color: #e8c4c0;
+      color: var(--red);
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+    }
+
+    @media (max-width: 520px) {
+      .how-row {
+        flex-direction: column;
+      }
+
+      .header h1 {
+        font-size: 26px;
+      }
+
+      .card {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <div class="header">
+      <h1>The Fake News Detector</h1>
+      <p class="subtitle">Paste any claim or article — we verify it against live news sources.</p>
+      <div class="lang-row">
+        <span class="lang-tag">English</span>
+        <span class="lang-tag">Hindi</span>
+        <span class="lang-tag">Gujarati</span>
+        <span class="lang-tag">Hinglish</span>
+        <span class="lang-tag">Gujlish</span>
+      </div>
+    </div>
+
+    <div class="card">
+
+      <div class="how-row">
+        <div class="how-box">
+          <strong>Short Claims</strong>
+          Under 60 words — verified against live news sources on the web.
+        </div>
+        <div class="how-box">
+          <strong>Full Articles</strong>
+          60+ words — analysed with machine learning for writing patterns.
+        </div>
+        <div class="how-box">
+          <strong>Multi-Language</strong>
+          Auto-detects language and translates before analysis.
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('text',this)" id="tab-text">Paste Text / Claim</button>
+        <button class="tab" onclick="switchTab('url',this)" id="tab-url">Scrape from URL</button>
+      </div>
+
+      <form action="/predict" method="post" id="main-form">
+        <div class="panel active" id="panel-text">
+          <label>News Text or Short Claim</label>
+          <textarea name="news" id="news-input"
+            placeholder="Type or paste anything, for example:&#10;&#10;• India won T20 World Cup 2024&#10;• भारत ने 2024 टी20 विश्व कप जीता&#10;• Or paste a full news article...">{{ input_text or '' }}</textarea>
+        </div>
+        <div class="panel" id="panel-url">
+          <label>Article URL</label>
+          <input type="text" name="url" id="url-input" placeholder="https://www.bbc.com/news/..." />
+          <p class="hint">The article will be scraped and analysed automatically.</p>
+        </div>
+        <button type="submit" class="btn" id="submit-btn">Verify This</button>
+      </form>
+
+      {% if error %}
+      <div class="error-box">{{ error }}</div>
+      {% endif %}
+
+      {% if prediction %}
+      {% if is_fake %}
+      {% set res_class = 'fake' %}
+      {% elif prediction == 'Likely Real' %}
+      {% set res_class = 'unsure' %}
+      {% elif 'Unverified' in prediction or 'Cannot' in prediction or 'Disputed' in prediction %}
+      {% set res_class = 'unsure' %}
+      {% else %}
+      {% set res_class = 'real' %}
+      {% endif %}
+
+      <div class="result {{ res_class }}">
+
+        <div class="result-top">
+          <div class="verdict-icon">
+            {% if res_class == 'fake' %}&#10007;{% elif res_class == 'real' %}&#10003;{% else %}?{% endif %}
+          </div>
+          <div>
+            <div class="verdict-label">{{ prediction }}</div>
+            <div class="verdict-confidence">{{ confidence }}% confidence</div>
+          </div>
+        </div>
+
+        <div class="bars">
+          <div class="bar-row">
+            <span class="bar-name">Fake</span>
+            <div class="bar-track">
+              <div class="bar-fill fake" style="width:{{ fake_prob }}%"></div>
+            </div>
+            <span class="bar-pct" style="color:var(--red)">{{ fake_prob }}%</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-name">Real</span>
+            <div class="bar-track">
+              <div class="bar-fill real" style="width:{{ real_prob }}%"></div>
+            </div>
+            <span class="bar-pct" style="color:var(--green)">{{ real_prob }}%</span>
+          </div>
+        </div>
+
+        <div class="meta-row">
+          <span class="meta-tag">{{ verification_method }}</span>
+          <span class="meta-tag">{{ detected_language }}</span>
+          <span class="meta-tag">{{ word_count }} words</span>
+          {% if was_translated %}
+          <span class="meta-tag">Translated</span>
+          {% endif %}
+        </div>
+
+        {% if credible_sources %}
+        <hr class="divider">
+        <div class="section-h">Verified by {{ credible_count }} credible source{{ 's' if credible_count != 1 }}</div>
+        <div class="source-list">
+          {% for src in credible_sources %}
+          <div class="source-card">
+            <div class="source-marker"></div>
+            <div class="source-body">
+              <div class="source-domain">{{ src.domain }}</div>
+              <div class="source-title">{{ src.title }}</div>
+              <a class="source-url" href="{{ src.url }}" target="_blank" rel="noopener">{{ src.url[:80] }}{% if
+                src.url|length > 80 %}...{% endif %}</a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        {% elif 'Web Search' in verification_method and not credible_sources %}
+        <hr class="divider">
+        <div class="no-sources">
+          No credible sources found reporting this claim.
+          <small>If this is true news, try pasting the full article or its URL instead.</small>
+        </div>
+        {% endif %}
+
+        {% if ai_reason %}
+        <hr class="divider">
+        <div class="section-h">AI Analysis</div>
+        <div class="ai-reason-box">
+          <p>{{ ai_reason }}</p>
+          {% if ai_details %}
+          <div class="detail-chips">
+            {% for d in ai_details %}
+            <span class="detail-chip">{{ d }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        {% if was_translated and translated_preview %}
+        <hr class="divider">
+        <div class="section-h">Translated to English</div>
+        <div class="translation-box">
+          <p>{{ translated_preview }}</p>
+        </div>
+        {% endif %}
+
+        {% if article %}
+        <hr class="divider">
+        <div class="section-h">Scraped Article</div>
+        <div class="article-title">{{ article.title }}</div>
+        {% if article.publish_date and article.publish_date != 'None' %}
+        <div class="article-date">{{ article.publish_date }}</div>
+        {% endif %}
+        {% elif input_text %}
+        <hr class="divider">
+        <div class="section-h">Analysed Text</div>
+        <p class="preview-text">{{ input_text }}</p>
+        {% endif %}
+
+      </div>
+      {% endif %}
+
+    </div>
+
+    <div class="footer">
+      Fake News Detector &mdash; Powered by Groq AI + Live Web Search.
+    </div>
+
+  </div>
+
+  <script>
+    function switchTab(tab, el) {
+      document.querySelectorAll('.tab').forEach(function (t) { t.classList.remove('active'); });
+      document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('active'); });
+      el.classList.add('active');
+      document.getElementById('panel-' + tab).classList.add('active');
+    }
+
+    document.getElementById('main-form').addEventListener('submit', function () {
+      var btn = document.getElementById('submit-btn');
+      btn.textContent = 'Verifying...';
+      btn.disabled = true;
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,13 @@
+flask
+newspaper3k
+requests
+beautifulsoup4
+lxml
+scikit-learn
+nltk
+pandas
+deep-translator
+langdetect
+ddgs
+groq
+python-dotenv
