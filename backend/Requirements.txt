@@ -12,3 +12,4 @@ langdetect
 ddgs
 groq
 python-dotenv
+gunicorn
