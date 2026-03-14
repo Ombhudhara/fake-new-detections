@@ -501,8 +501,12 @@ def predict_api():
 if __name__ == "__main__":
     import sys, io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+
+    port = int(os.environ.get("PORT", 5000))
+
     print("\n[*] Fake News Detector with Groq AI")
     print("    Engine    : AI Fact-Check + Web Search + ML")
     print("    Languages : English | Hindi | Gujarati | Hinglish | Gujlish")
-    print("    URL       : http://127.0.0.1:5000\n")
-    app.run(debug=True)
+    print(f"    URL       : http://0.0.0.0:{port}\n")
+
+    app.run(host="0.0.0.0", port=port, debug=True)
