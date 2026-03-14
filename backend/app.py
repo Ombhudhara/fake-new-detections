@@ -393,13 +393,16 @@ def predict_ml(text):
 #  MAIN PREDICT
 # ══════════════════════════════════════════════════════════
 
-def predict_text(raw_text):
+def predict_text(raw_text, language_hint=None):
     """
-    1. Detect language
+    1. Detect language (or use the provided language hint)
     2. Translate to English
     3. Route: short claim -> AI + web search, long article -> AI + ML
     """
-    detected_lang = detect_language(raw_text)
+    if language_hint:
+        detected_lang = language_hint
+    else:
+        detected_lang = detect_language(raw_text)
     lang_display = LANGUAGE_NAMES.get(detected_lang, detected_lang)
 
     translated, was_translated = raw_text, False
@@ -441,6 +444,7 @@ def home():
 def predict():
     news = request.form.get("news", "").strip()
     url = request.form.get("url", "").strip()
+    selected_language = request.form.get("selected_language", "en")
     article_info = None
 
     if url:
@@ -456,7 +460,7 @@ def predict():
         return render_template("index.html",
                                error="Please enter news text or a valid URL.")
 
-    res = predict_text(news)
+    res = predict_text(news, language_hint=selected_language)
 
     return render_template(
         "index.html",

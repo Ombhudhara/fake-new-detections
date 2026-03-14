@@ -616,12 +616,13 @@
       <h1>The Fake News Detector</h1>
       <p class="subtitle">Paste any claim or article — we verify it against live news sources.</p>
       <div class="lang-row">
-        <span class="lang-tag">English</span>
-        <span class="lang-tag">Hindi</span>
-        <span class="lang-tag">Gujarati</span>
-        <span class="lang-tag">Hinglish</span>
-        <span class="lang-tag">Gujlish</span>
+        <span class="lang-tag active" data-lang="en" onclick="selectLanguage(this)">English</span>
+        <span class="lang-tag" data-lang="hi" onclick="selectLanguage(this)">Hindi</span>
+        <span class="lang-tag" data-lang="gu" onclick="selectLanguage(this)">Gujarati</span>
+        <span class="lang-tag" data-lang="hi" onclick="selectLanguage(this)">Hinglish</span>
+        <span class="lang-tag" data-lang="gu" onclick="selectLanguage(this)">Gujlish</span>
       </div>
+      <input type="hidden" name="selected_language" id="selected_language" value="en" />
     </div>
 
     <div class="card">
@@ -811,6 +812,12 @@
       err.textContent = '';
     }
 
+    function selectLanguage(el) {
+      document.querySelectorAll('.lang-tag').forEach(function (tag) {
+        tag.classList.toggle('active', tag === el);
+      });
+      document.getElementById('selected_language').value = el.getAttribute('data-lang');
+    }
 
     document.getElementById('main-form').addEventListener('submit', function (evt) {
       var mode = document.querySelector('.how-box[data-mode].active').getAttribute('data-mode');
