@@ -15,8 +15,12 @@ load_dotenv()
 
 app = Flask(__name__, template_folder='../frontend/templates')
 
-model      = pickle.load(open("model/model.pkl", "rb"))
-vectorizer = pickle.load(open("model/vectorizer.pkl", "rb"))
+# Resolve paths relative to this file so the app works regardless of the current working directory.
+from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent
+
+model      = pickle.load(open(BASE_DIR / "model" / "model.pkl", "rb"))
+vectorizer = pickle.load(open(BASE_DIR / "model" / "vectorizer.pkl", "rb"))
 
 # ── Groq AI Client ───────────────────────────────────────
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
