@@ -118,6 +118,19 @@
       font-size: 12px;
       line-height: 1.5;
       color: var(--text-secondary);
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .how-box.active {
+      border-color: var(--navy);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      background: rgba(41, 55, 110, 0.06);
+      color: var(--text);
+    }
+
+    .how-box:hover {
+      border-color: var(--navy);
     }
 
     .how-box strong {
@@ -606,11 +619,11 @@
     <div class="card">
 
       <div class="how-row">
-        <div class="how-box">
+        <div class="how-box active" data-mode="short" onclick="selectMode('short', this)">
           <strong>Short Claims</strong>
           Under 60 words — verified against live news sources on the web.
         </div>
-        <div class="how-box">
+        <div class="how-box" data-mode="full" onclick="selectMode('full', this)">
           <strong>Full Articles</strong>
           60+ words — analysed with machine learning for writing patterns.
         </div>
@@ -619,6 +632,9 @@
           Auto-detects language and translates before analysis.
         </div>
       </div>
+
+      <input type="hidden" name="analysis_mode" id="analysis_mode" value="short" />
+      <div id="client-error" class="error-box" style="display:none;"></div>
 
       <div class="tabs">
         <button class="tab active" onclick="switchTab('text',this)" id="tab-text">Paste Text / Claim</button>
@@ -772,7 +788,48 @@
       document.getElementById('panel-' + tab).classList.add('active');
     }
 
-    document.getElementById('main-form').addEventListener('submit', function () {
+    function selectMode(mode, el) {
+      document.getElementById('analysis_mode').value = mode;
+      document.querySelectorAll('.how-box[data-mode]').forEach(function (box) {
+        box.classList.toggle('active', box === el);
+      });
+      clearClientError();
+    }
+
+    function setClientError(msg) {
+      var err = document.getElementById('client-error');
+      err.textContent = msg;
+      err.style.display = 'block';
+    }
+
+    function clearClientError() {
+      var err = document.getElementById('client-error');
+      err.style.display = 'none';
+      err.textContent = '';
+    }
+
+    document.getElementById('main-form').addEventListener('submit', function (evt) {
+      var mode = document.getElementById('analysis_mode').value;
+      var text = document.getElementById('news-input').value.trim();
+      var activePanel = document.querySelector('.panel.active');
+
+      // Only validate when using the text input panel
+      if (activePanel && activePanel.id === 'panel-text') {
+        var wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0;
+
+        if (mode === 'short' && wordCount > 60) {
+          evt.preventDefault();
+          setClientError('This is longer than 60 words. Switch to "Full Articles" to analyse longer text.');
+          return;
+        }
+        if (mode === 'full' && wordCount > 0 && wordCount <= 60) {
+          evt.preventDefault();
+          setClientError('This is shorter than 60 words. Switch to "Short Claims" to analyse short text.');
+          return;
+        }
+      }
+
+      clearClientError();
       var btn = document.getElementById('submit-btn');
       btn.textContent = 'Verifying...';
       btn.disabled = true;
