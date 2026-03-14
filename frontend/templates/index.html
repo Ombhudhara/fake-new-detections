@@ -91,6 +91,14 @@
       border: 1px solid var(--border);
       color: var(--text-secondary);
       font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .lang-tag.active {
+      background: rgba(41, 55, 110, 0.08);
+      border-color: var(--navy);
+      color: var(--navy);
     }
 
     /* ── Card ── */
@@ -607,12 +615,12 @@
     <div class="header">
       <h1>The Fake News Detector</h1>
       <p class="subtitle">Paste any claim or article — we verify it against live news sources.</p>
-      <div class="lang-row">
-        <span class="lang-tag">English</span>
-        <span class="lang-tag">Hindi</span>
-        <span class="lang-tag">Gujarati</span>
-        <span class="lang-tag">Hinglish</span>
-        <span class="lang-tag">Gujlish</span>
+      <div class="lang-row" id="lang-row">
+        <span class="lang-tag active" onclick="selectLanguage(this)">English</span>
+        <span class="lang-tag" onclick="selectLanguage(this)">Hindi</span>
+        <span class="lang-tag" onclick="selectLanguage(this)">Gujarati</span>
+        <span class="lang-tag" onclick="selectLanguage(this)">Hinglish</span>
+        <span class="lang-tag" onclick="selectLanguage(this)">Gujlish</span>
       </div>
     </div>
 
@@ -627,7 +635,7 @@
           <strong>Full Articles</strong>
           60+ words — analysed with machine learning for writing patterns.
         </div>
-        <div class="how-box">
+        <div class="how-box" data-mode="multilang" onclick="selectMode('multilang', this)">
           <strong>Multi-Language</strong>
           Auto-detects language and translates before analysis.
         </div>
@@ -808,6 +816,14 @@
       err.textContent = '';
     }
 
+    function selectLanguage(el) {
+      // Selecting a language implies using Multi-Language mode
+      selectMode('multilang', document.querySelector('.how-box[data-mode="multilang"]'));
+      document.querySelectorAll('.lang-tag').forEach(function (tag) {
+        tag.classList.toggle('active', tag === el);
+      });
+    }
+
     document.getElementById('main-form').addEventListener('submit', function (evt) {
       var mode = document.getElementById('analysis_mode').value;
       var text = document.getElementById('news-input').value.trim();
@@ -817,6 +833,7 @@
       if (activePanel && activePanel.id === 'panel-text') {
         var wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0;
 
+        // Ensure correct mode selection based on word count
         if (mode === 'short' && wordCount > 60) {
           evt.preventDefault();
           setClientError('This is longer than 60 words. Switch to "Full Articles" to analyse longer text.');
@@ -825,6 +842,13 @@
         if (mode === 'full' && wordCount > 0 && wordCount <= 60) {
           evt.preventDefault();
           setClientError('This is shorter than 60 words. Switch to "Short Claims" to analyse short text.');
+          return;
+        }
+
+        // For non-multi-language modes, require basic English characters
+        if (mode !== 'multilang' && /[^\x00-\x7F]/.test(text)) {
+          evt.preventDefault();
+          setClientError('Please enter text in English, or select Multi-Language mode to use other languages.');
           return;
         }
       }
