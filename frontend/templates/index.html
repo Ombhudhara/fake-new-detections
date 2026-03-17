@@ -1,618 +1,197 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
+{% block title %}Fake News Detector — Verify Any Claim{% endblock %}
+{% block meta_desc %}Detect fake news in English, Hindi, Gujarati, Hinglish and Gujlish using AI and live web verification.{% endblock %}
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fake News Detector — Verify Any Claim</title>
-  <meta name="description"
-    content="Detect fake news in English, Hindi, Gujarati, Hinglish and Gujlish using AI and live web verification." />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet">
-  <style>
-    :root {
-      --bg: #f5f0e8;
-      --surface: #ffffff;
-      --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-      --border: #e0d8c8;
-      --border-dark: #c4b89c;
-      --red: #c0392b;
-      --red-bg: #fdf2f0;
-      --green: #1a7a4c;
-      --green-bg: #edf7f0;
-      --amber: #b8860b;
-      --amber-bg: #fef9ec;
-      --navy: #1a1a2e;
-      --text: #2c2c2c;
-      --text-secondary: #6b6b6b;
-      --link: #2a5db0;
-    }
+{% block extra_css %}
+    /* ── Hero ── */
+    .hero{text-align:center;padding:20px 0 32px;border-bottom:2px solid var(--navy);margin-bottom:36px}
+    .hero h1{font-family:'Merriweather',Georgia,serif;font-size:32px;font-weight:900;color:var(--navy);letter-spacing:-.5px;line-height:1.2}
+    .hero .subtitle{margin-top:10px;font-size:15px;color:var(--text-secondary)}
+    .lang-row{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:14px}
+    .lang-tag{font-size:11px;padding:4px 12px;border-radius:20px;background:var(--surface);border:1px solid var(--border);color:var(--text-secondary);font-weight:500;cursor:pointer;transition:all var(--transition)}
+    .lang-tag:hover{border-color:var(--navy)}
+    .lang-tag.active{background:rgba(26,26,46,.07);border-color:var(--navy);color:var(--navy)}
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    /* ── Stats ── */
+    .stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:40px}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;border-left:4px solid;box-shadow:var(--card-shadow);transition:all var(--transition)}
+    .stat-card:hover{box-shadow:var(--card-shadow-hover);transform:translateY(-2px)}
+    .stat-card .stat-value{font-family:'Merriweather',Georgia,serif;font-size:28px;font-weight:700;color:var(--navy)}
+    .stat-card .stat-label{font-size:12px;color:var(--text-secondary);margin-top:4px;text-transform:uppercase;letter-spacing:.6px;font-weight:600}
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 48px 20px 60px;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 680px;
-    }
-
-    /* ── Header ── */
-    .header {
-      text-align: center;
-      margin-bottom: 36px;
-      padding-bottom: 28px;
-      border-bottom: 2px solid var(--navy);
-    }
-
-    .header h1 {
-      font-family: 'Merriweather', Georgia, serif;
-      font-size: 34px;
-      font-weight: 900;
-      color: var(--navy);
-      letter-spacing: -0.5px;
-      line-height: 1.2;
-    }
-
-    .header .subtitle {
-      margin-top: 10px;
-      font-size: 15px;
-      color: var(--text-secondary);
-      font-weight: 400;
-    }
-
-    .lang-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      justify-content: center;
-      margin-top: 14px;
-    }
-
-    .lang-tag {
-      font-size: 11px;
-      padding: 3px 10px;
-      border-radius: 3px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text-secondary);
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.2s, border-color 0.2s;
-    }
-
-    .lang-tag.active {
-      background: rgba(41, 55, 110, 0.08);
-      border-color: var(--navy);
-      color: var(--navy);
-    }
-
-    /* ── Card ── */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 28px;
-      box-shadow: var(--card-shadow);
-    }
-
-    /* How it works */
-    .how-row {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-
-    .how-box {
-      flex: 1;
-      padding: 12px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: #faf8f4;
-      font-size: 12px;
-      line-height: 1.5;
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    .how-box.active {
-      border-color: var(--navy);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-      background: rgba(41, 55, 110, 0.06);
-      color: var(--text);
-    }
-
-    .how-box:hover {
-      border-color: var(--navy);
-    }
-
-    .how-box strong {
-      display: block;
-      font-size: 13px;
-      color: var(--text);
-      margin-bottom: 2px;
-      font-weight: 600;
-    }
-
-    /* ── Tabs ── */
-    .tabs {
-      display: flex;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 20px;
-    }
-
-    .tab {
-      flex: 1;
-      padding: 10px 16px;
-      border: none;
-      background: transparent;
-      font-family: 'Source Sans 3', sans-serif;
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: all 0.2s;
-    }
-
-    .tab:hover {
-      color: var(--text);
-    }
-
-    .tab.active {
-      color: var(--navy);
-      border-bottom-color: var(--navy);
-    }
-
-    .panel {
-      display: none;
-    }
-
-    .panel.active {
-      display: block;
-    }
-
-    label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: var(--text-secondary);
-      margin-bottom: 6px;
-    }
-
-    textarea,
-    input[type="text"] {
-      width: 100%;
-      background: #faf8f4;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      font-family: 'Source Sans 3', sans-serif;
-      font-size: 14px;
-      padding: 12px 14px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    textarea {
-      resize: none;
-      height: 150px;
-    }
-
-    textarea:focus,
-    input[type="text"]:focus {
-      border-color: var(--navy);
-      background: #fff;
-    }
-
-    .hint {
-      font-size: 12px;
-      color: var(--text-secondary);
-      margin-top: 6px;
-    }
-
-    .btn {
-      width: 100%;
-      margin-top: 18px;
-      padding: 13px;
-      background: var(--navy);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-family: 'Source Sans 3', sans-serif;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .btn:hover {
-      background: #2d2d4e;
-    }
-
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    /* ── Error ── */
-    .error-box {
-      background: var(--red-bg);
-      border: 1px solid #e8c4c0;
-      border-radius: 6px;
-      padding: 12px 16px;
-      color: var(--red);
-      font-size: 14px;
-      margin-top: 20px;
-    }
+    /* ── Verify Card ── */
+    .verify-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;box-shadow:var(--card-shadow);max-width:680px;margin:0 auto 48px}
+    .how-row{display:flex;gap:12px;margin-bottom:24px}
+    .how-box{flex:1;padding:14px;border:1px solid var(--border);border-radius:8px;background:#faf8f4;font-size:12px;line-height:1.5;color:var(--text-secondary);cursor:pointer;transition:all var(--transition)}
+    .how-box.active{border-color:var(--navy);box-shadow:0 4px 16px rgba(0,0,0,.06);background:rgba(26,26,46,.04);color:var(--text)}
+    .how-box:hover{border-color:var(--navy)}
+    .how-box strong{display:block;font-size:13px;color:var(--text);margin-bottom:2px;font-weight:600}
+    .tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px}
+    .tab{flex:1;padding:10px 16px;border:none;background:transparent;font-family:'Source Sans 3',sans-serif;font-size:14px;font-weight:600;color:var(--text-secondary);cursor:pointer;border-bottom:2px solid transparent;transition:all var(--transition)}
+    .tab:hover{color:var(--text)}.tab.active{color:var(--navy);border-bottom-color:var(--navy)}
+    .panel{display:none}.panel.active{display:block}
+    .hint{font-size:12px;color:var(--text-secondary);margin-top:6px}
+    .error-box{background:var(--red-bg);border:1px solid rgba(192,57,43,.2);border-radius:8px;padding:12px 16px;color:var(--red);font-size:14px;margin-top:20px}
 
     /* ── Result ── */
-    .result {
-      margin-top: 24px;
-      border-radius: 8px;
-      padding: 24px;
-      border-left: 4px solid;
-    }
+    .result{margin-top:24px;border-radius:var(--radius);padding:24px;border-left:4px solid;animation:fadeUp .4s ease}
+    .result.fake{background:var(--red-bg);border-left-color:var(--red)}
+    .result.real{background:var(--green-bg);border-left-color:var(--green)}
+    .result.unsure{background:var(--amber-bg);border-left-color:var(--amber)}
+    .result-top{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    .verdict-icon{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+    .result.fake .verdict-icon{background:var(--red);color:#fff}
+    .result.real .verdict-icon{background:var(--green);color:#fff}
+    .result.unsure .verdict-icon{background:var(--amber);color:#fff}
+    .verdict-label{font-family:'Merriweather',Georgia,serif;font-size:22px;font-weight:700}
+    .result.fake .verdict-label{color:var(--red)}.result.real .verdict-label{color:var(--green)}.result.unsure .verdict-label{color:var(--amber)}
+    .verdict-confidence{font-size:13px;color:var(--text-secondary);margin-top:2px}
+    .bars{display:flex;flex-direction:column;gap:8px}
+    .bar-row{display:flex;align-items:center;gap:10px}
+    .bar-name{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;width:38px;color:var(--text-secondary)}
+    .bar-track{flex:1;height:7px;background:rgba(0,0,0,.06);border-radius:4px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:4px;transition:width .8s ease}
+    .bar-fill.fake{background:var(--red)}.bar-fill.real{background:var(--green)}
+    .bar-pct{font-size:13px;font-weight:600;width:42px;text-align:right}
+    .meta-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(0,0,0,.08)}
+    .meta-tag{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;background:rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.06);color:var(--text-secondary)}
+    .divider{border:none;border-top:1px solid rgba(0,0,0,.08);margin:18px 0}
+    .section-h{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);margin-bottom:10px}
+    .source-list{display:flex;flex-direction:column;gap:8px}
+    .source-card{display:flex;align-items:flex-start;gap:12px;padding:10px 14px;border:1px solid #c8dfcc;border-radius:8px;background:#f5faf6}
+    .source-marker{width:7px;height:7px;border-radius:50%;background:var(--green);margin-top:6px;flex-shrink:0}
+    .source-body{flex:1;min-width:0}
+    .source-domain{font-size:13px;font-weight:700;color:var(--green)}
+    .source-title{font-size:12px;color:var(--text-secondary);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .source-url{font-size:11px;color:var(--link);margin-top:2px;text-decoration:none;word-break:break-all}
+    .source-url:hover{text-decoration:underline}
+    .no-sources{font-size:13px;color:var(--text-secondary);padding:14px;text-align:center;background:var(--red-bg);border:1px solid rgba(192,57,43,.15);border-radius:8px}
+    .no-sources small{display:block;margin-top:4px;font-size:11px;color:#999}
+    .translation-box{background:#f0f4f8;border:1px solid #d0dbe5;border-radius:8px;padding:12px 14px;margin-top:4px}
+    .translation-box p{font-size:13px;color:var(--text-secondary);line-height:1.6}
+    .preview-text{font-size:13px;color:var(--text-secondary);line-height:1.6;margin-top:4px}
+    .article-title{font-family:'Merriweather',Georgia,serif;font-size:15px;font-weight:700;color:var(--text)}
+    .article-date{font-size:12px;color:var(--text-secondary);margin-top:4px}
+    .ai-reason-box{background:#f7f5f0;border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-top:4px}
+    .ai-reason-box p{font-size:14px;color:var(--text);line-height:1.6}
+    .detail-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+    .detail-chip{font-size:11px;padding:3px 10px;border-radius:20px;background:#eef2e8;border:1px solid #d0d9c4;color:#4a5c3a;font-weight:500}
+    .result.fake .detail-chip{background:#fdf0ef;border-color:rgba(192,57,43,.2);color:var(--red)}
 
-    .result.fake {
-      background: var(--red-bg);
-      border-left-color: var(--red);
-    }
+    /* ── Trending Section ── */
+    .trending-section{max-width:860px;margin:0 auto}
+    .ts-heading-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+    .ts-search-wrap{position:relative;margin-bottom:12px}
+    .ts-search-input{padding-right:44px !important}
+    .ts-search-icon{position:absolute;right:4px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;cursor:pointer;padding:8px 10px;color:var(--text-secondary);transition:color var(--transition)}
+    .ts-search-icon:hover{color:var(--navy)}
+    .ts-search-tag{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:var(--amber-bg);border:1px solid rgba(184,134,11,.2);border-radius:20px;font-size:12px;color:var(--amber);font-weight:600;margin-bottom:12px}
+    .ts-tag-close{background:none;border:none;color:var(--amber);cursor:pointer;font-size:14px;padding:0 2px;font-weight:700;line-height:1}
+    .ts-tag-close:hover{color:var(--red)}
+    .ts-filter-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+    .ts-filter-btn{padding:6px 16px;font-size:12px;font-weight:600;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary);cursor:pointer;font-family:'Source Sans 3',sans-serif;transition:all var(--transition)}
+    .ts-filter-btn:hover{border-color:var(--navy);color:var(--navy)}
+    .ts-filter-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+    .ts-filter-custom{border-style:dashed}
+    .ts-custom-row{display:flex;gap:8px;margin-bottom:6px;max-width:320px}
+    .ts-custom-input{padding:8px 12px !important;font-size:12px !important;flex:1}
+    .ts-custom-add{padding:8px 14px !important;font-size:12px !important;white-space:nowrap}
+    .ts-custom-error{font-size:12px;color:var(--red);padding:4px 0 8px}
 
-    .result.real {
-      background: var(--green-bg);
-      border-left-color: var(--green);
-    }
+    .trending-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+    .trending-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:var(--radius);padding:20px;box-shadow:var(--card-shadow);transition:all var(--transition)}
+    .trending-card:hover{box-shadow:var(--card-shadow-hover);border-color:var(--border-dark)}
+    .trending-card .t-headline{font-weight:700;font-size:14px;color:var(--text);margin-bottom:10px;line-height:1.5}
+    .trending-card .t-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    .check-claim-btn{padding:7px 16px;font-size:12px;font-weight:600;background:var(--navy);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:'Source Sans 3',sans-serif;transition:all var(--transition)}
+    .check-claim-btn:hover{background:var(--navy-light);transform:translateY(-1px)}
 
-    .result.unsure {
-      background: var(--amber-bg);
-      border-left-color: var(--amber);
-    }
+    .ts-skeleton{pointer-events:none}
+    @keyframes tsShimmer{0%{background-position:-200px 0}100%{background-position:200px 0}}
+    .ts-shimmer{background:linear-gradient(90deg,var(--border) 25%,rgba(0,0,0,.04) 50%,var(--border) 75%);background-size:400px 100%;animation:tsShimmer 1.4s ease infinite}
 
-    .result-top {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 18px;
-    }
+    .ts-empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:32px 20px;background:var(--amber-bg);border:1px solid rgba(184,134,11,.15);border-radius:var(--radius);color:var(--amber);text-align:center;font-size:14px}
+    .ts-empty-icon{font-size:28px}
 
-    .verdict-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      flex-shrink: 0;
-    }
+    @media(max-width:600px){.trending-grid{grid-template-columns:1fr}.ts-custom-row{max-width:100%}.ts-filter-row{gap:4px}}
 
-    .result.fake .verdict-icon {
-      background: var(--red);
-      color: #fff;
-    }
+    /* ── Homepage Dark Mode ── */
+    html.dark .hero{border-bottom-color:rgba(255,255,255,.1)}
+    html.dark .hero h1{color:var(--text)}
+    html.dark .lang-tag{background:var(--surface);border-color:var(--border);color:var(--text-secondary)}
+    html.dark .lang-tag:hover{border-color:#5566aa}
+    html.dark .lang-tag.active{background:rgba(64,80,160,.2);border-color:#5566aa;color:var(--text)}
+    html.dark .verify-card{background:var(--surface);border-color:var(--border)}
+    html.dark .how-box{background:#151520;border-color:var(--border);color:var(--text-secondary)}
+    html.dark .how-box:hover{border-color:#5566aa}
+    html.dark .how-box.active{border-color:#5566aa;background:rgba(64,80,160,.1);color:var(--text)}
+    html.dark .how-box strong{color:var(--text)}
+    html.dark .tab{color:var(--text-secondary)}
+    html.dark .tab:hover{color:var(--text)}
+    html.dark .tab.active{color:var(--link);border-bottom-color:var(--link)}
+    html.dark .tabs{border-bottom-color:var(--border)}
+    html.dark .stat-card{background:var(--surface);border-color:var(--border)}
+    html.dark .stat-card .stat-value{color:var(--text)}
+    html.dark .error-box{background:var(--red-bg);border-color:rgba(255,107,107,.2);color:var(--red)}
+    html.dark .result.fake{background:var(--red-bg);border-left-color:var(--red)}
+    html.dark .result.real{background:var(--green-bg);border-left-color:var(--green)}
+    html.dark .result.unsure{background:var(--amber-bg);border-left-color:var(--amber)}
+    html.dark .result.fake .verdict-icon{background:var(--red)}
+    html.dark .result.real .verdict-icon{background:var(--green)}
+    html.dark .result.unsure .verdict-icon{background:var(--amber)}
+    html.dark .result.fake .verdict-label{color:var(--red)}
+    html.dark .result.real .verdict-label{color:var(--green)}
+    html.dark .result.unsure .verdict-label{color:var(--amber)}
+    html.dark .bar-track{background:rgba(255,255,255,.08)}
+    html.dark .meta-row{border-top-color:rgba(255,255,255,.08)}
+    html.dark .meta-tag{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.08);color:var(--text-secondary)}
+    html.dark .source-card{background:rgba(74,222,128,.06);border-color:rgba(74,222,128,.15)}
+    html.dark .source-domain{color:var(--green)}
+    html.dark .source-url{color:var(--link)}
+    html.dark .no-sources{background:var(--red-bg);border-color:rgba(255,107,107,.15);color:var(--red)}
+    html.dark .ai-reason-box{background:#151520;border-color:var(--border)}
+    html.dark .ai-reason-box p{color:var(--text)}
+    html.dark .translation-box{background:rgba(64,80,160,.1);border-color:rgba(64,80,160,.2)}
+    html.dark .translation-box p{color:var(--text-secondary)}
+    html.dark .detail-chip{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.2);color:var(--green)}
+    html.dark .result.fake .detail-chip{background:var(--red-bg);border-color:rgba(255,107,107,.2);color:var(--red)}
+    html.dark .divider{border-top-color:rgba(255,255,255,.08)}
+    html.dark .trending-card{background:var(--surface);border-color:var(--border)}
+    html.dark .trending-card:hover{border-color:rgba(255,255,255,.15)}
+    html.dark .check-claim-btn{background:#4050a0;color:#fff}
+    html.dark .check-claim-btn:hover{background:#5060b0}
+    html.dark .ts-search-icon{color:var(--text-secondary)}
+    html.dark .ts-search-icon:hover{color:var(--text)}
+    html.dark .ts-filter-btn{background:var(--surface);border-color:var(--border);color:var(--text-secondary)}
+    html.dark .ts-filter-btn:hover{border-color:#5566aa;color:var(--text)}
+    html.dark .ts-filter-btn.active{background:#4050a0;border-color:#4050a0;color:#fff}
+    html.dark .ts-search-tag{background:var(--amber-bg);border-color:rgba(251,191,36,.15);color:var(--amber)}
+    html.dark .ts-empty{background:var(--amber-bg);border-color:rgba(251,191,36,.15);color:var(--amber)}
+    html.dark .ts-shimmer{background:linear-gradient(90deg,var(--border) 25%,rgba(255,255,255,.04) 50%,var(--border) 75%);background-size:400px 100%}
+    html.dark .hint{color:var(--text-secondary)}
+    @media(max-width:600px){.stats-bar{grid-template-columns:1fr}.how-row{flex-direction:column}.hero h1{font-size:24px}.verify-card{padding:20px}}
+{% endblock %}
 
-    .result.real .verdict-icon {
-      background: var(--green);
-      color: #fff;
-    }
+{% block body %}
+  <div class="page-container">
+    <!-- Stats Bar -->
+    <div class="stats-bar animate-in">
+      <div class="stat-card" style="border-left-color:var(--red)">
+        <div class="stat-value">152</div>
+        <div class="stat-label">Fake news detected today</div>
+      </div>
+      <div class="stat-card delay-1" style="border-left-color:var(--amber)">
+        <div class="stat-value">Health</div>
+        <div class="stat-label">Most targeted category</div>
+      </div>
+      <div class="stat-card delay-2" style="border-left-color:var(--navy)">
+        <div class="stat-value">WhatsApp</div>
+        <div class="stat-label">Top platform</div>
+      </div>
+    </div>
 
-    .result.unsure .verdict-icon {
-      background: var(--amber);
-      color: #fff;
-    }
-
-    .verdict-label {
-      font-family: 'Merriweather', Georgia, serif;
-      font-size: 22px;
-      font-weight: 700;
-    }
-
-    .result.fake .verdict-label {
-      color: var(--red);
-    }
-
-    .result.real .verdict-label {
-      color: var(--green);
-    }
-
-    .result.unsure .verdict-label {
-      color: var(--amber);
-    }
-
-    .verdict-confidence {
-      font-size: 13px;
-      color: var(--text-secondary);
-      margin-top: 2px;
-    }
-
-    /* Bars */
-    .bars {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .bar-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .bar-name {
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      width: 38px;
-      color: var(--text-secondary);
-    }
-
-    .bar-track {
-      flex: 1;
-      height: 7px;
-      background: rgba(0, 0, 0, 0.06);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-
-    .bar-fill {
-      height: 100%;
-      border-radius: 4px;
-      transition: width 0.8s ease;
-    }
-
-    .bar-fill.fake {
-      background: var(--red);
-    }
-
-    .bar-fill.real {
-      background: var(--green);
-    }
-
-    .bar-pct {
-      font-size: 13px;
-      font-weight: 600;
-      width: 42px;
-      text-align: right;
-    }
-
-    /* Meta tags */
-    .meta-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid rgba(0, 0, 0, 0.08);
-    }
-
-    .meta-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 10px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 500;
-      background: rgba(0, 0, 0, 0.04);
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      color: var(--text-secondary);
-    }
-
-    /* Divider */
-    .divider {
-      border: none;
-      border-top: 1px solid rgba(0, 0, 0, 0.08);
-      margin: 18px 0;
-    }
-
-    /* Section header */
-    .section-h {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-      margin-bottom: 10px;
-    }
-
-    /* Sources */
-    .source-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .source-card {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 10px 14px;
-      border: 1px solid #c8dfcc;
-      border-radius: 6px;
-      background: #f5faf6;
-    }
-
-    .source-marker {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--green);
-      margin-top: 6px;
-      flex-shrink: 0;
-    }
-
-    .source-body {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .source-domain {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--green);
-    }
-
-    .source-title {
-      font-size: 12px;
-      color: var(--text-secondary);
-      margin-top: 2px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .source-url {
-      font-size: 11px;
-      color: var(--link);
-      margin-top: 2px;
-      text-decoration: none;
-      word-break: break-all;
-    }
-
-    .source-url:hover {
-      text-decoration: underline;
-    }
-
-    .no-sources {
-      font-size: 13px;
-      color: var(--text-secondary);
-      padding: 14px;
-      text-align: center;
-      background: var(--red-bg);
-      border: 1px solid #e8c4c0;
-      border-radius: 6px;
-    }
-
-    .no-sources small {
-      display: block;
-      margin-top: 4px;
-      font-size: 11px;
-      color: #999;
-    }
-
-    /* Translation */
-    .translation-box {
-      background: #f0f4f8;
-      border: 1px solid #d0dbe5;
-      border-radius: 6px;
-      padding: 12px 14px;
-      margin-top: 4px;
-    }
-
-    .translation-box p {
-      font-size: 13px;
-      color: var(--text-secondary);
-      line-height: 1.6;
-    }
-
-    /* Text preview */
-    .preview-text {
-      font-size: 13px;
-      color: var(--text-secondary);
-      line-height: 1.6;
-      margin-top: 4px;
-    }
-
-    .article-title {
-      font-family: 'Merriweather', Georgia, serif;
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text);
-    }
-
-    .article-date {
-      font-size: 12px;
-      color: var(--text-secondary);
-      margin-top: 4px;
-    }
-
-    /* AI Reason */
-    .ai-reason-box {
-      background: #f7f5f0;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 14px 16px;
-      margin-top: 4px;
-    }
-
-    .ai-reason-box p {
-      font-size: 14px;
-      color: var(--text);
-      line-height: 1.6;
-    }
-
-    .detail-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 10px;
-    }
-
-    .detail-chip {
-      font-size: 11px;
-      padding: 3px 10px;
-      border-radius: 4px;
-      background: #eef2e8;
-      border: 1px solid #d0d9c4;
-      color: #4a5c3a;
-      font-weight: 500;
-    }
-
-    .result.fake .detail-chip {
-      background: #fdf0ef;
-      border-color: #e8c4c0;
-      color: var(--red);
-    }
-
-    /* Footer */
-    .footer {
-      margin-top: 40px;
-      text-align: center;
-      font-size: 12px;
-      color: var(--text-secondary);
-      border-top: 1px solid var(--border);
-      padding-top: 20px;
-    }
-
-    @media (max-width: 520px) {
-      .how-row {
-        flex-direction: column;
-      }
-
-      .header h1 {
-        font-size: 26px;
-      }
-
-      .card {
-        padding: 20px;
-      }
-    }
-  </style>
-</head>
-
-<body>
-  <div class="container">
-
-    <div class="header">
+    <!-- Hero Header -->
+    <div class="hero animate-in delay-1">
       <h1>The Fake News Detector</h1>
       <p class="subtitle">Paste any claim or article — we verify it against live news sources.</p>
       <div class="lang-row">
@@ -625,39 +204,33 @@
       <input type="hidden" name="selected_language" id="selected_language" value="en" />
     </div>
 
-    <div class="card">
-
+    <!-- Verify Card -->
+    <div class="verify-card animate-in delay-2">
       <div class="how-row">
         <div class="how-box active" data-mode="short" onclick="selectMode('short', this)">
-          <strong>Short Claims</strong>
-          Under 60 words — verified against live news sources on the web.
+          <strong>Short Claims</strong>Under 60 words — verified against live news sources on the web.
         </div>
         <div class="how-box" data-mode="full" onclick="selectMode('full', this)">
-          <strong>Full Articles</strong>
-          60+ words — analysed with machine learning for writing patterns.
+          <strong>Full Articles</strong>60+ words — analysed with machine learning for writing patterns.
         </div>
-
       </div>
-
       <div id="client-error" class="error-box" style="display:none;"></div>
-
       <div class="tabs">
         <button class="tab active" onclick="switchTab('text',this)" id="tab-text">Paste Text / Claim</button>
         <button class="tab" onclick="switchTab('url',this)" id="tab-url">Scrape from URL</button>
       </div>
-
       <form action="/predict" method="post" id="main-form">
         <div class="panel active" id="panel-text">
-          <label>News Text or Short Claim</label>
-          <textarea name="news" id="news-input"
+          <label class="form-label">News Text or Short Claim</label>
+          <textarea class="form-textarea" name="news" id="news-input"
             placeholder="Type or paste anything, for example:&#10;&#10;• India won T20 World Cup 2024&#10;• भारत ने 2024 टी20 विश्व कप जीता&#10;• Or paste a full news article...">{{ input_text or '' }}</textarea>
         </div>
         <div class="panel" id="panel-url">
-          <label>Article URL</label>
-          <input type="text" name="url" id="url-input" placeholder="https://www.bbc.com/news/..." />
+          <label class="form-label">Article URL</label>
+          <input class="form-input" type="text" name="url" id="url-input" placeholder="https://www.bbc.com/news/..." />
           <p class="hint">The article will be scraped and analysed automatically.</p>
         </div>
-        <button type="submit" class="btn" id="submit-btn">Verify This</button>
+        <button type="submit" class="btn-primary" style="width:100%;margin-top:18px;padding:14px" id="submit-btn">Verify This</button>
       </form>
 
       {% if error %}
@@ -665,189 +238,316 @@
       {% endif %}
 
       {% if prediction %}
-      {% if is_fake %}
-      {% set res_class = 'fake' %}
-      {% elif prediction == 'Likely Real' %}
-      {% set res_class = 'unsure' %}
-      {% elif 'Unverified' in prediction or 'Cannot' in prediction or 'Disputed' in prediction %}
-      {% set res_class = 'unsure' %}
-      {% else %}
-      {% set res_class = 'real' %}
-      {% endif %}
+      {% if is_fake %}{% set res_class = 'fake' %}
+      {% elif prediction == 'Likely Real' %}{% set res_class = 'unsure' %}
+      {% elif 'Unverified' in prediction or 'Cannot' in prediction or 'Disputed' in prediction %}{% set res_class = 'unsure' %}
+      {% else %}{% set res_class = 'real' %}{% endif %}
 
       <div class="result {{ res_class }}">
-
         <div class="result-top">
-          <div class="verdict-icon">
-            {% if res_class == 'fake' %}&#10007;{% elif res_class == 'real' %}&#10003;{% else %}?{% endif %}
-          </div>
+          <div class="verdict-icon">{% if res_class == 'fake' %}&#10007;{% elif res_class == 'real' %}&#10003;{% else %}?{% endif %}</div>
           <div>
             <div class="verdict-label">{{ prediction }}</div>
             <div class="verdict-confidence">{{ confidence }}% confidence</div>
           </div>
         </div>
-
         <div class="bars">
-          <div class="bar-row">
-            <span class="bar-name">Fake</span>
-            <div class="bar-track">
-              <div class="bar-fill fake" style="width:{{ fake_prob }}%"></div>
-            </div>
-            <span class="bar-pct" style="color:var(--red)">{{ fake_prob }}%</span>
-          </div>
-          <div class="bar-row">
-            <span class="bar-name">Real</span>
-            <div class="bar-track">
-              <div class="bar-fill real" style="width:{{ real_prob }}%"></div>
-            </div>
-            <span class="bar-pct" style="color:var(--green)">{{ real_prob }}%</span>
-          </div>
+          <div class="bar-row"><span class="bar-name">Fake</span><div class="bar-track"><div class="bar-fill fake" style="width:{{ fake_prob }}%"></div></div><span class="bar-pct" style="color:var(--red)">{{ fake_prob }}%</span></div>
+          <div class="bar-row"><span class="bar-name">Real</span><div class="bar-track"><div class="bar-fill real" style="width:{{ real_prob }}%"></div></div><span class="bar-pct" style="color:var(--green)">{{ real_prob }}%</span></div>
         </div>
-
         <div class="meta-row">
           <span class="meta-tag">{{ verification_method }}</span>
           <span class="meta-tag">{{ detected_language }}</span>
           <span class="meta-tag">{{ word_count }} words</span>
-          {% if was_translated %}
-          <span class="meta-tag">Translated</span>
-          {% endif %}
+          {% if was_translated %}<span class="meta-tag">Translated</span>{% endif %}
         </div>
-
         {% if credible_sources %}
-        <hr class="divider">
-        <div class="section-h">Verified by {{ credible_count }} credible source{{ 's' if credible_count != 1 }}</div>
-        <div class="source-list">
-          {% for src in credible_sources %}
-          <div class="source-card">
-            <div class="source-marker"></div>
-            <div class="source-body">
-              <div class="source-domain">{{ src.domain }}</div>
-              <div class="source-title">{{ src.title }}</div>
-              <a class="source-url" href="{{ src.url }}" target="_blank" rel="noopener">{{ src.url[:80] }}{% if
-                src.url|length > 80 %}...{% endif %}</a>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-
+        <hr class="divider"><div class="section-h">Verified by {{ credible_count }} credible source{{ 's' if credible_count != 1 }}</div>
+        <div class="source-list">{% for src in credible_sources %}
+          <div class="source-card"><div class="source-marker"></div><div class="source-body"><div class="source-domain">{{ src.domain }}</div><div class="source-title">{{ src.title }}</div><a class="source-url" href="{{ src.url }}" target="_blank" rel="noopener">{{ src.url[:80] }}{% if src.url|length > 80 %}...{% endif %}</a></div></div>
+        {% endfor %}</div>
         {% elif 'Web Search' in verification_method and not credible_sources %}
-        <hr class="divider">
-        <div class="no-sources">
-          No credible sources found reporting this claim.
-          <small>If this is true news, try pasting the full article or its URL instead.</small>
-        </div>
+        <hr class="divider"><div class="no-sources">No credible sources found reporting this claim.<small>If this is true news, try pasting the full article or its URL instead.</small></div>
         {% endif %}
-
-        {% if ai_reason %}
-        <hr class="divider">
-        <div class="section-h">AI Analysis</div>
-        <div class="ai-reason-box">
-          <p>{{ ai_reason }}</p>
-          {% if ai_details %}
-          <div class="detail-chips">
-            {% for d in ai_details %}
-            <span class="detail-chip">{{ d }}</span>
-            {% endfor %}
-          </div>
-          {% endif %}
-        </div>
-        {% endif %}
-
-        {% if was_translated and translated_preview %}
-        <hr class="divider">
-        <div class="section-h">Translated to English</div>
-        <div class="translation-box">
-          <p>{{ translated_preview }}</p>
-        </div>
-        {% endif %}
-
-        {% if article %}
-        <hr class="divider">
-        <div class="section-h">Scraped Article</div>
-        <div class="article-title">{{ article.title }}</div>
-        {% if article.publish_date and article.publish_date != 'None' %}
-        <div class="article-date">{{ article.publish_date }}</div>
-        {% endif %}
-        {% elif input_text %}
-        <hr class="divider">
-        <div class="section-h">Analysed Text</div>
-        <p class="preview-text">{{ input_text }}</p>
-        {% endif %}
-
+        {% if ai_reason %}<hr class="divider"><div class="section-h">AI Analysis</div><div class="ai-reason-box"><p>{{ ai_reason }}</p>{% if ai_details %}<div class="detail-chips">{% for d in ai_details %}<span class="detail-chip">{{ d }}</span>{% endfor %}</div>{% endif %}</div>{% endif %}
+        {% if was_translated and translated_preview %}<hr class="divider"><div class="section-h">Translated to English</div><div class="translation-box"><p>{{ translated_preview }}</p></div>{% endif %}
+        {% if article %}<hr class="divider"><div class="section-h">Scraped Article</div><div class="article-title">{{ article.title }}</div>{% if article.publish_date and article.publish_date != 'None' %}<div class="article-date">{{ article.publish_date }}</div>{% endif %}
+        {% elif input_text %}<hr class="divider"><div class="section-h">Analysed Text</div><p class="preview-text">{{ input_text }}</p>{% endif %}
       </div>
       {% endif %}
-
     </div>
 
-    <div class="footer">
-      Fake News Detector &mdash; Powered by Groq AI + Live Web Search.
-    </div>
+    <!-- Trending Misinformation -->
+    <hr class="section-divider">
+    <div class="trending-section" id="trending-section">
+      <!-- Heading Row -->
+      <div class="ts-heading-row">
+        <h2 class="section-heading" style="margin-bottom:0">&#128293; Trending Misinformation</h2>
+        <button class="btn-secondary" onclick="TS.refresh()" id="trending-refresh" title="Refresh trending">&#8634; Refresh</button>
+      </div>
 
+      <!-- Search Bar -->
+      <div class="ts-search-wrap">
+        <input type="text" class="form-input ts-search-input" id="ts-search" placeholder='Search misinformation... e.g. "vaccine", "election", "5G"' autocomplete="off">
+        <button class="ts-search-icon" onclick="TS.searchSubmit()" title="Search">&#128269;</button>
+      </div>
+
+      <!-- Search Active Tag -->
+      <div class="ts-search-tag" id="ts-search-tag" style="display:none">
+        <span id="ts-search-tag-text"></span>
+        <button class="ts-tag-close" onclick="TS.clearSearch()">&#10005;</button>
+      </div>
+
+      <!-- Category Filters -->
+      <div class="ts-filter-row" id="ts-filter-row">
+        <button class="ts-filter-btn active" data-cat="All" onclick="TS.setCategory('All',this)">All</button>
+        <button class="ts-filter-btn" data-cat="Health" onclick="TS.setCategory('Health',this)">Health</button>
+        <button class="ts-filter-btn" data-cat="Politics" onclick="TS.setCategory('Politics',this)">Politics</button>
+        <button class="ts-filter-btn" data-cat="Technology" onclick="TS.setCategory('Technology',this)">Technology</button>
+        <button class="ts-filter-btn" data-cat="Science" onclick="TS.setCategory('Science',this)">Science</button>
+        <button class="ts-filter-btn" data-cat="Finance" onclick="TS.setCategory('Finance',this)">Finance</button>
+        <button class="ts-filter-btn" data-cat="Sports" onclick="TS.setCategory('Sports',this)">Sports</button>
+      </div>
+
+      <!-- Custom Category -->
+      <div class="ts-custom-row">
+        <input type="text" class="form-input ts-custom-input" id="ts-custom-input" placeholder="Enter custom category..." minlength="2" maxlength="20">
+        <button class="btn-secondary ts-custom-add" onclick="TS.addCustom()">+ Add</button>
+      </div>
+      <div class="ts-custom-error" id="ts-custom-error" style="display:none"></div>
+
+      <!-- Cards Grid -->
+      <div class="trending-grid" id="trending-grid"></div>
+
+      <!-- Empty State -->
+      <div class="ts-empty" id="ts-empty" style="display:none">
+        <span class="ts-empty-icon">&#128269;</span>
+        <span id="ts-empty-text">No results found — try a different search or click Refresh.</span>
+      </div>
+    </div>
   </div>
+{% endblock %}
 
-  <script>
-    function switchTab(tab, el) {
-      document.querySelectorAll('.tab').forEach(function (t) { t.classList.remove('active'); });
-      document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('active'); });
-      el.classList.add('active');
-      document.getElementById('panel-' + tab).classList.add('active');
-    }
+{% block scripts %}
+<script>
+  function switchTab(tab,el){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active')});el.classList.add('active');document.getElementById('panel-'+tab).classList.add('active')}
+  function selectMode(mode,el){document.querySelectorAll('.how-box[data-mode]').forEach(function(box){box.classList.toggle('active',box===el)});clearClientError()}
+  function setClientError(msg){var err=document.getElementById('client-error');err.textContent=msg;err.style.display='block'}
+  function clearClientError(){var err=document.getElementById('client-error');err.style.display='none';err.textContent=''}
+  function selectLanguage(el){document.querySelectorAll('.lang-tag').forEach(function(tag){tag.classList.toggle('active',tag===el)});document.getElementById('selected_language').value=el.getAttribute('data-lang')}
+  function checkClaim(text){var i=document.getElementById('news-input');i.value=text;document.querySelector('.how-box[data-mode="short"]').click();document.getElementById('tab-text').click();window.scrollTo({top:i.offsetTop-80,behavior:'smooth'})}
+  document.getElementById('main-form').addEventListener('submit',function(evt){var mode=document.querySelector('.how-box[data-mode].active').getAttribute('data-mode');var text=document.getElementById('news-input').value.trim();var ap=document.querySelector('.panel.active');if(ap&&ap.id==='panel-text'){var wc=text?text.split(/\s+/).filter(Boolean).length:0;if(mode==='short'&&wc>60){evt.preventDefault();setClientError('This is longer than 60 words. Switch to "Full Articles".');return}if(mode==='full'&&wc>0&&wc<=60){evt.preventDefault();setClientError('This is shorter than 60 words. Switch to "Short Claims".');return}}clearClientError();var btn=document.getElementById('submit-btn');btn.textContent='Verifying...';btn.disabled=true})
 
-    function selectMode(mode, el) {
-      document.querySelectorAll('.how-box[data-mode]').forEach(function (box) {
-        box.classList.toggle('active', box === el);
+  /* ════════════════════════════════════════
+     Trending Misinformation State Machine
+     ════════════════════════════════════════ */
+  var TS = (function(){
+    var state = {
+      allCards: [],
+      activeCategory: 'All',
+      searchTerm: '',
+      customCategories: []
+    };
+
+    var els = {};
+    function init(){
+      els.grid = document.getElementById('trending-grid');
+      els.empty = document.getElementById('ts-empty');
+      els.emptyText = document.getElementById('ts-empty-text');
+      els.searchInput = document.getElementById('ts-search');
+      els.searchTag = document.getElementById('ts-search-tag');
+      els.searchTagText = document.getElementById('ts-search-tag-text');
+      els.filterRow = document.getElementById('ts-filter-row');
+      els.customInput = document.getElementById('ts-custom-input');
+      els.customError = document.getElementById('ts-custom-error');
+
+      els.searchInput.addEventListener('input', function(){ liveFilter(); });
+      els.searchInput.addEventListener('keydown', function(e){
+        if(e.key === 'Enter'){ e.preventDefault(); searchSubmit(); }
       });
-      clearClientError();
-    }
-
-    function setClientError(msg) {
-      var err = document.getElementById('client-error');
-      err.textContent = msg;
-      err.style.display = 'block';
-    }
-
-    function clearClientError() {
-      var err = document.getElementById('client-error');
-      err.style.display = 'none';
-      err.textContent = '';
-    }
-
-    function selectLanguage(el) {
-      document.querySelectorAll('.lang-tag').forEach(function (tag) {
-        tag.classList.toggle('active', tag === el);
+      els.customInput.addEventListener('keydown', function(e){
+        if(e.key === 'Enter'){ e.preventDefault(); addCustom(); }
       });
-      document.getElementById('selected_language').value = el.getAttribute('data-lang');
+
+      fetchData();
     }
 
-    document.getElementById('main-form').addEventListener('submit', function (evt) {
-      var mode = document.querySelector('.how-box[data-mode].active').getAttribute('data-mode');
-      var text = document.getElementById('news-input').value.trim();
-      var activePanel = document.querySelector('.panel.active');
-
-      // Only validate when using the text input panel
-      if (activePanel && activePanel.id === 'panel-text') {
-        var wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0;
-
-        // Ensure correct mode selection based on word count
-        if (mode === 'short' && wordCount > 60) {
-          evt.preventDefault();
-          setClientError('This is longer than 60 words. Switch to "Full Articles" to analyse longer text.');
-          return;
-        }
-        if (mode === 'full' && wordCount > 0 && wordCount <= 60) {
-          evt.preventDefault();
-          setClientError('This is shorter than 60 words. Switch to "Short Claims" to analyse short text.');
-          return;
-        }
-
+    function showSkeleton(){
+      var s = '';
+      for(var i=0;i<4;i++){
+        s += '<div class="trending-card ts-skeleton">'
+          + '<div class="ts-shimmer" style="height:16px;width:'+(60+Math.random()*30)+'%;border-radius:4px"></div>'
+          + '<div style="height:8px"></div>'
+          + '<div class="ts-shimmer" style="height:12px;width:90%;border-radius:4px"></div>'
+          + '<div style="height:12px"></div>'
+          + '<div style="display:flex;gap:6px">'
+          + '<div class="ts-shimmer" style="height:22px;width:70px;border-radius:12px"></div>'
+          + '<div class="ts-shimmer" style="height:22px;width:60px;border-radius:12px"></div>'
+          + '<div class="ts-shimmer" style="height:22px;width:80px;border-radius:12px"></div>'
+          + '</div>'
+          + '<div style="height:12px"></div>'
+          + '<div class="ts-shimmer" style="height:30px;width:120px;border-radius:6px"></div>'
+          + '</div>';
       }
+      els.grid.innerHTML = s;
+      els.empty.style.display = 'none';
+    }
 
-      clearClientError();
-      var btn = document.getElementById('submit-btn');
-      btn.textContent = 'Verifying...';
-      btn.disabled = true;
-    });
-  </script>
-</body>
+    function fetchData(category){
+      showSkeleton();
+      var url = '/api/trending';
+      if(category) url += '?category=' + encodeURIComponent(category);
+      fetch(url).then(function(r){ return r.json(); }).then(function(items){
+        state.allCards = items || [];
+        renderCards();
+      }).catch(function(){
+        state.allCards = [];
+        renderCards();
+      });
+    }
 
-</html>
+    function getFiltered(){
+      var items = state.allCards;
+      var cat = state.activeCategory;
+      var term = state.searchTerm.toLowerCase().trim();
+      return items.filter(function(c){
+        var catMatch = (cat === 'All') || (c.category === cat);
+        var termMatch = !term || c.headline.toLowerCase().indexOf(term) !== -1;
+        return catMatch && termMatch;
+      });
+    }
+
+    function renderCards(){
+      var filtered = getFiltered();
+      if(filtered.length === 0){
+        els.grid.innerHTML = '';
+        els.empty.style.display = 'flex';
+        var msg;
+        if(state.activeCategory !== 'All' && !state.searchTerm){
+          msg = '\u26A0\uFE0F No fake news available for "' + state.activeCategory + '" right now. Try another category or click Refresh.';
+        } else if(state.searchTerm){
+          msg = '\u26A0\uFE0F No fake news found for "' + state.searchTerm + '". Try a different keyword.';
+        } else {
+          msg = '\u26A0\uFE0F No fake news available right now — click Refresh to try again.';
+        }
+        els.emptyText.textContent = msg;
+        return;
+      }
+      els.empty.style.display = 'none';
+      var html = '';
+      filtered.forEach(function(item, i){
+        var escaped = item.headline.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+        html += '<div class="trending-card animate-in delay-'+(Math.min(i+1,4))+'">'
+          + '<div class="t-headline">"' + item.headline + '"</div>'
+          + '<div class="t-meta">'
+          + '<span class="pill pill-muted">' + item.platform + '</span>'
+          + '<span class="pill pill-muted">' + item.category + '</span>'
+          + '<span class="pill pill-red">Fake — ' + item.fake_pct + '%</span>'
+          + '</div>'
+          + '<button class="check-claim-btn" onclick="checkClaim(\'' + escaped + '\')">Check This Claim</button>'
+          + '</div>';
+      });
+      els.grid.innerHTML = html;
+    }
+
+    function liveFilter(){
+      state.searchTerm = els.searchInput.value;
+      renderCards();
+    }
+
+    function searchSubmit(){
+      var term = els.searchInput.value.trim();
+      if(!term) return;
+      state.searchTerm = term;
+      state.activeCategory = 'All';
+      activateFilterBtn('All');
+      els.searchTag.style.display = 'inline-flex';
+      els.searchTagText.textContent = 'Showing results for "' + term + '"';
+      fetchData(term);
+    }
+
+    function clearSearch(){
+      state.searchTerm = '';
+      state.activeCategory = 'All';
+      els.searchInput.value = '';
+      els.searchTag.style.display = 'none';
+      activateFilterBtn('All');
+      fetchData();
+    }
+
+    function setCategory(cat, btn){
+      state.activeCategory = cat;
+      state.searchTerm = '';               // clear local search when switching category
+      els.searchInput.value = '';
+      els.searchTag.style.display = 'none';
+      activateFilterBtn(cat);
+      if(cat === 'All'){
+        fetchData();                        // general fetch
+      } else {
+        fetchData(cat);                     // category-specific fetch from API
+      }
+    }
+
+    function activateFilterBtn(cat){
+      els.filterRow.querySelectorAll('.ts-filter-btn').forEach(function(b){
+        b.classList.toggle('active', b.getAttribute('data-cat') === cat);
+      });
+    }
+
+    function addCustom(){
+      var val = els.customInput.value.trim();
+      els.customError.style.display = 'none';
+      if(val.length < 2){
+        els.customError.textContent = 'Category must be at least 2 characters.';
+        els.customError.style.display = 'block';
+        return;
+      }
+      if(val.length > 20){
+        els.customError.textContent = 'Category must be 20 characters or less.';
+        els.customError.style.display = 'block';
+        return;
+      }
+      var exists = els.filterRow.querySelector('[data-cat="'+val+'"]');
+      if(exists){
+        state.activeCategory = val;
+        activateFilterBtn(val);
+        els.customInput.value = '';
+        renderCards();
+        return;
+      }
+      var btn = document.createElement('button');
+      btn.className = 'ts-filter-btn ts-filter-custom';
+      btn.setAttribute('data-cat', val);
+      btn.textContent = val;
+      btn.onclick = function(){ setCategory(val, btn); };
+      els.filterRow.appendChild(btn);
+      state.customCategories.push(val);
+      state.activeCategory = val;
+      activateFilterBtn(val);
+      els.customInput.value = '';
+      fetchData(val);
+    }
+
+    function refresh(){
+      state.searchTerm = '';
+      state.activeCategory = 'All';
+      els.searchInput.value = '';
+      els.searchTag.style.display = 'none';
+      els.customError.style.display = 'none';
+      activateFilterBtn('All');
+      fetchData();
+    }
+
+    return {
+      init: init,
+      refresh: refresh,
+      searchSubmit: searchSubmit,
+      clearSearch: clearSearch,
+      setCategory: setCategory,
+      addCustom: addCustom
+    };
+  })();
+
+  TS.init();
+</script>
+{% endblock %}

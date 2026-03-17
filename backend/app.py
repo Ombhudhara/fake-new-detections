@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = Flask(__name__, template_folder='../frontend/templates')
+app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/static')
 
 # Resolve paths relative to this file so the app works regardless of the current working directory.
 from pathlib import Path
@@ -437,7 +437,22 @@ def predict_text(raw_text, language_hint=None):
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return render_template("index.html", active_page="home")
+
+
+@app.route("/dashboard")
+def dashboard():
+    return render_template("dashboard.html", active_page="dashboard")
+
+
+@app.route("/learn")
+def learn():
+    return render_template("learn.html", active_page="learn")
+
+
+@app.route("/report")
+def report_page():
+    return render_template("report.html", active_page="report")
 
 
 @app.route("/predict", methods=["POST"])
@@ -453,17 +468,17 @@ def predict():
             news = scraped["text"]
             article_info = scraped
         else:
-            return render_template("index.html",
+            return render_template("index.html", active_page="home",
                                    error="Could not scrape URL: " + scraped.get("error", "Unknown error"))
 
     if not news:
-        return render_template("index.html",
+        return render_template("index.html", active_page="home",
                                error="Please enter news text or a valid URL.")
 
     res = predict_text(news, language_hint=selected_language)
 
     return render_template(
-        "index.html",
+        "index.html", active_page="home",
         prediction=res["label"],
         is_fake=res["is_fake"],
         confidence=res["confidence"],
@@ -500,6 +515,221 @@ def predict_api():
         return jsonify({"error": "No text or URL provided"}), 400
 
     return jsonify(predict_text(text))
+
+
+@app.route("/api/latest-factchecked")
+def latest_factchecked():
+    import csv
+    import random
+    try:
+        csv_path = BASE_DIR / "live_scraped_data.csv"
+        rows = []
+        with open(csv_path, newline="", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                text = row.get("text", "").strip()
+                label = row.get("label", "").strip()
+                if not text:
+                    continue
+                # Extract headline: first sentence up to 100 chars
+                first_line = text.split(".")[0].strip()
+                headline = first_line[:100] + ("..." if len(first_line) > 100 else "")
+
+                if len(headline) < 20:
+                    continue
+                # Auto-detect category from keywords
+                t = text.lower()
+                if any(w in t for w in ["vaccine", "virus", "cure", "cancer", "health",
+                                        "medicine", "doctor", "diet", "chronic"]):
+                    category = "Health"
+                elif any(w in t for w in ["cricket", "ipl", "football", "sports", "match",
+                                          "fifa", "olympic", "bafta", "game"]):
+                    category = "Sports/Entertainment"
+                elif any(w in t for w in ["economy", "finance", "spending", "budget"]):
+                    category = "Finance"
+                elif any(w in t for w in ["trump", "minister", "election", "government",
+                                          "parliament", "policy", "senate", "congress", "noem"]):
+                    category = "Politics"
+                elif any(w in t for w in ["nasa", "science", "space", "uap", "ufo",
+                                          "research", "discovery", "technology", "5g"]):
+                    category = "Science"
+                elif any(w in t for w in ["war", "military", "attack", "strike",
+                                          "israel", "iran", "ukraine", "conflict"]):
+                    category = "World"
+                else:
+                    category = "General"
+                rows.append({
+                    "headline": headline,
+                    "result": "Real" if label == "1" else "Fake",
+                    "category": category,
+                })
+        random.shuffle(rows)
+        return jsonify(rows[:6])
+    except Exception as e:
+        print(f"[CSV Error] {e}")
+        return jsonify([]), 500
+
+
+@app.route("/api/trending")
+def api_trending():
+    """Return trending fake-news items from Google Fact Check API + CSV fallback."""
+    import csv
+    import random
+
+    category_param = request.args.get("category", "").strip()
+
+    EMERGENCY_FALLBACK = [
+        {"headline": "Drinking hot water cures all viruses", "category": "Health", "platform": "WhatsApp", "fake_pct": 94},
+        {"headline": "5G towers cause cancer, WHO confirms", "category": "Science", "platform": "Facebook", "fake_pct": 91},
+        {"headline": "New government scheme gives Rs 50,000 to all farmers free", "category": "Politics", "platform": "WhatsApp", "fake_pct": 88},
+    ]
+
+    def detect_category(text):
+        t = text.lower()
+        if any(w in t for w in ["vaccine", "virus", "cure", "cancer", "health", "medicine", "doctor", "diet", "disease"]):
+            return "Health"
+        if any(w in t for w in ["trump", "minister", "election", "government", "senate", "congress", "policy", "president", "vote", "party"]):
+            return "Politics"
+        if any(w in t for w in ["5g", "ai", "app", "hack", "software", "chip", "phone", "robot", "cyber", "internet"]):
+            return "Technology"
+        if any(w in t for w in ["nasa", "space", "science", "ufo", "uap", "planet", "climate", "research", "discovery"]):
+            return "Science"
+        if any(w in t for w in ["economy", "finance", "spending", "budget", "bank", "money", "scheme", "tax", "rupee", "dollar"]):
+            return "Finance"
+        if any(w in t for w in ["cricket", "football", "sports", "match", "olympic", "fifa", "ipl", "game", "player"]):
+            return "Sports"
+        return "General"
+
+    def pick_platform():
+        return random.choice(["WhatsApp", "Twitter/X", "Facebook", "YouTube", "Web"])
+
+    def rating_to_pct(rating):
+        if not rating:
+            return random.randint(82, 95)
+        r = rating.lower()
+        if any(w in r for w in ["false", "fake", "pants on fire", "fabricated", "misleading", "incorrect",
+                                 "not true", "hoax", "scam", "debunked", "wrong"]):
+            return random.randint(85, 97)
+        if any(w in r for w in ["mostly false", "half true", "partly", "mixture", "unproven", "distorts"]):
+            return random.randint(65, 84)
+        if any(w in r for w in ["true", "correct", "accurate"]):
+            return 0  # skip these
+        return random.randint(70, 90)
+
+    rows = []
+    seen = set()
+
+    # --- Source 1: Google Fact Check Tools API ---
+    try:
+        queries = [category_param + " fake news"] if category_param else [
+            "health misinformation", "political fake news",
+            "technology hoax", "science false claim",
+            "viral misinformation india"
+        ]
+        api_key = os.environ.get("GOOGLE_FACTCHECK_API_KEY", "")
+        if api_key:
+            for q in queries:
+                try:
+                    resp = requests.get(
+                        "https://factchecktools.googleapis.com/v1alpha1/claims:search",
+                        params={"query": q, "languageCode": "en", "pageSize": 6, "key": api_key},
+                        timeout=5
+                    )
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        for claim in data.get("claims", []):
+                            headline = claim.get("text", "").strip()
+                            if not headline or len(headline) < 20 or headline.lower() in seen:
+                                continue
+                            reviews = claim.get("claimReview", [])
+                            rating = reviews[0].get("textualRating", "") if reviews else ""
+                            pct = rating_to_pct(rating)
+                            if pct < 55:
+                                continue
+                            seen.add(headline.lower())
+                            rows.append({
+                                "headline": headline[:150],
+                                "category": detect_category(headline),
+                                "platform": pick_platform(),
+                                "fake_pct": pct,
+                            })
+                except Exception:
+                    pass
+    except Exception:
+        pass
+
+    # --- Source 2: CSV fallback ---
+    try:
+        csv_path = BASE_DIR / "live_scraped_data.csv"
+        csv_rows = []
+
+        # keyword map — used for fast pre-filtering when a category is requested
+        CATEGORY_KEYWORDS = {
+            "Health":     ["vaccine", "virus", "cure", "cancer", "health", "medicine",
+                           "doctor", "diet", "disease", "hospital", "drug", "covid"],
+            "Politics":   ["trump", "minister", "election", "government", "senate",
+                           "congress", "policy", "president", "vote", "party", "democrat",
+                           "republican", "biden", "modi", "parliament"],
+            "Technology": ["5g", " ai ", "app", "hack", "software", "chip", "phone",
+                           "robot", "cyber", "internet", "tech", "computer", "digital"],
+            "Science":    ["nasa", "space", "science", "ufo", "uap", "planet", "climate",
+                           "research", "discovery", "astronomy", "physics", "study"],
+            "Finance":    ["economy", "finance", "spending", "budget", "bank", "money",
+                           "scheme", "tax", "rupee", "dollar", "stock", "market", "crypto"],
+            "Sports":     ["cricket", "football", "sports", "match", "olympic", "fifa",
+                           "ipl", "game", "player", "tournament", "league", "athlete"],
+        }
+
+        with open(csv_path, "r", encoding="utf-8", errors="replace") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                text = row.get("text", "").strip()
+                label = row.get("label", "1").strip()
+                if label != "0":
+                    continue
+                if len(text) < 40:
+                    continue
+
+                # fast pre-filter: if a category is requested, check keywords first
+                if category_param and category_param in CATEGORY_KEYWORDS:
+                    kws = CATEGORY_KEYWORDS[category_param]
+                    t_lower = text.lower()
+                    if not any(kw in t_lower for kw in kws):
+                        continue  # skip rows unrelated to the requested category
+
+                first_line = text.split(".")[0].strip()
+                headline = first_line[:120] + ("..." if len(first_line) > 120 else "")
+                if len(headline) < 25 or headline.lower() in seen:
+                    continue
+
+                detected = detect_category(text)
+
+                # if a specific category is requested, only include matching rows
+                if category_param and category_param in CATEGORY_KEYWORDS:
+                    if detected != category_param:
+                        continue
+
+                seen.add(headline.lower())
+                csv_rows.append({
+                    "headline": headline,
+                    "category": detected,
+                    "platform": pick_platform(),
+                    "fake_pct": random.randint(82, 98),
+                })
+
+        random.shuffle(csv_rows)
+        need = 8 - len(rows)
+        if need > 0:
+            rows.extend(csv_rows[:need])
+    except Exception:
+        pass
+
+    # --- Source 3: Emergency fallback ---
+    if len(rows) == 0:
+        rows = EMERGENCY_FALLBACK
+
+    random.shuffle(rows)
+    return jsonify(rows[:8])
 
 
 if __name__ == "__main__":
