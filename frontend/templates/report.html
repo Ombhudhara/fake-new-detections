@@ -1,63 +1,703 @@
 {% extends "base.html" %}
-{% block title %}Report Suspicious News — Fake News Detector{% endblock %}
-{% block meta_desc %}Report suspicious news links and help us fight misinformation.{% endblock %}
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}">
+{% block title %}Report Suspicious News — Fake News Detector{% endblock %}
+{% block meta_desc %}Report suspicious news links and help us fight misinformation. All reports are reviewed by our verification team.{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;700&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --report-bg:       #f0ede6;
+    --report-card:     #ffffff;
+    --report-border:   0.5px solid rgba(0,0,0,0.08);
+    --report-shadow:   0 1px 4px rgba(0,0,0,0.06);
+    --report-accent:   #E8453C;
+    --report-navy:     #18181b;
+    --report-text:     #18181b;
+    --report-muted:    #6b6965;
+    --report-hint:     #9c9890;
+    --report-radius:   16px;
+    --input-radius:    10px;
+  }
+
+  /* ── Dark Mode Overrides ── */
+  html.dark {
+    --report-bg:       #0f0f17;
+    --report-card:     #1a1a2e;
+    --report-border:   1px solid rgba(255,255,255,0.08);
+    --report-shadow:   0 4px 24px rgba(0,0,0,0.4);
+    --report-text:     #e8e8f0;
+    --report-navy:     #ffffff;
+    --report-muted:    #a0a0ab;
+    --report-hint:     #80808a;
+  }
+
+  body { background: var(--report-bg); transition: background 0.3s; }
+  .report-layout-main { padding-bottom: 80px; }
+
+  /* ── Hero ── */
+  .report-hero {
+    text-align: center;
+    padding: 64px 24px 44px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .report-hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #E8453C;
+    background: rgba(232,69,60,0.08);
+    padding: 6px 16px;
+    border-radius: 999px;
+    margin-bottom: 24px;
+  }
+  .eyebrow-dot {
+    width: 6px; height: 6px;
+    background: #E8453C;
+    border-radius: 50%;
+  }
+  .report-hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(34px, 6vw, 56px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1.5px;
+    color: var(--report-navy);
+    margin-bottom: 18px;
+  }
+  .report-hero-subtitle {
+    font-family: 'Source Serif 4', serif;
+    font-size: 17px;
+    color: var(--report-muted);
+    line-height: 1.7;
+    margin-bottom: 36px;
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .report-stats-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    flex-wrap: wrap;
+    padding: 24px 40px;
+    background: var(--report-card);
+    border-radius: 18px;
+    border: var(--report-border);
+    max-width: 600px;
+    margin: 0 auto;
+    box-shadow: var(--report-shadow);
+  }
+  .report-stat { text-align: center; }
+  .rs-value {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: #E8453C;
+    line-height: 1;
+  }
+  .rs-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--report-hint);
+    margin-top: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .rs-divider { width: 1px; height: 36px; background: rgba(0,0,0,0.08); }
+  html.dark .rs-divider { background: rgba(255,255,255,0.1); }
+
+  /* ── Layout ── */
+  .report-layout {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 32px;
+    max-width: 1150px;
+    margin: 0 auto;
+    padding: 0 24px;
+    align-items: start;
+  }
+  @media (max-width: 960px) {
+    .report-layout { grid-template-columns: 1fr; }
+    .report-sidebar-col { order: -1; }
+  }
+
+  /* ── Form Card ── */
+  .report-form-card {
+    background: var(--report-card);
+    border-radius: var(--report-radius);
+    border: var(--report-border);
+    box-shadow: var(--report-shadow);
+    padding: 40px;
+    position: sticky;
+    top: 100px;
+  }
+  .form-steps {
+    display: flex;
+    align-items: center;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--report-border);
+  }
+  .form-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0.45;
+  }
+  .form-step.active { opacity: 1; }
+  .step-num {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.07);
+    display: flex; align-items: center;
+    justify-content: center;
+    font-size: 11px; font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    color: #6b6965;
+  }
+  html.dark .step-num { background: rgba(255,255,255,0.1); color: #fff; }
+  .form-step.active .step-num { background: #E8453C; color: #fff; }
+  .form-step.done .step-num { background: #27AE60; color: #fff; }
+  .step-label { font-size: 13px; font-weight: 600; color: var(--report-muted); white-space: nowrap; }
+  .form-step.active .step-label { color: var(--report-navy); }
+  .step-connector { flex: 1; height: 1px; background: rgba(0,0,0,0.1); margin: 0 14px; }
+  html.dark .step-connector { background: rgba(255,255,255,0.1); }
+
+  /* ── Form Groups ── */
+  .form-group { margin-bottom: 28px; }
+  .form-label {
+    display: block; font-size: 14px; font-weight: 700;
+    color: var(--report-navy); margin-bottom: 6px;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .form-hint { font-size: 12.5px; color: var(--report-hint); margin-bottom: 12px; line-height: 1.5; }
+  .req { color: #E8453C; margin-left: 2px; }
+
+  /* Platform Selector */
+  .platform-selector {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  @media (max-width: 540px) { .platform-selector { grid-template-columns: repeat(3, 1fr); } }
+  .platform-button {
+    display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px;
+    border-radius: 12px; border: 1.5px solid var(--report-border);
+    background: rgba(0,0,0,0.02); cursor: pointer; transition: all 0.2s;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  html.dark .platform-button { background: rgba(255,255,255,0.03); }
+  .platform-button:hover { border-color: #E8453C; background: rgba(232,69,60,0.06); }
+  .platform-button.active { border-color: #E8453C; background: rgba(232,69,60,0.1); box-shadow: 0 0 0 4px rgba(232,69,60,0.1); }
+  .pb-icon { font-size: 20px; }
+  .pb-label { font-size: 11px; font-weight: 700; color: var(--report-muted); text-align: center; }
+  .platform-button.active .pb-label { color: #E8453C; }
+
+  /* Inputs */
+  .input-wrap { position: relative; display: flex; align-items: center; }
+  .input-prefix { position: absolute; left: 14px; font-size: 16px; pointer-events: none; z-index: 1; opacity: 0.6; }
+  .input-status { position: absolute; right: 14px; font-size: 16px; pointer-events: none; }
+  .form-input {
+    width: 100%; padding: 14px 18px; border-radius: 12px;
+    border: 1.5px solid var(--report-border); background: rgba(0,0,0,0.02);
+    color: var(--report-text); font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px; outline: none; transition: all 0.2s;
+  }
+  html.dark .form-input { background: rgba(255,255,255,0.03); }
+  .form-input.with-prefix { padding-left: 44px; }
+  .form-input:focus {
+    border-color: #E8453C; box-shadow: 0 0 0 4px rgba(232,69,60,0.1);
+    background: var(--report-card);
+  }
+  .form-input.valid { border-color: #27AE60; box-shadow: 0 0 0 4px rgba(39,174,96,0.1); }
+  .form-input.error { border-color: #E8453C; }
+  .input-feedback { font-size: 12px; margin-top: 6px; display: none; font-weight: 600; }
+  .input-feedback.show { display: block; }
+  .input-feedback.error { color: #E8453C; }
+  .input-feedback.valid { color: #1e7e4a; }
+
+  /* Styled Select */
+  .form-select {
+    width: 100%; padding: 14px 18px; border-radius: 12px;
+    border: 1.5px solid var(--report-border); background: rgba(0,0,0,0.02);
+    color: var(--report-text); font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px; outline: none; cursor: pointer; transition: all 0.2s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b6965' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 18px center;
+    padding-right: 48px;
+  }
+  html.dark .form-select { background-color: rgba(255,255,255,0.03); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23e8e8f0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); }
+  .form-select:focus { border-color: #E8453C; box-shadow: 0 0 0 4px rgba(232,69,60,0.1); background-color: var(--report-card); }
+
+  /* Textarea */
+  .form-textarea {
+    width: 100%; padding: 16px 18px; border-radius: 12px;
+    border: 1.5px solid var(--report-border); background: rgba(0,0,0,0.02);
+    color: var(--report-text); font-family: 'Source Serif 4', serif;
+    font-size: 15px; line-height: 1.7; resize: vertical; outline: none;
+    transition: all 0.2s; min-height: 140px;
+  }
+  html.dark .form-textarea { background: rgba(255,255,255,0.03); }
+  .form-textarea:focus { border-color: #E8453C; box-shadow: 0 0 0 4px rgba(232,69,60,0.1); background: var(--report-card); }
+  .textarea-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+  .char-counter { font-size: 12px; font-family: 'DM Mono', monospace; color: var(--report-hint); font-weight: 500; }
+  .char-counter.near-limit { color: #E8453C; font-weight: 700; }
+  .char-tip { font-size: 12px; color: var(--report-hint); font-style: italic; }
+
+  /* Anonymous Switch */
+  .anon-group {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 24px; background: rgba(0,0,0,0.03);
+    border-radius: 14px; border: var(--report-border);
+  }
+  html.dark .anon-group { background: rgba(255,255,255,0.05); }
+  .switch-label-stack { display: flex; flex-direction: column; gap: 2px; }
+  .toggle-switch { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+  .toggle-switch input { opacity:0; width:0; height:0; }
+  .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: rgba(0,0,0,0.15); border-radius: 20px; transition: 0.3s; }
+  html.dark .toggle-slider { background: rgba(255,255,255,0.2); }
+  .toggle-slider:before { content: ""; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+  input:checked + .toggle-slider { background: #27AE60; }
+  input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+  /* Submit Button */
+  .submit-button {
+    width: 100%; padding: 16px 28px; border-radius: 14px; border: none;
+    background: #E8453C; color: #fff; font-size: 16px; font-weight: 700;
+    cursor: pointer; font-family: 'Space Grotesk', sans-serif;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    transition: all 0.25s; margin-bottom: 16px; letter-spacing: 0.5px;
+    box-shadow: 0 4px 12px rgba(232,69,60,0.2);
+  }
+  .submit-button:hover { background: #c73228; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(232,69,60,0.3); }
+  .submit-button:active { transform: scale(0.98); }
+  .submit-button.loading { opacity: 0.8; pointer-events: none; }
+  .privacy-mention { font-size: 12px; color: var(--report-hint); text-align: center; line-height: 1.6; }
+
+  /* ── Sidebar ── */
+  .sidebar-card {
+    background: var(--report-card); border-radius: 18px;
+    border: var(--report-border); padding: 28px;
+    box-shadow: var(--report-shadow);
+  }
+  .sidebar-card-title { font-size: 15px; font-weight: 800; color: var(--report-navy); margin-bottom: 20px; font-family: 'Space Grotesk', sans-serif; display: flex; align-items: center; gap: 8px; }
+  .tips-list { display: flex; flex-direction: column; gap: 16px; }
+  .tip-item { display: flex; gap: 12px; align-items: flex-start; }
+  .tip-item-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+  .tip-item-text { font-size: 14px; color: var(--report-muted); line-height: 1.6; font-family: 'Space Grotesk', sans-serif; }
+  .tip-item-text strong { color: var(--report-navy); font-weight: 700; }
+  
+  .activity-list { display: flex; flex-direction: column; gap: 18px; }
+  .activity-item { display: flex; flex-direction: column; gap: 8px; }
+  .activity-text-row { display: flex; justify-content: space-between; align-items: flex-end; }
+  .activity-label { font-size: 13px; font-weight: 700; color: var(--report-navy); }
+  .activity-count { font-size: 12px; color: var(--report-hint); font-family: 'DM Mono', monospace; }
+  .activity-bar-bg { height: 6px; background: rgba(0,0,0,0.06); border-radius: 4px; overflow: hidden; }
+  html.dark .activity-bar-bg { background: rgba(255,255,255,0.08); }
+  .activity-bar-fill { height: 100%; border-radius: 4px; transition: width 1s cubic-bezier(.4,0,.2,1); }
+
+  .sidebar-trust-box {
+    display: flex; align-items: flex-start; gap: 14px; padding: 18px 20px;
+    margin-top: 20px; background: rgba(39,174,96,0.06);
+    border-radius: 16px; border: 1px solid rgba(39,174,96,0.15);
+  }
+  .trust-icon { font-size: 24px; flex-shrink: 0; }
+  .trust-header { font-size: 13px; font-weight: 800; color: #1e7e4a; margin-bottom: 4px; }
+  .trust-desc { font-size: 12px; color: #27AE60; line-height: 1.5; font-weight: 500; }
+
+  /* ── Success Card ── */
+  .success-card {
+    background: var(--report-card);
+    border-radius: 24px;
+    border: var(--report-border);
+    padding: 60px 48px;
+    text-align: center;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.12);
+    animation: successIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes successIn { from { opacity:0; transform: translateY(20px) scale(0.98); } to { opacity:1; transform: translateY(0) scale(1); } }
+  .success-badge {
+    width: 84px; height: 84px;
+    border-radius: 50%; background: rgba(39,174,96,0.08);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 28px;
+  }
+  .success-badge svg { filter: drop-shadow(0 4px 6px rgba(39,174,96,0.2)); }
+  .success-heading { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 800; color: var(--report-navy); margin-bottom: 14px; }
+  .success-message { font-family: 'Source Serif 4', serif; font-size: 16.5px; color: var(--report-muted); line-height: 1.75; margin-bottom: 32px; max-width: 480px; margin-left: auto; margin-right: auto; }
+  .success-pill-row { display: flex; gap: 12px; justify-content: center; margin-bottom: 40px; }
+  .success-token { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 700; color: var(--report-muted); background: rgba(0,0,0,0.04); padding: 10px 20px; border-radius: 12px; }
+  html.dark .success-token { background: rgba(255,255,255,0.05); }
+  .success-eta-tag { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #27AE60; background: rgba(39,174,96,0.06); padding: 10px 20px; border-radius: 12px; border: 1px solid rgba(39,174,96,0.1); }
+  .success-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .success-btn-main { padding: 15px 32px; border-radius: 14px; background: var(--report-navy); color: var(--report-card); font-size: 15px; font-weight: 700; text-decoration: none; font-family: 'Space Grotesk', sans-serif !important; transition: 0.2s; }
+  .success-btn-main:hover { opacity: 0.9; transform: translateY(-2px); text-decoration: none; color: var(--report-card); }
+  .success-btn-alt { padding: 15px 32px; border-radius: 14px; border: 1.5px solid var(--report-border); background: transparent; color: var(--report-navy); font-size: 15px; font-weight: 700; cursor: pointer; font-family: 'Space Grotesk', sans-serif !important; transition: 0.2s; }
+  .success-btn-alt:hover { background: rgba(0,0,0,0.03); border-color: var(--report-navy); }
+  html.dark .success-btn-alt:hover { background: rgba(255,255,255,0.03); }
+
+  /* ── Navbar active fix ── */
+  html.dark .navbar { border-bottom: 1px solid rgba(255,255,255,0.08); }
+</style>
+{% endblock %}
 
 {% block body %}
-  <div class="page-container">
-    <div class="page-header animate-in">
-      <h1>Report Suspicious News</h1>
-      <p>Found something suspicious? Submit it and help us fight misinformation. All reports are reviewed and added to our database.</p>
+<main class="report-layout-main">
+
+  <!-- ════════════════════════════════════════
+       HERO SECTION
+       ════════════════════════════════════════ -->
+  <header class="report-hero">
+    <div class="report-hero-eyebrow">
+      <span class="eyebrow-dot"></span>
+      Community Compliance
+    </div>
+    <h1 class="report-hero-title">Report Suspicious News</h1>
+    <p class="report-hero-subtitle">
+      Found a suspicious story? Submit it here. Our team review every report to verify facts and stop the spread of misinformation.
+    </p>
+
+    <!-- Global Stats -->
+    <div class="report-stats-row">
+      <div class="report-stat">
+        <span class="rs-value">1,240</span>
+        <span class="rs-label">Reports this week</span>
+      </div>
+      <div class="rs-divider"></div>
+      <div class="report-stat">
+        <span class="rs-value">89%</span>
+        <span class="rs-label">Verified Fake</span>
+      </div>
+      <div class="rs-divider"></div>
+      <div class="report-stat">
+        <span class="rs-value">&lt;24h</span>
+        <span class="rs-label">Review Time</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="report-layout">
+    
+    <!-- ════════════════════════════════════════
+         LEFT COLUMN: FORM CARD
+         ════════════════════════════════════════ -->
+    <div class="report-form-col">
+      
+      <!-- SUCCESS STATE (hidden by default) -->
+      <div class="success-card" id="success-card" style="display:none">
+        <div class="success-badge">
+          <svg width="44" height="44" viewBox="0 0 40 40">
+            <circle cx="20" cy="20" r="18" fill="none" stroke="#27AE60" stroke-width="2.5"/>
+            <path d="M11 20.5l6 6 12-14" fill="none" stroke="#27AE60" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2 class="success-heading">Report Submitted!</h2>
+        <p class="success-message">
+          Thanks for taking a stand against misinformation. Your report has been added to our queue and will be analyzed by our editorial team within 24 hours.
+        </p>
+        <div class="success-pill-row">
+          <div class="success-token">REPORT-ID: <span id="success-rid">...</span></div>
+          <div class="success-eta-tag">⏱ Expected review in 18h</div>
+        </div>
+        <div class="success-actions">
+          <a href="/" class="success-btn-main">← Back to Dashboard</a>
+          <button class="success-btn-alt" onclick="window.location.reload()">Submit Another</button>
+        </div>
+      </div>
+
+      <!-- FORM CARD -->
+      <div class="report-form-card" id="report-form-card">
+        <!-- Step UI -->
+        <div class="form-steps">
+          <div class="form-step active" id="step-marker-1">
+            <span class="step-num">1</span>
+            <span class="step-label">Identify Source</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="form-step" id="step-marker-2">
+            <span class="step-num">2</span>
+            <span class="step-label">Provide Details</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="form-step" id="step-marker-3">
+            <span class="step-num">3</span>
+            <span class="step-label">Review</span>
+          </div>
+        </div>
+
+        <form id="report-form" method="POST" action="{{ url_for('report') }}">
+          
+          <!-- Platform Choice -->
+          <div class="form-group">
+            <label class="form-label">Where did you see this? <span class="req">*</span></label>
+            <p class="form-hint">Select the primary platform where this story is spreading.</p>
+            <div class="platform-selector">
+              <button type="button" class="platform-button active" data-val="WhatsApp" onclick="setPlatform(this)">
+                <span class="pb-icon">💬</span><span class="pb-label">WhatsApp</span>
+              </button>
+              <button type="button" class="platform-button" data-val="Facebook" onclick="setPlatform(this)">
+                <span class="pb-icon">📘</span><span class="pb-label">Facebook</span>
+              </button>
+              <button type="button" class="platform-button" data-val="Twitter" onclick="setPlatform(this)">
+                <span class="pb-icon">🐦</span><span class="pb-label">Twitter/X</span>
+              </button>
+              <button type="button" class="platform-button" data-val="Telegram" onclick="setPlatform(this)">
+                <span class="pb-icon">✈️</span><span class="pb-label">Telegram</span>
+              </button>
+              <button type="button" class="platform-button" data-val="Instagram" onclick="setPlatform(this)">
+                <span class="pb-icon">📸</span><span class="pb-label">Instagram</span>
+              </button>
+              <button type="button" class="platform-button" data-val="YouTube" onclick="setPlatform(this)">
+                <span class="pb-icon">▶️</span><span class="pb-label">YouTube</span>
+              </button>
+              <button type="button" class="platform-button" data-val="News Site" onclick="setPlatform(this)">
+                <span class="pb-icon">🗞️</span><span class="pb-label">News Site</span>
+              </button>
+              <button type="button" class="platform-button" data-val="Other" onclick="setPlatform(this)">
+                <span class="pb-icon">📱</span><span class="pb-label">Other</span>
+              </button>
+            </div>
+            <input type="hidden" name="platform" id="platform-input" value="WhatsApp">
+          </div>
+
+          <!-- URL Input -->
+          <div class="form-group">
+            <label class="form-label" for="url-input">Suspicious Link or Web URL <span class="req">*</span></label>
+            <p class="form-hint">Paste the direct link to the article, post, or video you want us to investigate.</p>
+            <div class="input-wrap">
+              <span class="input-prefix">🔗</span>
+              <input type="url" name="url" id="url-input" class="form-input with-prefix" 
+                     placeholder="https://news.example/story/123" required oninput="validateUrl(this)">
+              <span class="input-status" id="url-status"></span>
+            </div>
+            <div id="url-feedback" class="input-feedback"></div>
+          </div>
+
+          <!-- Category -->
+          <div class="form-group">
+            <label class="form-label">Story Category</label>
+            <p class="form-hint">What subject does this misinformation target?</p>
+            <select name="category" class="form-select">
+              <option value="">Select Category (Optional)</option>
+              <option value="Health">🏥 Health & Medical</option>
+              <option value="Politics">🏛 Politics & Elections</option>
+              <option value="Finance">💰 Money & Finance</option>
+              <option value="Science">💻 Technology & Science</option>
+              <option value="International">🌐 Global Affairs</option>
+              <option value="Crime">⚖️ Crime & Legal</option>
+              <option value="AI">🤖 AI or Deepfakes</option>
+              <option value="Other">📦 Other</option>
+            </select>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label class="form-label" for="desc-area">Your Observation</label>
+            <p class="form-hint">Describe why you think this story is false or misleading.</p>
+            <textarea name="description" id="desc-area" class="form-textarea" 
+                      placeholder="e.g. The headline contradicts the main article, the source looks like a clone of BBC, etc." 
+                      maxlength="1000" oninput="handleTextArea(this)"></textarea>
+            <div class="textarea-footer">
+              <span class="char-counter" id="char-counter">0 / 1000 chars</span>
+              <span class="char-tip">Detailed reports are processed 2x faster.</span>
+            </div>
+          </div>
+
+          <!-- Anon Switch -->
+          <div class="form-group anon-group">
+            <div class="switch-label-stack">
+              <div class="form-label" style="margin-bottom:0">Submit Anonymously</div>
+              <div class="form-hint" style="margin-bottom:0">We will never publish your name with this report.</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" name="anonymous" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <button type="submit" class="submit-button" id="submit-btn" disabled>
+            <span id="btn-text">Submit Report</span>
+            <span class="submit-arrow">→</span>
+          </button>
+
+          <p class="privacy-mention">
+            🛡️ Your privacy is our priority. Reports are encrypted and reviewed strictly for verification metadata.
+          </p>
+        </form>
+      </div>
     </div>
 
-    <div class="report-card animate-in delay-1" id="report-form-container">
-      <form id="community-report-form" onsubmit="submitReport(event)">
-        <div class="field">
-          <label class="form-label">Suspicious Link or URL *</label>
-          <input type="text" class="form-input" id="report-link" placeholder="https://example.com/suspicious-article">
+    <!-- ════════════════════════════════════════
+         RIGHT COLUMN: SIDEBAR
+         ════════════════════════════════════════ -->
+    <aside class="report-sidebar-col">
+      <!-- Tips -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-title">✅ Pro Reporting Tips</div>
+        <div class="tips-list">
+          <div class="tip-item">
+            <div class="tip-item-icon">🔗</div>
+            <div class="tip-item-text">Include the <strong>direct link</strong> rather than a screenshot if possible.</div>
+          </div>
+          <div class="tip-item">
+            <div class="tip-item-icon">📝</div>
+            <div class="tip-item-text">Point out <strong>specific contradictions</strong> or logical flaws you noticed.</div>
+          </div>
+          <div class="tip-item">
+            <div class="tip-item-icon">📱</div>
+            <div class="tip-item-text">Mention <strong>how many times</strong> you've seen this today in your circles.</div>
+          </div>
+          <div class="tip-item">
+            <div class="tip-item-icon">🔍</div>
+            <div class="tip-item-text">If you found a <strong>source debunking this</strong>, please paste that link too.</div>
+          </div>
         </div>
-        <div class="field">
-          <label class="form-label">Category</label>
-          <select class="category-select" id="report-category">
-            <option value="">Select a category (optional)</option>
-            <option value="health">Health / Medical</option>
-            <option value="politics">Politics / Government</option>
-            <option value="science">Science / Technology</option>
-            <option value="finance">Finance / Economy</option>
-            <option value="world">World / International</option>
-            <option value="entertainment">Entertainment / Sports</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-        <div class="field">
-          <label class="form-label">Why do you think it's fake? (optional)</label>
-          <textarea class="form-textarea" id="report-reason" placeholder="Describe why this seems suspicious — misleading headline, no sources cited, emotional language, etc."></textarea>
-        </div>
-        <div class="report-error" id="report-error"></div>
-        <button type="submit" class="btn-primary" style="width:100%;padding:14px;margin-top:8px">Submit Report</button>
-      </form>
-    </div>
+      </div>
 
-    <div class="report-success" id="report-success">
-      <div class="success-icon">&#10003;</div>
-      <h3>Report Submitted!</h3>
-      <p>Thanks for helping fight misinformation. Your report has been added to our review queue. Together we make the internet safer.</p>
-      <a href="/" class="btn-primary" style="margin-top:20px;text-decoration:none">&#8592; Back to Home</a>
-    </div>
+      <!-- Activity -->
+      <div class="sidebar-card" style="margin-top:20px">
+        <div class="sidebar-card-title">📊 Live Reporting Volume</div>
+        <div class="activity-list">
+          <div class="activity-item">
+            <div class="activity-text-row">
+              <span class="activity-label">Health</span>
+              <span class="activity-count">64 reports</span>
+            </div>
+            <div class="activity-bar-bg"><div class="activity-bar-fill" style="width:90%;background:#E8453C"></div></div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-text-row">
+              <span class="activity-label">Politics</span>
+              <span class="activity-count">42 reports</span>
+            </div>
+            <div class="activity-bar-bg"><div class="activity-bar-fill" style="width:65%;background:#7F77DD"></div></div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-text-row">
+              <span class="activity-label">Finance</span>
+              <span class="activity-count">28 reports</span>
+            </div>
+            <div class="activity-bar-bg"><div class="activity-bar-fill" style="width:40%;background:#F5A623"></div></div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-text-row">
+              <span class="activity-label">Other</span>
+              <span class="activity-count">19 reports</span>
+            </div>
+            <div class="activity-bar-bg"><div class="activity-bar-fill" style="width:25%;background:#4A90D9"></div></div>
+          </div>
+        </div>
+      </div>
 
-    <div class="report-guidelines animate-in delay-2">
-      <h3>What makes a good report?</h3>
-      <ul>
-        <li>Include the <strong>direct link</strong> to the suspicious content</li>
-        <li>Explain <strong>why you think it's false</strong> — misleading headline, no credible sources, emotional manipulation</li>
-        <li>If possible, mention <strong>where you saw it shared</strong> (WhatsApp, Facebook, Twitter, etc.)</li>
-        <li>If you found a <strong>debunking article</strong>, feel free to include the link in the description</li>
-      </ul>
-    </div>
+      <!-- Privacy Box -->
+      <div class="sidebar-trust-box">
+        <span class="trust-icon">🛡️</span>
+        <div>
+          <div class="trust-header">No Data Shared</div>
+          <div class="trust-desc">We use community data to improve our global detection algorithms without compromising your personal identity.</div>
+        </div>
+      </div>
+    </aside>
+
   </div>
+</main>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/report.js') }}"></script>
+<script>
+  /* Platform Logic */
+  function setPlatform(btn) {
+    document.querySelectorAll('.platform-button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('platform-input').value = btn.dataset.val;
+  }
+
+  /* URL Validator */
+  function validateUrl(input) {
+    const val = input.value.trim();
+    const feedback = document.getElementById('url-feedback');
+    const status = document.getElementById('url-status');
+    const submitBtn = document.getElementById('submit-btn');
+
+    if (!val) {
+      input.className = 'form-input with-prefix';
+      feedback.className = 'input-feedback';
+      status.textContent = '';
+      submitBtn.disabled = true;
+      return;
+    }
+
+    try {
+      new URL(val);
+      input.className = 'form-input with-prefix valid';
+      feedback.textContent = '✓ Credible URL format detected';
+      feedback.className = 'input-feedback show valid';
+      status.textContent = '✓';
+      status.style.color = '#27AE60';
+      submitBtn.disabled = false;
+      document.getElementById('step-marker-1').classList.add('done');
+      document.getElementById('step-marker-2').classList.add('active');
+    } catch(e) {
+      if (val.length > 5) {
+        input.className = 'form-input with-prefix error';
+        feedback.textContent = 'Please enter a valid URL (e.g. https://...)';
+        feedback.className = 'input-feedback show error';
+        status.textContent = '✗';
+        status.style.color = '#E8453C';
+        submitBtn.disabled = true;
+      }
+    }
+  }
+
+  /* Textarea Counter */
+  function handleTextArea(el) {
+    const len = el.value.length;
+    const counter = document.getElementById('char-counter');
+    counter.textContent = `${len} / 1000 chars`;
+    counter.classList.toggle('near-limit', len > 900);
+    
+    if (len > 50) {
+      document.getElementById('step-marker-2').classList.add('done');
+      document.getElementById('step-marker-3').classList.add('active');
+    }
+  }
+
+  /* Loading State */
+  document.getElementById('report-form').addEventListener('submit', (e) => {
+    const btn = document.getElementById('submit-btn');
+    btn.classList.add('loading');
+    btn.querySelector('#btn-text').textContent = 'Submitting...';
+  });
+
+  /* Handle Flask Success State */
+  {% if report_submitted %}
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('report-form-card').style.display = 'none';
+    document.getElementById('success-card').style.display = 'block';
+    document.getElementById('success-rid').textContent = '{{ report_id }}';
+    
+    // Smooth scroll to success card
+    document.getElementById('success-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+  {% endif %}
+
+  /* Animation for sidebar bars */
+  window.addEventListener('load', () => {
+    document.querySelectorAll('.activity-bar-fill').forEach(bar => {
+      const w = bar.style.width;
+      bar.style.width = '0%';
+      setTimeout(() => { bar.style.width = w; }, 400);
+    });
+  });
+</script>
 {% endblock %}

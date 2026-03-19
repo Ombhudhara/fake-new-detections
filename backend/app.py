@@ -452,9 +452,35 @@ def learn():
     return render_template("learn.html", active_page="learn")
 
 
-@app.route("/report")
-def report_page():
-    return render_template("report.html", active_page="report")
+@app.route("/report", methods=["GET", "POST"])
+def report():
+    import random
+    import string
+    
+    if request.method == "POST":
+        # Extract form data
+        url         = request.form.get("url", "")
+        category    = request.form.get("category", "")
+        description = request.form.get("description", "")
+        platform    = request.form.get("platform", "WhatsApp")
+        anonymous   = request.form.get("anonymous", "off") # Flask switch is "on" or absent
+
+        # Logic to save the report would go here
+        # (e.g., db.session.add(NewReport(...)) or log to CSV)
+        print(f"[Report Log] New report submitted: {url} | Platform: {platform}")
+
+        # Generate a random report ID
+        report_id = "RPT-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
+
+        return render_template("report.html", 
+                               active_page="report",
+                               report_submitted=True,
+                               report_id=report_id)
+
+    return render_template("report.html", 
+                           active_page="report",
+                           report_submitted=False,
+                           report_id=None)
 
 
 @app.route("/analytics")

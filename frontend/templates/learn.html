@@ -1,89 +1,1184 @@
 {% extends "base.html" %}
-{% block title %}How to Spot Fake News — Fake News Detector{% endblock %}
-{% block meta_desc %}Learn how to identify misinformation, verify sources, and protect yourself from fake news.{% endblock %}
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/learn.css') }}">
+{% block title %}Learn Media Literacy — Fake News Detector{% endblock %}
+{% block meta_desc %}Master the art of spotting misinformation with our comprehensive guide, interactive quiz, and expert resources.{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --learn-card-bg:    #ffffff;
+    --learn-card-border: rgba(0,0,0,0.07);
+    --learn-card-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    --learn-tip-radius: 14px;
+    --accent:           #E8453C;
+    --navy:             #18181b;
+    --text-muted:       #6b6965;
+    --bg-page:          #f0ede6;
+  }
+
+  /* ── Dark Mode ── */
+  html.dark {
+    --learn-card-bg:    #1a1a2e;
+    --learn-card-border: rgba(255,255,255,0.08);
+    --learn-card-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    --navy:             #e8e8f0;
+    --text-muted:       #9090a8;
+    --bg-page:          #0f0f17;
+  }
+
+  body { background: var(--bg-page); transition: background 0.3s; }
+  .learn-page-main { padding-bottom: 80px; }
+
+  /* ── Section Header ── */
+  .learn-section {
+    max-width: 1000px;
+    margin: 0 auto 80px;
+    padding: 0 24px;
+  }
+  .learn-section-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .learn-section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 4vw, 36px);
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+  .learn-section-subtitle {
+    font-size: 16px;
+    color: var(--text-muted);
+    font-family: 'Source Serif 4', serif;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* ── Hero Section ── */
+  .learn-hero {
+    text-align: center;
+    padding: 80px 24px 64px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .learn-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #E8453C;
+    background: rgba(232,69,60,0.08);
+    padding: 6px 16px;
+    border-radius: 999px;
+    margin-bottom: 24px;
+  }
+  .eyebrow-dot {
+    width: 6px; height: 6px;
+    background: #E8453C;
+    border-radius: 50%;
+  }
+  .learn-hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(42px, 8vw, 68px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -2.5px;
+    color: var(--navy);
+    margin-bottom: 24px;
+  }
+  .title-accent { color: #E8453C; }
+  .learn-hero-subtitle {
+    font-family: 'Source Serif 4', serif;
+    font-size: 19px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-bottom: 40px;
+    max-width: 580px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .learn-stats-row {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+  .learn-stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 22px;
+    background: var(--learn-card-bg);
+    border-radius: 999px;
+    border: 1px solid var(--learn-card-border);
+    box-shadow: var(--learn-card-shadow);
+  }
+  .stat-number {
+    font-family: 'DM Mono', monospace;
+    font-size: 20px;
+    font-weight: 600;
+    color: #E8453C;
+  }
+  .stat-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  .read-progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    max-width: 380px;
+    margin: 0 auto;
+    padding-top: 10px;
+  }
+  .read-progress-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #9c9890;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .read-progress-track {
+    flex: 1;
+    height: 6px;
+    background: rgba(0,0,0,0.08);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  html.dark .read-progress-track { background: rgba(255,255,255,0.1); }
+  .read-progress-fill {
+    height: 100%;
+    background: #E8453C;
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.2s ease;
+  }
+
+  /* ── Tips Grid ── */
+  .tips-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 20px;
+  }
+  @media (max-width: 640px) { .tips-grid { grid-template-columns: 1fr; } }
+  .tip-card {
+    background: var(--learn-card-bg);
+    border-radius: var(--learn-tip-radius);
+    border: 1px solid var(--learn-card-border);
+    box-shadow: var(--learn-card-shadow);
+    overflow: hidden;
+    transition: transform 0.3s cubic-bezier(.17, .67, .83, .67), box-shadow 0.3s;
+  }
+  .tip-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+  }
+  .tip-card-inner { padding: 32px; }
+  .tip-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .tip-icon-wrap {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center;
+    justify-content: center;
+    font-size: 24px;
+  }
+  .tip-number {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: #9c9890;
+    letter-spacing: 1px;
+    opacity: 0.6;
+  }
+  .tip-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 12px;
+    line-height: 1.3;
+  }
+  .tip-body {
+    font-family: 'Source Serif 4', serif;
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin-bottom: 24px;
+  }
+  .tip-link {
+    color: #E8453C;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: opacity 0.2s;
+  }
+  .tip-link:hover { opacity: 0.8; }
+  .tip-footer {
+    padding-top: 16px;
+    border-top: 1px solid var(--learn-card-border);
+  }
+  .tip-tag {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #9c9890;
+    background: rgba(0,0,0,0.04);
+    padding: 4px 12px;
+    border-radius: 999px;
+  }
+  html.dark .tip-tag { background: rgba(255,255,255,0.06); }
+
+  /* ── Misinfo Grid ── */
+  .misinfo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap: 16px;
+  }
+  @media (max-width: 820px) { .misinfo-grid { grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 540px) { .misinfo-grid { grid-template-columns: 1fr; } }
+  .misinfo-card {
+    background: var(--accent-bg);
+    border-radius: 14px;
+    border: 1px solid var(--accent);
+    border-left: 5px solid var(--accent);
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .misinfo-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  }
+  .misinfo-icon { font-size: 28px; line-height: 1; }
+  .misinfo-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+  .misinfo-desc {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .misinfo-severity {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: auto;
+    padding-top: 4px;
+  }
+  .severity-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .severity-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    color: #9c9890;
+    text-transform: uppercase;
+  }
+
+  /* ── Resources Grid ── */
+  .resources-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap: 16px;
+  }
+  @media (max-width: 820px) { .resources-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 540px) { .resources-grid { grid-template-columns: 1fr; } }
+  .resource-card {
+    background: var(--learn-card-bg);
+    border-radius: 14px;
+    border: 1px solid var(--learn-card-border);
+    padding: 22px;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: all 0.25s;
+    position: relative;
+  }
+  .resource-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    border-color: #E8453C;
+    text-decoration: none;
+  }
+  .resource-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .resource-initial {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    display: flex; align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-family: 'DM Mono', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -1px;
+  }
+  .resource-globe {
+    font-size: 16px;
+    color: #c8c2b8;
+    transition: color 0.2s, transform 0.2s;
+  }
+  .resource-card:hover .resource-globe {
+    color: #E8453C;
+    transform: translate(2px, -2px);
+  }
+  .resource-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .resource-url {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: #9c9890;
+    margin-bottom: 6px;
+  }
+  .resource-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.55;
+    flex: 1;
+    font-family: 'Source Serif 4', serif;
+  }
+  .resource-tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #9c9890;
+    background: rgba(0,0,0,0.05);
+    padding: 4px 10px;
+    border-radius: 999px;
+    display: inline-block;
+    margin-top: 10px;
+  }
+  html.dark .resource-tag { background: rgba(255,255,255,0.07); }
+
+  /* ── Quiz Board ── */
+  .quiz-card {
+    background: var(--learn-card-bg);
+    border-radius: 20px;
+    border: 1px solid var(--learn-card-border);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+    padding: 40px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .quiz-top {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+  .quiz-counter {
+    font-size: 13px;
+    font-weight: 700;
+    color: #9c9890;
+    font-family: 'DM Mono', monospace;
+    white-space: nowrap;
+  }
+  .quiz-progress-track {
+    height: 6px;
+    background: rgba(0,0,0,0.07);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  html.dark .quiz-progress-track { background: rgba(255,255,255,0.1); }
+  .quiz-progress-fill {
+    height: 100%;
+    background: #E8453C;
+    border-radius: 4px;
+    transition: width 0.4s cubic-bezier(.17, .67, .83, .67);
+  }
+  .quiz-score-display {
+    font-size: 14px;
+    font-weight: 700;
+    color: #27AE60;
+    font-family: 'DM Mono', monospace;
+    white-space: nowrap;
+  }
+  .quiz-question {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1.4;
+    margin-bottom: 28px;
+  }
+  .quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .quiz-option {
+    padding: 16px 20px;
+    border-radius: 12px;
+    border: 1.5px solid var(--learn-card-border);
+    background: rgba(0,0,0,0.02);
+    cursor: pointer;
+    font-size: 15px;
+    font-family: 'Space Grotesk', sans-serif;
+    color: var(--navy);
+    text-align: left;
+    transition: all 0.2s;
+    line-height: 1.5;
+  }
+  html.dark .quiz-option { background: rgba(255,255,255,0.03); }
+  .quiz-option:hover:not(:disabled) {
+    border-color: #E8453C;
+    background: rgba(232,69,60,0.06);
+    transform: translateX(4px);
+  }
+  .quiz-option.correct {
+    background: rgba(39,174,96,0.12);
+    border-color: #27AE60;
+    color: #27AE60;
+    font-weight: 600;
+    pointer-events: none;
+  }
+  .quiz-option.wrong {
+    background: rgba(232,69,60,0.12);
+    border-color: #E8453C;
+    color: #E8453C;
+    font-weight: 600;
+    pointer-events: none;
+  }
+  .quiz-option.dimmed { opacity: 0.35; pointer-events: none; }
+  .quiz-feedback {
+    font-size: 14px;
+    font-family: 'Source Serif 4', serif;
+    line-height: 1.65;
+    padding: 18px;
+    border-radius: 10px;
+    display: none;
+    margin-bottom: 24px;
+  }
+  .quiz-feedback.visible { display: block; animation: slideDown 0.3s ease; }
+  @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+  .quiz-feedback.correct {
+    background: rgba(39,174,96,0.12);
+    color: #1a7a4c;
+    border-left: 4px solid #27AE60;
+  }
+  .quiz-feedback.wrong {
+    background: rgba(232,69,60,0.12);
+    color: #b53028;
+    border-left: 4px solid #E8453C;
+  }
+  .quiz-next-btn {
+    width: 100%;
+    padding: 16px 24px;
+    border-radius: 12px;
+    border: none;
+    background: #E8453C;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .quiz-next-btn:hover { background: #c73228; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(232,69,60,0.3); }
+
+  /* ── CTA Banner ── */
+  .learn-cta-banner {
+    background: #18181b;
+    border-radius: 24px;
+    padding: 60px;
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 60px;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+  }
+  .learn-cta-banner::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 260px; height: 260px;
+    background: rgba(232,69,60,0.15);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  @media (max-width: 860px) {
+    .learn-cta-banner { grid-template-columns: 1fr; padding: 48px 32px; }
+    .cta-banner-visual { display: none; }
+  }
+  .cta-banner-eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #E8453C;
+    margin-bottom: 14px;
+  }
+  .cta-banner-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 18px;
+    line-height: 1.15;
+  }
+  .cta-banner-body {
+    font-size: 17px;
+    color: rgba(255,255,255,0.65);
+    line-height: 1.7;
+    margin-bottom: 32px;
+    max-width: 460px;
+    font-family: 'Source Serif 4', serif;
+  }
+  .cta-banner-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+  .cta-btn-primary {
+    padding: 14px 28px;
+    border-radius: 12px;
+    background: #E8453C;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    font-family: 'Space Grotesk', sans-serif !important;
+    transition: all 0.2s;
+  }
+  .cta-btn-primary:hover { background: #c73228; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(199,50,40,0.4); text-decoration: none; color: #fff; }
+  .cta-btn-secondary {
+    padding: 14px 28px;
+    border-radius: 12px;
+    background: transparent;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    border: 2px solid rgba(255,255,255,0.2);
+    font-family: 'Space Grotesk', sans-serif !important;
+    transition: all 0.2s;
+  }
+  .cta-btn-secondary:hover { border-color: #fff; background: rgba(255,255,255,0.1); text-decoration: none; color: #fff; }
+  .cta-stat-stack { display: flex; flex-direction: column; gap: 28px; }
+  .cta-stat-item { text-align: right; }
+  .cta-stat-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 36px;
+    font-weight: 700;
+    color: #E8453C;
+    line-height: 1;
+  }
+  .cta-stat-lbl {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.45);
+    margin-top: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Dark Mode Nav & Footer fixes for Learn page ── */
+  html.dark .navbar { border-bottom: 1px solid rgba(255,255,255,0.08); }
+</style>
+{% endblock %}
 
 {% block body %}
-  <div class="page-container">
-    <div class="page-header animate-in">
-      <h1>How to Spot Fake News</h1>
-      <p>Misinformation spreads faster than truth. Use these techniques to identify and combat fake news.</p>
+<main class="learn-page-main">
+
+  <!-- ════════════════════════════════════════
+       SECTION 1: HERO
+       ════════════════════════════════════════ -->
+  <section class="learn-hero">
+    <div class="learn-eyebrow">
+      <span class="eyebrow-dot"></span>
+      Media Literacy Guide
+    </div>
+    <h1 class="learn-hero-title">
+      How to Spot<br>
+      <span class="title-accent">Fake News</span>
+    </h1>
+    <p class="learn-hero-subtitle">
+      Misinformation spreads faster than truth. 
+      Use these techniques to identify and combat 
+      fake news before sharing.
+    </p>
+
+    <div class="learn-stats-row">
+      <div class="learn-stat-pill">
+        <span class="stat-number">6</span>
+        <span class="stat-label">Detection Tips</span>
+      </div>
+      <div class="learn-stat-pill">
+        <span class="stat-number">6</span>
+        <span class="stat-label">Misinformation Types</span>
+      </div>
+      <div class="learn-stat-pill">
+        <span class="stat-number">6+</span>
+        <span class="stat-label">Fact-Check Resources</span>
+      </div>
+    </div>
+
+    <div class="read-progress-wrap">
+      <div class="read-progress-label">Reading progress</div>
+      <div class="read-progress-track">
+        <div class="read-progress-fill" id="read-progress-fill"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       SECTION 2: 6 TIPS GRID
+       ════════════════════════════════════════ -->
+  <section class="learn-section" id="tips-section">
+    <div class="learn-section-header">
+      <h2 class="learn-section-title">6 Ways to Detect Fake News</h2>
+      <p class="learn-section-subtitle">Apply these checks before sharing anything to ensure accuracy and prevent the spread of misinformation.</p>
     </div>
 
     <div class="tips-grid">
-      <div class="tip-card animate-in">
-        <div class="tip-icon">&#128270;</div>
-        <div class="tip-num">Tip 01</div>
-        <div class="tip-title">Check the Source</div>
-        <div class="tip-desc">Is it a known, credible outlet? Look for about pages, editorial policies, and author bylines. If you haven't heard of the source, use our <a href="/dashboard">credibility checker</a>.</div>
+      <!-- Tip 01 -->
+      <div class="tip-card">
+        <div class="tip-card-inner">
+          <div class="tip-header">
+            <div class="tip-icon-wrap" style="background:rgba(232,69,60,0.08)">🔍</div>
+            <span class="tip-number">01</span>
+          </div>
+          <h3 class="tip-title">Check the Source</h3>
+          <p class="tip-body">
+            Is it a known, credible outlet? Look for about pages, editorial policies, and author bylines. If you haven't heard of the source, use our 
+            <a href="/dashboard" class="tip-link">credibility checker</a>.
+          </p>
+          <div class="tip-footer"><span class="tip-tag">Source Verification</span></div>
+        </div>
       </div>
-      <div class="tip-card animate-in delay-1">
-        <div class="tip-icon">&#128196;</div>
-        <div class="tip-num">Tip 02</div>
-        <div class="tip-title">Verify with 2+ Sources</div>
-        <div class="tip-desc">Real news is reported by multiple outlets. If only one obscure site covers a story, be highly skeptical. Cross-check with Reuters, AP, or BBC.</div>
+
+      <!-- Tip 02 -->
+      <div class="tip-card">
+        <div class="tip-card-inner">
+          <div class="tip-header">
+            <div class="tip-icon-wrap" style="background:rgba(55,138,221,0.08)">📋</div>
+            <span class="tip-number">02</span>
+          </div>
+          <h3 class="tip-title">Verify with 2+ Sources</h3>
+          <p class="tip-body">
+            Real news is reported by multiple outlets. If only one obscure site covers a story, be highly skeptical. Cross-check with Reuters, AP, or BBC.
+          </p>
+          <div class="tip-footer"><span class="tip-tag">Cross-Referencing</span></div>
+        </div>
       </div>
-      <div class="tip-card animate-in delay-2">
-        <div class="tip-icon">&#9888;&#65039;</div>
-        <div class="tip-num">Tip 03</div>
-        <div class="tip-title">Watch for Sensational Headlines</div>
-        <div class="tip-desc">Real journalism rarely uses ALL CAPS, excessive exclamation marks, or emotionally manipulative language. Headlines designed to shock are red flags.</div>
+
+      <!-- Tip 03 -->
+      <div class="tip-card">
+        <div class="tip-card-inner">
+          <div class="tip-header">
+            <div class="tip-icon-wrap" style="background:rgba(239,159,39,0.1)">⚠️</div>
+            <span class="tip-number">03</span>
+          </div>
+          <h3 class="tip-title">Watch for Sensational Headlines</h3>
+          <p class="tip-body">
+            Real journalism rarely uses ALL CAPS, excessive exclamation marks, or emotionally manipulative language. Headlines designed to shock are red flags.
+          </p>
+          <div class="tip-footer"><span class="tip-tag">Headline Analysis</span></div>
+        </div>
       </div>
-      <div class="tip-card animate-in delay-3">
-        <div class="tip-icon">&#128197;</div>
-        <div class="tip-num">Tip 04</div>
-        <div class="tip-title">Check the Date</div>
-        <div class="tip-desc">Old news often recirculates as new, especially on WhatsApp. Always verify the original publication date before sharing or reacting.</div>
+
+      <!-- Tip 04 -->
+      <div class="tip-card">
+        <div class="tip-card-inner">
+          <div class="tip-header">
+            <div class="tip-icon-wrap" style="background:rgba(39,174,96,0.08)">📅</div>
+            <span class="tip-number">04</span>
+          </div>
+          <h3 class="tip-title">Check the Date</h3>
+          <p class="tip-body">
+            Old news often recirculates as new, especially on WhatsApp. Always verify the original publication date before sharing or reacting.
+          </p>
+          <div class="tip-footer"><span class="tip-tag">Date Verification</span></div>
+        </div>
       </div>
-      <div class="tip-card animate-in delay-4">
-        <div class="tip-icon">&#128247;</div>
-        <div class="tip-num">Tip 05</div>
-        <div class="tip-title">Reverse Image Search</div>
-        <div class="tip-desc">Photos and videos can be taken out of context. Use Google's reverse image search or TinEye to verify where an image originally appeared.</div>
+
+      <!-- Tip 05 -->
+      <div class="tip-card">
+        <div class="tip-card-inner">
+          <div class="tip-header">
+            <div class="tip-icon-wrap" style="background:rgba(127,119,221,0.08)">🖼️</div>
+            <span class="tip-number">05</span>
+          </div>
+          <h3 class="tip-title">Reverse Image Search</h3>
+          <p class="tip-body">
+            Photos and videos can be taken out of context. Use Google's reverse image search or TinEye to verify where an image originally appeared.
+          </p>
+          <div class="tip-footer"><span class="tip-tag">Image Verification</span></div>
+        </div>
       </div>
-      <div class="tip-card animate-in delay-4">
-        <div class="tip-icon">&#129300;</div>
-        <div class="tip-num">Tip 06</div>
-        <div class="tip-title">Check Your Own Bias</div>
-        <div class="tip-desc">We tend to believe news that supports our existing views. Before sharing, ask yourself: "Would I question this if it came from the other side?"</div>
+
+      <!-- Tip 06 -->
+      <div class="tip-card">
+        <div class="tip-card-inner">
+          <div class="tip-header">
+            <div class="tip-icon-wrap" style="background:rgba(216,90,48,0.08)">🤔</div>
+            <span class="tip-number">06</span>
+          </div>
+          <h3 class="tip-title">Check Your Own Bias</h3>
+          <p class="tip-body">
+            We tend to believe news that supports our existing views. Before sharing, ask yourself: "Would I question this if it came from the other side?"
+          </p>
+          <div class="tip-footer"><span class="tip-tag">Critical Thinking</span></div>
+        </div>
       </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       SECTION 3: TYPES OF MISINFORMATION
+       ════════════════════════════════════════ -->
+  <section class="learn-section">
+    <div class="learn-section-header">
+      <h2 class="learn-section-title">Types of Misinformation</h2>
+      <p class="learn-section-subtitle">Not all fake news is the same. Understanding these different categories helps you identify hidden agendas and manipulative patterns.</p>
     </div>
 
-    <div class="info-section animate-in">
-      <div class="info-card">
-        <h3>Types of Misinformation</h3>
-        <p>Not all fake news is the same. Understanding the different types helps identify them:</p>
-        <ul>
-          <li><strong>Fabricated Content</strong> — completely false stories invented for clicks or profit</li>
-          <li><strong>Manipulated Content</strong> — real stories distorted with misleading context or edited images</li>
-          <li><strong>Satire / Parody</strong> — humorous content that gets shared without the comedy context</li>
-          <li><strong>Misleading Headlines</strong> — clickbait titles that don't match the actual article content</li>
-          <li><strong>False Context</strong> — real photos or quotes used in the wrong context entirely</li>
-          <li><strong>Imposter Content</strong> — websites that mimic real news outlets to appear credible</li>
-        </ul>
+    <div class="misinfo-grid">
+      <!-- Item 1 -->
+      <div class="misinfo-card" style="--accent:#E8453C;--accent-bg:rgba(232,69,60,0.07)">
+        <div class="misinfo-icon">🚫</div>
+        <div class="misinfo-content">
+          <h4 class="misinfo-title">Fabricated Content</h4>
+          <p class="misinfo-desc">Completely false stories invented for clicks, profit, or malicious purposes.</p>
+        </div>
+        <div class="misinfo-severity">
+          <span class="severity-dot" style="background:#E8453C"></span>
+          <span class="severity-label">High Risk</span>
+        </div>
+      </div>
+
+      <!-- Item 2 -->
+      <div class="misinfo-card" style="--accent:#F5A623;--accent-bg:rgba(245,166,35,0.07)">
+        <div class="misinfo-icon">✂️</div>
+        <div class="misinfo-content">
+          <h4 class="misinfo-title">Manipulated Content</h4>
+          <p class="misinfo-desc">Real stories or imagery distorted with misleading context or edited elements.</p>
+        </div>
+        <div class="misinfo-severity">
+          <span class="severity-dot" style="background:#F5A623"></span>
+          <span class="severity-label">High Risk</span>
+        </div>
+      </div>
+
+      <!-- Item 3 -->
+      <div class="misinfo-card" style="--accent:#4A90D9;--accent-bg:rgba(74,144,217,0.07)">
+        <div class="misinfo-icon">🎭</div>
+        <div class="misinfo-content">
+          <h4 class="misinfo-title">Satire / Parody</h4>
+          <p class="misinfo-desc">Humorous content that gets shared as fact when the comedy context is removed.</p>
+        </div>
+        <div class="misinfo-severity">
+          <span class="severity-dot" style="background:#4A90D9"></span>
+          <span class="severity-label">Medium Risk</span>
+        </div>
+      </div>
+
+      <!-- Item 4 -->
+      <div class="misinfo-card" style="--accent:#7F77DD;--accent-bg:rgba(127,119,221,0.07)">
+        <div class="misinfo-icon">📰</div>
+        <div class="misinfo-content">
+          <h4 class="misinfo-title">Misleading Headlines</h4>
+          <p class="misinfo-desc">Clickbait titles that don't match or accurately represent the actual article content.</p>
+        </div>
+        <div class="misinfo-severity">
+          <span class="severity-dot" style="background:#7F77DD"></span>
+          <span class="severity-label">High Risk</span>
+        </div>
+      </div>
+
+      <!-- Item 5 -->
+      <div class="misinfo-card" style="--accent:#27AE60;--accent-bg:rgba(39,174,96,0.07)">
+        <div class="misinfo-icon">📸</div>
+        <div class="misinfo-content">
+          <h4 class="misinfo-title">False Context</h4>
+          <p class="misinfo-desc">Real photos, videos, or quotes used in the wrong context to support a false claim.</p>
+        </div>
+        <div class="misinfo-severity">
+          <span class="severity-dot" style="background:#27AE60"></span>
+          <span class="severity-label">Medium Risk</span>
+        </div>
+      </div>
+
+      <!-- Item 6 -->
+      <div class="misinfo-card" style="--accent:#D85A30;--accent-bg:rgba(216,90,48,0.07)">
+        <div class="misinfo-icon">🕵️</div>
+        <div class="misinfo-content">
+          <h4 class="misinfo-title">Imposter Content</h4>
+          <p class="misinfo-desc">Websites or social accounts that mimic real news outlets to gain unearned credibility.</p>
+        </div>
+        <div class="misinfo-severity">
+          <span class="severity-dot" style="background:#D85A30"></span>
+          <span class="severity-label">Critical</span>
+        </div>
       </div>
     </div>
+  </section>
 
-    <div class="info-section animate-in">
-      <div class="info-card">
-        <h3>Fact-Checking Resources</h3>
-        <p>These organizations verify claims and debunk misinformation professionally:</p>
-        <ul>
-          <li><strong>Snopes</strong> (snopes.com) — world's oldest and largest fact-checking site</li>
-          <li><strong>AltNews</strong> (altnews.in) — India-focused fact-checking in English and Hindi</li>
-          <li><strong>BOOM Live</strong> (boomlive.in) — independent Indian digital journalism initiative</li>
-          <li><strong>PolitiFact</strong> (politifact.com) — US political fact-checking with a "Truth-O-Meter"</li>
-          <li><strong>Full Fact</strong> (fullfact.org) — UK's independent fact checking charity</li>
-          <li><strong>AFP Fact Check</strong> (factcheck.afp.com) — global multilingual fact-checking</li>
-        </ul>
+  <!-- ════════════════════════════════════════
+       SECTION 4: FACT-CHECKING RESOURCES
+       ════════════════════════════════════════ -->
+  <section class="learn-section">
+    <div class="learn-section-header">
+      <h2 class="learn-section-title">Fact-Checking Resources</h2>
+      <p class="learn-section-subtitle">These organizations verify claims and debunk misinformation professionally. Bookmark these for personal verification.</p>
+    </div>
+
+    <div class="resources-grid">
+      <!-- Snopes -->
+      <a href="https://snopes.com" target="_blank" class="resource-card">
+        <div class="resource-header">
+          <div class="resource-initial" style="background:#E8453C">S</div>
+          <div class="resource-globe">↗</div>
+        </div>
+        <div class="resource-name">Snopes</div>
+        <div class="resource-url">snopes.com</div>
+        <div class="resource-desc">World's oldest and largest independent fact-checking site covering viral claims.</div>
+        <div class="resource-tag">Global</div>
+      </a>
+
+      <!-- AltNews -->
+      <a href="https://altnews.in" target="_blank" class="resource-card">
+        <div class="resource-header">
+          <div class="resource-initial" style="background:#FF6B35">A</div>
+          <div class="resource-globe">↗</div>
+        </div>
+        <div class="resource-name">AltNews</div>
+        <div class="resource-url">altnews.in</div>
+        <div class="resource-desc">Leading India-focused fact-checking organisation debunking social media fake news.</div>
+        <div class="resource-tag">India</div>
+      </a>
+
+      <!-- BOOM -->
+      <a href="https://boomlive.in" target="_blank" class="resource-card">
+        <div class="resource-header">
+          <div class="resource-initial" style="background:#4A90D9">B</div>
+          <div class="resource-globe">↗</div>
+        </div>
+        <div class="resource-name">BOOM Live</div>
+        <div class="resource-url">boomlive.in</div>
+        <div class="resource-desc">Independent Indian digital journalism initiative debunking misinformation daily.</div>
+        <div class="resource-tag">India</div>
+      </a>
+
+      <!-- PolitiFact -->
+      <a href="https://politifact.com" target="_blank" class="resource-card">
+        <div class="resource-header">
+          <div class="resource-initial" style="background:#27AE60">P</div>
+          <div class="resource-globe">↗</div>
+        </div>
+        <div class="resource-name">PolitiFact</div>
+        <div class="resource-url">politifact.com</div>
+        <div class="resource-desc">US-based political fact-checking with the famous "Truth-O-Meter" and transparency.</div>
+        <div class="resource-tag">USA</div>
+      </a>
+
+      <!-- Full Fact -->
+      <a href="https://fullfact.org" target="_blank" class="resource-card">
+        <div class="resource-header">
+          <div class="resource-initial" style="background:#7F77DD">F</div>
+          <div class="resource-globe">↗</div>
+        </div>
+        <div class="resource-name">Full Fact</div>
+        <div class="resource-url">fullfact.org</div>
+        <div class="resource-desc">The UK's independent fact-checking charity focusing on government and major reporting.</div>
+        <div class="resource-tag">UK</div>
+      </a>
+
+      <!-- AFP -->
+      <a href="https://factcheck.afp.com" target="_blank" class="resource-card">
+        <div class="resource-header">
+          <div class="resource-initial" style="background:#D85A30">AFP</div>
+          <div class="resource-globe">↗</div>
+        </div>
+        <div class="resource-name">AFP Fact Check</div>
+        <div class="resource-url">factcheck.afp.com</div>
+        <div class="resource-desc">Global multilingual fact-checking team from Agence France-Presse (AFP).</div>
+        <div class="resource-tag">Global</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       SECTION 5: INTERACTIVE QUIZ
+       ════════════════════════════════════════ -->
+  <section class="learn-section">
+    <div class="learn-section-header">
+      <h2 class="learn-section-title">Test Your Skills</h2>
+      <p class="learn-section-subtitle">Can you spot fake news in the wild? Take this quick quiz to find out if you're a media literacy expert.</p>
+    </div>
+
+    <div class="quiz-card" id="quiz-card">
+      <div class="quiz-top">
+        <span class="quiz-counter" id="quiz-counter">Question 1 of 5</span>
+        <div class="quiz-progress-track">
+          <div class="quiz-progress-fill" id="quiz-progress-fill" style="width:20%"></div>
+        </div>
+        <span class="quiz-score-display" id="quiz-score-display">Score: 0</span>
+      </div>
+      <div class="quiz-question" id="quiz-question">Loading question...</div>
+      <div class="quiz-options" id="quiz-options"></div>
+      <div class="quiz-feedback" id="quiz-feedback"></div>
+      <button class="quiz-next-btn" id="quiz-next-btn" style="display:none" onclick="quizNext()">Next Question →</button>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       SECTION 6: CTA BANNER
+       ════════════════════════════════════════ -->
+  <section class="learn-section">
+    <div class="learn-cta-banner" id="bottom-cta">
+      <div class="cta-banner-content">
+        <div class="cta-banner-eyebrow">Ready to fact-check?</div>
+        <h2 class="cta-banner-title">Verify Any Claim in Seconds</h2>
+        <p class="cta-banner-body">
+          Paste any claim, headline, or article link and our AI will fact-check it against live web sources, checking credibility and context in real-time.
+        </p>
+        <div class="cta-banner-actions">
+          <a href="/" class="cta-btn-primary">🔍 Try the Detector</a>
+          <a href="/dashboard" class="cta-btn-secondary">📊 View Dashboard</a>
+        </div>
+      </div>
+      <div class="cta-banner-visual">
+        <div class="cta-stat-stack">
+          <div class="cta-stat-item">
+            <div class="cta-stat-num">94%</div>
+            <div class="cta-stat-lbl">Detection Accuracy</div>
+          </div>
+          <div class="cta-stat-item">
+            <div class="cta-stat-num">&lt;3s</div>
+            <div class="cta-stat-lbl">Analysis Speed</div>
+          </div>
+          <div class="cta-stat-item">
+            <div class="cta-stat-num">3</div>
+            <div class="cta-stat-lbl">Languages Supported</div>
+          </div>
+        </div>
       </div>
     </div>
+  </section>
 
-    <div class="cta-box animate-in">
-      <h3>Ready to verify something?</h3>
-      <p>Paste any claim, headline, or article link and our AI will fact-check it against live web sources in seconds.</p>
-      <a href="/">&#128269; Try the Detector</a>
-    </div>
-  </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  /* ── Reading Progress Logic ── */
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrollTop = doc.scrollTop || document.body.scrollTop;
+    const scrollHeight = doc.scrollHeight - doc.clientHeight;
+    const pct = Math.round((scrollTop / scrollHeight) * 100);
+    const fill = document.getElementById('read-progress-fill');
+    if (fill) fill.style.width = pct + '%';
+  });
+
+  /* ── Test Your Skills Quiz ── */
+  const QUIZ_DATA = [
+    {
+      q: 'A WhatsApp message claims "Eating raw garlic daily prevents cancer." What is your first step?',
+      options: [
+        'Share it immediately — it sounds helpful',
+        'Check WHO or government health websites first',
+        'Forward it to 10 friends to warn them',
+        'Believe it since garlic is healthy'
+      ],
+      correct: 1,
+      explanation: '✓ Always verify health claims on official sources like WHO, CDC, or your government health ministry before sharing or believing them.'
+    },
+    {
+      q: 'Which headline is most likely fake news?',
+      options: [
+        '"Government announces new tax policy for 2025"',
+        '"SHOCKING!! Doctors HATE this one simple trick"',
+        '"Stock market closes up 0.3% today"',
+        '"Local council approves road construction plan"'
+      ],
+      correct: 1,
+      explanation: '✓ ALL CAPS words like "SHOCKING" and phrases like "HATE this one trick" are classic emotional manipulation tactics used in fake news headlines.'
+    },
+    {
+      q: 'A news article has no author name and no publication date. This means:',
+      options: [
+        'The author wants to stay anonymous — perfectly fine',
+        'It might be outdated or fabricated — verify carefully',
+        'It is definitely 100% fake news',
+        'Anonymous articles are actually more trustworthy'
+      ],
+      correct: 1,
+      explanation: '✓ Missing author names and publication dates are major credibility red flags. Legitimate journalism always includes these details for accountability.'
+    },
+    {
+      q: 'You see a viral photo claimed to show a recent disaster in India. Best first step?',
+      options: [
+        'Share immediately to raise awareness',
+        'Reverse image search to check the original source',
+        'Trust it since it has thousands of shares',
+        'Check if the photo looks realistic'
+      ],
+      correct: 1,
+      explanation: '✓ Reverse image search (Google Images or TinEye) can reveal if a photo is from a different event, a different year, or is digitally altered.'
+    },
+    {
+      q: 'A story is only covered by one website you have never heard of. You should:',
+      options: [
+        'Trust it — exclusive news is valuable',
+        'Be skeptical and cross-check with Reuters or BBC',
+        'Share it — you found the story first',
+        'The site design looks professional so it must be real'
+      ],
+      correct: 1,
+      explanation: '✓ Real news is reported by multiple credible outlets. A story covered only by one unknown site is a major red flag — always cross-reference.'
+    }
+  ];
+
+  let quizCurrent = 0;
+  let quizScore   = 0;
+  let quizAnswered = false;
+
+  function quizRender() {
+    const card = document.getElementById('quiz-card');
+    if (!card) return;
+    
+    if (quizCurrent >= QUIZ_DATA.length) {
+      quizShowResult(); return;
+    }
+    const q = QUIZ_DATA[quizCurrent];
+    const pct = ((quizCurrent + 1) / QUIZ_DATA.length) * 100;
+
+    const counter = document.getElementById('quiz-counter');
+    const fill = document.getElementById('quiz-progress-fill');
+    const scoreDisp = document.getElementById('quiz-score-display');
+    const question = document.getElementById('quiz-question');
+    const options = document.getElementById('quiz-options');
+    const fb = document.getElementById('quiz-feedback');
+    const nextBtn = document.getElementById('quiz-next-btn');
+
+    if (counter) counter.textContent = `Question ${quizCurrent + 1} of ${QUIZ_DATA.length}`;
+    if (fill) fill.style.width = pct + '%';
+    if (scoreDisp) scoreDisp.textContent = `Score: ${quizScore}`;
+    if (question) question.textContent = q.q;
+
+    if (options) {
+      options.innerHTML = q.options.map((opt, i) => `
+        <button class="quiz-option" data-index="${i}" onclick="quizAnswer(${i})">${opt}</button>
+      `).join('');
+    }
+
+    if (fb) {
+      fb.className = 'quiz-feedback';
+      fb.textContent = '';
+    }
+
+    if (nextBtn) nextBtn.style.display = 'none';
+    quizAnswered = false;
+  }
+
+  function quizAnswer(chosen) {
+    if (quizAnswered) return;
+    quizAnswered = true;
+    const q = QUIZ_DATA[quizCurrent];
+    const correct = chosen === q.correct;
+    if (correct) quizScore++;
+
+    document.querySelectorAll('.quiz-option').forEach((btn, i) => {
+      if (i === q.correct) btn.classList.add('correct');
+      else if (i === chosen && !correct) btn.classList.add('wrong');
+      else btn.classList.add('dimmed');
+    });
+
+    const fb = document.getElementById('quiz-feedback');
+    if (fb) {
+      fb.textContent = q.explanation;
+      fb.className = 'quiz-feedback visible ' + (correct ? 'correct' : 'wrong');
+    }
+
+    const nextBtn = document.getElementById('quiz-next-btn');
+    if (nextBtn) {
+      nextBtn.style.display = 'block';
+      nextBtn.textContent = quizCurrent < QUIZ_DATA.length - 1 ? 'Next Question →' : 'See My Results →';
+    }
+  }
+
+  function quizNext() {
+    quizCurrent++;
+    quizRender();
+  }
+
+  function quizShowResult() {
+    const pct = Math.round((quizScore / QUIZ_DATA.length) * 100);
+    const emoji = pct >= 80 ? '🏆' : pct >= 60 ? '👍' : '📚';
+    const msg = pct >= 80 ? 'Excellent! You are a Fact-Checking Pro!' : pct >= 60 ? 'Good job! Keep practicing your media literacy.' : 'Keep learning — misinformation is tricky!';
+
+    const card = document.getElementById('quiz-card');
+    if (card) {
+      card.innerHTML = `
+        <div style="text-align:center;padding:20px 0">
+          <div style="font-size:62px;margin-bottom:20px">${emoji}</div>
+          <div style="font-family:'DM Mono',monospace; font-size:42px; font-weight:700; color:#E8453C; margin-bottom:12px">${quizScore}/${QUIZ_DATA.length}</div>
+          <div style="font-family:'Playfair Display',serif; font-size:24px; font-weight:700; color:var(--navy); margin-bottom:12px">${msg}</div>
+          <div style="font-size:16px; color:var(--text-muted); margin-bottom:32px">You scored ${pct}% on the Fake News Awareness Quiz</div>
+          <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap">
+            <button onclick="quizRestart()" style="padding:14px 28px; border-radius:12px; border:none; background:#E8453C; color:#fff; font-size:15px; font-weight:700; cursor:pointer; font-family:'Space Grotesk',sans-serif">Try Again</button>
+            <a href="/" style="padding:14px 28px; border-radius:12px; border:1px solid var(--learn-card-border); background:var(--bg-page); color:var(--navy); font-size:15px; font-weight:700; cursor:pointer; text-decoration:none; font-family:'Space Grotesk',sans-serif; display:inline-block">Check Real News →</a>
+          </div>
+        </div>`;
+    }
+  }
+
+  function quizRestart() {
+    location.reload();
+  }
+
+  /* ── Scroll Entrance Animations ── */
+  const scrollObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+        scrollObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    quizRender();
+    
+    document.querySelectorAll('.tip-card, .misinfo-card, .resource-card, .learn-section-header, .quiz-card, .learn-cta-banner').forEach((el, i) => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(30px)';
+      el.style.transition = `opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${i * 60}ms, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${i * 60}ms`;
+      scrollObserver.observe(el);
+    });
+  });
+</script>
 {% endblock %}

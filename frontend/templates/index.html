@@ -10,15 +10,15 @@
   <div class="page-container">
     <!-- Stats Bar -->
     <div class="stats-bar animate-in">
-      <div class="stat-card" style="border-left-color:var(--red)">
+      <div class="stat-card" style="border-left-color:var(--red);">
         <div class="stat-value">152</div>
         <div class="stat-label">Fake news detected today</div>
       </div>
-      <div class="stat-card delay-1" style="border-left-color:var(--amber)">
+      <div class="stat-card delay-1" style="border-left-color:var(--amber);">
         <div class="stat-value">Health</div>
         <div class="stat-label">Most targeted category</div>
       </div>
-      <div class="stat-card delay-2" style="border-left-color:var(--navy)">
+      <div class="stat-card delay-2" style="border-left-color:var(--navy);">
         <div class="stat-value">WhatsApp</div>
         <div class="stat-label">Top platform</div>
       </div>
@@ -64,7 +64,7 @@
           <input class="form-input" type="text" name="url" id="url-input" placeholder="https://www.bbc.com/news/..." />
           <p class="hint">The article will be scraped and analysed automatically.</p>
         </div>
-        <button type="submit" class="btn-primary" style="width:100%;margin-top:18px;padding:14px" id="submit-btn">Verify This</button>
+        <button type="submit" class="btn-primary" style="width:100%;margin-top:18px;padding:14px;" id="submit-btn">Verify This</button>
       </form>
 
       {% if error %}
@@ -86,8 +86,8 @@
           </div>
         </div>
         <div class="bars">
-          <div class="bar-row"><span class="bar-name">Fake</span><div class="bar-track"><div class="bar-fill fake" style="width:{{ fake_prob }}%"></div></div><span class="bar-pct" style="color:var(--red)">{{ fake_prob }}%</span></div>
-          <div class="bar-row"><span class="bar-name">Real</span><div class="bar-track"><div class="bar-fill real" style="width:{{ real_prob }}%"></div></div><span class="bar-pct" style="color:var(--green)">{{ real_prob }}%</span></div>
+          <div class="bar-row"><span class="bar-name">Fake</span><div class="bar-track"><div class="bar-fill fake" style="width:{{ fake_prob }}%;"></div></div><span class="bar-pct" style="color:var(--red);">{{ fake_prob }}%</span></div>
+          <div class="bar-row"><span class="bar-name">Real</span><div class="bar-track"><div class="bar-fill real" style="width:{{ real_prob }}%;"></div></div><span class="bar-pct" style="color:var(--green);">{{ real_prob }}%</span></div>
         </div>
         <div class="meta-row">
           <span class="meta-tag">{{ verification_method }}</span>
