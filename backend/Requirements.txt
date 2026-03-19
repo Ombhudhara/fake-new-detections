@@ -12,4 +12,5 @@ langdetect
 ddgs
 groq
 python-dotenv
+flask-cors
 gunicorn

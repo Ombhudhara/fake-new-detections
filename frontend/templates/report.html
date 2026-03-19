@@ -2,64 +2,7 @@
 {% block title %}Report Suspicious News — Fake News Detector{% endblock %}
 {% block meta_desc %}Report suspicious news links and help us fight misinformation.{% endblock %}
 
-{% block extra_css %}
-    .report-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:36px;box-shadow:var(--card-shadow);max-width:640px}
-    .report-card .field{margin-bottom:20px}
-    .report-error{color:var(--red);font-size:13px;margin-top:8px;display:none;padding:10px 14px;background:var(--red-bg);border-radius:6px;border:1px solid rgba(192,57,43,.15)}
-    .report-success{background:var(--green-bg);border:1px solid rgba(26,122,76,.2);border-radius:var(--radius);padding:32px;color:var(--green);text-align:center;display:none;animation:fadeUp .4s ease}
-    .report-success .success-icon{font-size:48px;margin-bottom:12px}
-    .report-success h3{font-family:'Merriweather',serif;font-size:20px;margin-bottom:8px;color:var(--green)}
-    .report-success p{font-size:14px;color:var(--text-secondary);max-width:400px;margin:0 auto}
-    .report-guidelines{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;box-shadow:var(--card-shadow);margin-top:32px;max-width:640px}
-    .report-guidelines h3{font-family:'Merriweather',serif;font-size:16px;color:var(--navy);margin-bottom:14px}
-    .report-guidelines ul{margin-left:18px}
-    .report-guidelines li{font-size:14px;color:var(--text-secondary);line-height:1.8;margin-bottom:4px}
-    .category-select{
-      width:100%;
-      background-color:#faf8f4;
-      border:1px solid var(--border);
-      border-radius:8px;
-      color:var(--text);
-      font-family:'Source Sans 3',sans-serif;
-      font-size:14px;
-      padding:12px 40px 12px 16px;
-      outline:none;
-      cursor:pointer;
-      transition:all var(--transition);
-      appearance:none;
-      -webkit-appearance:none;
-      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b6b6b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-      background-repeat:no-repeat;
-      background-position:right 14px center;
-      background-size:14px 14px;
-    }
-    .category-select:hover{border-color:var(--border-dark)}
-    .category-select:focus{border-color:var(--navy);background-color:#fff;box-shadow:0 0 0 3px rgba(26,26,46,.08)}
-    @media(max-width:600px){.report-card{padding:24px}.report-guidelines{padding:20px}}
-
-    /* ── Report Dark Mode ── */
-    html.dark .report-card{background:var(--surface);border-color:var(--border)}
-    html.dark .category-select{
-      background-color:#151520;
-      border-color:var(--border);
-      color:var(--text);
-      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239090a8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-      background-repeat:no-repeat;
-      background-position:right 14px center;
-      background-size:14px 14px;
-    }
-    html.dark .category-select:hover{border-color:#5566aa}
-    html.dark .category-select:focus{background-color:#1a1a28;border-color:#5566aa;box-shadow:0 0 0 3px rgba(85,102,170,.15)}
-    html.dark .category-select option{background:#1a1a28;color:var(--text)}
-    html.dark .report-error{background:var(--red-bg);border-color:rgba(255,107,107,.2);color:var(--red)}
-    html.dark .report-success{background:var(--green-bg);border-color:rgba(74,222,128,.2)}
-    html.dark .report-success h3{color:var(--green)}
-    html.dark .report-success p{color:var(--text-secondary)}
-    html.dark .report-guidelines{background:var(--surface);border-color:var(--border)}
-    html.dark .report-guidelines h3{color:var(--text)}
-    html.dark .report-guidelines li{color:var(--text-secondary)}
-    html.dark .report-guidelines li strong{color:var(--text)}
-{% endblock %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}">
 
 {% block body %}
   <div class="page-container">
@@ -116,17 +59,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-  function submitReport(evt){
-    evt.preventDefault();
-    var link=document.getElementById('report-link').value.trim();
-    var errEl=document.getElementById('report-error');
-    if(!link){errEl.textContent='Please paste a link to the suspicious news article.';errEl.style.display='block';return}
-    if(!link.match(/^https?:\/\/.+\..+/)){errEl.textContent='Please enter a valid URL starting with http:// or https://';errEl.style.display='block';return}
-    errEl.style.display='none';
-    document.getElementById('report-form-container').style.display='none';
-    document.getElementById('report-success').style.display='block';
-    document.querySelector('.report-guidelines').style.display='none';
-  }
-</script>
+<script src="{{ url_for('static', filename='js/report.js') }}"></script>
 {% endblock %}

@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
 import pickle
 import requests
 from bs4 import BeautifulSoup
@@ -14,6 +15,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/static')
+CORS(app)
 
 # Resolve paths relative to this file so the app works regardless of the current working directory.
 from pathlib import Path
@@ -455,6 +457,11 @@ def report_page():
     return render_template("report.html", active_page="report")
 
 
+@app.route("/analytics")
+def analytics_page():
+    return render_template("analytics.html", active_page="analytics")
+
+
 @app.route("/predict", methods=["POST"])
 def predict():
     news = request.form.get("news", "").strip()
@@ -730,6 +737,121 @@ def api_trending():
 
     random.shuffle(rows)
     return jsonify(rows[:8])
+# ── API: Live Misinformation Feed ──────────────────────────
+@app.route('/api/live-feed', methods=['POST'])
+def live_feed():
+    try:
+        data = request.get_json()
+        
+        country   = data.get('country',   'worldwide')
+        state     = data.get('state',      'all')
+        source    = data.get('source',     'all')
+        category  = data.get('category',   'all')
+        time_range = data.get('timeRange', '7days')
+        
+        prompt = f"""Generate 6 realistic fake news 
+headlines currently spreading with these filters:
+Country: {country}
+State/Region: {state}
+Platform: {source}
+Category: {category}
+Time range: {time_range}
+
+Return ONLY a valid JSON array. No markdown. 
+No explanation. No code blocks.
+Each object must have exactly these keys:
+{{
+  "headline": "realistic fake news headline",
+  "source": "fake website or WhatsApp group name",
+  "platform": "WhatsApp|Facebook|Twitter|Telegram|Instagram",
+  "fakeScore": number between 65 and 98,
+  "category": "Health|Politics|Finance|Technology|Local",
+  "location": "city or region name matching the country/state",
+  "shareCount": number between 1000 and 500000,
+  "timeAgo": "X min ago or X hr ago",
+  "credibilityReason": "one sentence explaining why it is fake"
+}}
+
+Make headlines specific to {country} 
+{"and " + state if state != "all" else ""}.
+Use local context, local politicians, local health issues,
+local platforms popular in that region.
+If country is India: use Indian names, rupees, Indian context.
+If country is USA: use American context, dollars.
+Etc."""
+
+        # Use Groq (Llama 3 70B)
+        completion = groq_client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a fake news monitoring system. You generate realistic examples of misinformation for research and detection training. Always respond with valid JSON only."
+                },
+                {
+                    "role": "user", 
+                    "content": prompt
+                }
+            ],
+            temperature=0.8,
+            max_tokens=1500
+        )
+        
+        response_text = completion.choices[0].message.content
+        
+        # Clean response — remove any markdown if Groq adds it
+        response_text = response_text.strip()
+        if response_text.startswith('```'):
+            parts = response_text.split('```')
+            if len(parts) > 1:
+                response_text = parts[1]
+                if response_text.startswith('json'):
+                    response_text = response_text[4:]
+        response_text = response_text.strip()
+        
+        # Parse and validate JSON
+        items = json.loads(response_text)
+        
+        # Ensure it's a list
+        if not isinstance(items, list):
+            raise ValueError("Response is not a JSON array")
+        
+        # Validate each item has required fields
+        required_keys = ['headline','source','platform',
+                         'fakeScore','category','location',
+                         'shareCount','timeAgo',
+                         'credibilityReason']
+        for item in items:
+            for key in required_keys:
+                if key not in item:
+                    item[key] = 'Unknown'
+        
+        return jsonify({
+            'success': True,
+            'items': items,
+            'filters': {
+                'country': country,
+                'state': state,
+                'source': source,
+                'category': category
+            }
+        })
+        
+    except json.JSONDecodeError as e:
+        app.logger.error(f"JSON parse error: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'parse_error',
+            'message': 'AI response could not be parsed'
+        }), 500
+        
+    except Exception as e:
+        app.logger.error(f"Live feed error: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'server_error',
+            'message': str(e)
+        }), 500
 
 
 if __name__ == "__main__":

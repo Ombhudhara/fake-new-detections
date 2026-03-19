@@ -6,202 +6,8 @@
   <title>{% block title %}Fake News Detector{% endblock %}</title>
   <meta name="description" content="{% block meta_desc %}Detect fake news using AI and live web verification.{% endblock %}" />
   <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #f5f0e8;
-      --surface: #ffffff;
-      --card-shadow: 0 2px 16px rgba(0,0,0,0.07);
-      --card-shadow-hover: 0 8px 32px rgba(0,0,0,0.12);
-      --border: #e0d8c8;
-      --border-dark: #c4b89c;
-      --red: #c0392b;
-      --red-bg: #fdf2f0;
-      --green: #1a7a4c;
-      --green-bg: #edf7f0;
-      --amber: #b8860b;
-      --amber-bg: #fef9ec;
-      --navy: #1a1a2e;
-      --navy-light: #2d2d4e;
-      --text: #2c2c2c;
-      --text-secondary: #6b6b6b;
-      --link: #2a5db0;
-      --radius: 10px;
-      --transition: 0.25s cubic-bezier(.4,0,.2,1);
-    }
-    /* ── Dark Mode ── */
-    html.dark{--bg:#0f0f17;--surface:#1a1a28;--card-shadow:0 2px 20px rgba(0,0,0,.4);--card-shadow-hover:0 8px 36px rgba(0,0,0,.55);--border:#2a2a3e;--border-dark:#3a3a52;--red:#ff6b6b;--red-bg:rgba(255,107,107,.1);--green:#4ade80;--green-bg:rgba(74,222,128,.1);--amber:#fbbf24;--amber-bg:rgba(251,191,36,.1);--navy:#d4d8f0;--navy-light:#a8aed0;--text:#e8e8f0;--text-secondary:#9090a8;--link:#6db3f2}
-    html.dark .navbar{background:rgba(15,15,23,.88);border-bottom-color:rgba(255,255,255,.06)}
-    html.dark .navbar.scrolled{box-shadow:0 2px 24px rgba(0,0,0,.4)}
-    html.dark .navbar-brand{color:var(--text)}
-    html.dark .navbar-links a{color:var(--text-secondary)}
-    html.dark .navbar-links a:hover{color:var(--text);background:rgba(255,255,255,.06)}
-    html.dark .navbar-links a.active{color:#fff;background:rgba(255,255,255,.1)}
-    html.dark .form-input,html.dark .form-textarea{background:#151520;border-color:var(--border);color:var(--text)}
-    html.dark .form-input::placeholder,html.dark .form-textarea::placeholder{color:#606078}
-    html.dark .form-input:focus,html.dark .form-textarea:focus{background:#1a1a28;border-color:#5566aa;box-shadow:0 0 0 3px rgba(85,102,170,.15)}
-    html.dark .btn-primary{background:#4050a0;color:#fff}
-    html.dark .btn-primary:hover{background:#5060b0;box-shadow:0 4px 16px rgba(64,80,160,.3)}
-    html.dark .btn-secondary{background:var(--surface);color:var(--text-secondary);border-color:var(--border)}
-    html.dark .btn-secondary:hover{border-color:#5566aa;color:var(--text);background:rgba(255,255,255,.04)}
-    html.dark .site-footer{background:#08080f}
-    html.dark .footer-bottom{border-top-color:rgba(255,255,255,.06)}
-    html.dark .footer-brand .brand-desc{color:rgba(255,255,255,.45)}
-    html.dark .pill-muted{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.08);color:var(--text-secondary)}
-    html.dark .pill-red{background:var(--red-bg);color:var(--red);border-color:rgba(255,107,107,.2)}
-    html.dark .pill-green{background:var(--green-bg);color:var(--green);border-color:rgba(74,222,128,.2)}
-    html.dark .pill-amber{background:var(--amber-bg);color:var(--amber);border-color:rgba(251,191,36,.2)}
-    html.dark .brand-logo{filter:brightness(1.15) contrast(1.05)}
-    html.dark .hamburger{border-color:var(--border);color:var(--text)}
-    html.dark .page-header h1{color:var(--text)}
-    html.dark .section-heading{color:var(--text)}
-    html.dark .section-divider{border-top-color:var(--border)}
-    html.dark a{color:var(--link)}
-    html.dark ::selection{background:rgba(64,80,160,.4);color:#fff}
-    html.dark ::-webkit-scrollbar{width:8px;height:8px}
-    html.dark ::-webkit-scrollbar-track{background:#0f0f17}
-    html.dark ::-webkit-scrollbar-thumb{background:#2a2a3e;border-radius:4px}
-    html.dark ::-webkit-scrollbar-thumb:hover{background:#3a3a52}
-    *{margin:0;padding:0;box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{background:var(--bg);color:var(--text);font-family:'Source Sans 3','Segoe UI',sans-serif;min-height:100vh;display:flex;flex-direction:column;line-height:1.6;transition:background .3s,color .3s}
-
-    /* ── Navbar ── */
-    .navbar{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:58px;transition:box-shadow var(--transition),background var(--transition)}
-    /* ── Day / Night Mode Toggle Pill ── */
-    .dark-toggle{
-      display:inline-flex;align-items:center;gap:0;
-      height:40px;border-radius:40px;padding:0;
-      cursor:pointer;border:none;outline:none;
-      background:#e5e5e5;
-      box-shadow:0 2px 8px rgba(0,0,0,.15);
-      overflow:hidden;
-      position:relative;
-      flex-shrink:0;
-      margin-left:10px;
-      transition:background var(--transition);
-      width:158px;
-    }
-    /* text side */
-    .dark-toggle .dt-label{
-      display:flex;align-items:center;justify-content:center;
-      flex:1;height:100%;
-      font-size:11px;font-weight:800;letter-spacing:.7px;
-      font-family:'Source Sans 3',sans-serif;
-      color:#222;
-      padding:0 12px;
-      transition:color var(--transition);
-      user-select:none;
-    }
-    /* icon knob */
-    .dark-toggle .dt-knob{
-      display:flex;align-items:center;justify-content:center;
-      width:40px;height:40px;
-      border-radius:50%;
-      background:#fff;
-      box-shadow:0 2px 6px rgba(0,0,0,.25);
-      flex-shrink:0;
-      transition:all var(--transition);
-      position:relative;
-    }
-    .dark-toggle .dt-knob svg{
-      width:22px;height:22px;
-      transition:opacity var(--transition),transform var(--transition);
-    }
-    .dark-toggle .sun-icon{opacity:1;position:absolute;transform:scale(1)}
-    .dark-toggle .moon-icon{opacity:0;position:absolute;transform:scale(0.7)}
-
-    /* — Dark mode state — */
-    html.dark .dark-toggle{
-      background:#1a1a2e;
-      flex-direction:row-reverse;
-    }
-    html.dark .dark-toggle .dt-label{color:#e8e8f0}
-    html.dark .dark-toggle .dt-knob{background:#0f0f17;box-shadow:0 2px 6px rgba(0,0,0,.5)}
-    html.dark .dark-toggle .sun-icon{opacity:0;transform:scale(0.7)}
-    html.dark .dark-toggle .moon-icon{opacity:1;transform:scale(1)}
-    .navbar.scrolled{box-shadow:0 2px 20px rgba(0,0,0,.08)}
-    .navbar-brand{font-family:'Merriweather',Georgia,serif;font-weight:900;font-size:18px;color:var(--navy);text-decoration:none;display:flex;align-items:center;gap:10px}
-    .navbar-brand .brand-logo{height:32px;width:auto;border-radius:6px;object-fit:contain}
-    .navbar-links{display:flex;gap:6px;list-style:none;align-items:center}
-    .navbar-links a{font-size:14px;font-weight:500;color:var(--text-secondary);text-decoration:none;padding:8px 16px;border-radius:6px;transition:all var(--transition);position:relative}
-    .navbar-links a:hover{color:var(--navy);background:rgba(26,26,46,.05)}
-    .navbar-links a.active{color:var(--navy);font-weight:600;background:rgba(26,26,46,.07)}
-    .hamburger{display:none;background:none;border:1px solid var(--border);border-radius:6px;font-size:18px;cursor:pointer;color:var(--navy);width:38px;height:38px;align-items:center;justify-content:center;transition:all var(--transition)}
-    .hamburger:hover{background:rgba(26,26,46,.05)}
-
-    /* ── Layout ── */
-    .page-container{flex:1;width:100%;max-width:920px;margin:0 auto;padding:40px 24px 60px}
-    .container{width:100%;max-width:680px;margin:0 auto}
-    .page-header{margin-bottom:36px}
-    .page-header h1{font-family:'Merriweather',Georgia,serif;font-size:28px;font-weight:900;color:var(--navy);margin-bottom:8px}
-    .page-header p{color:var(--text-secondary);font-size:15px;max-width:560px}
-    .section-heading{font-family:'Merriweather',Georgia,serif;font-size:20px;font-weight:700;color:var(--navy);margin-bottom:20px;display:flex;align-items:center;gap:10px}
-    .section-divider{border:none;border-top:1px solid var(--border);margin:48px 0}
-
-    /* ── Cards ── */
-    .card-base{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--card-shadow);transition:box-shadow var(--transition),transform var(--transition)}
-    .card-base:hover{box-shadow:var(--card-shadow-hover);transform:translateY(-1px)}
-
-    /* ── Buttons ── */
-    .btn-primary{display:inline-flex;align-items:center;justify-content:center;padding:12px 24px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-family:'Source Sans 3',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all var(--transition);gap:6px}
-    .btn-primary:hover{background:var(--navy-light);transform:translateY(-1px);box-shadow:0 4px 12px rgba(26,26,46,.2)}
-    .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
-    .btn-secondary{display:inline-flex;align-items:center;justify-content:center;padding:10px 20px;background:var(--surface);color:var(--text-secondary);border:1px solid var(--border);border-radius:8px;font-family:'Source Sans 3',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all var(--transition);gap:6px}
-    .btn-secondary:hover{border-color:var(--navy);color:var(--navy);background:rgba(26,26,46,.03)}
-
-    /* ── Forms ── */
-    .form-label{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text-secondary);margin-bottom:6px}
-    .form-input,.form-textarea{width:100%;background:#faf8f4;border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Source Sans 3',sans-serif;font-size:14px;padding:12px 16px;outline:none;transition:all var(--transition)}
-    .form-input:focus,.form-textarea:focus{border-color:var(--navy);background:#fff;box-shadow:0 0 0 3px rgba(26,26,46,.08)}
-    .form-textarea{resize:none;height:120px}
-
-    /* ── Pills / Badges ── */
-    .pill{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;display:inline-flex;align-items:center;gap:4px}
-    .pill-red{background:var(--red-bg);color:var(--red);border:1px solid rgba(192,57,43,.2)}
-    .pill-green{background:var(--green-bg);color:var(--green);border:1px solid rgba(26,122,76,.2)}
-    .pill-amber{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(184,134,11,.2)}
-    .pill-muted{background:rgba(0,0,0,.04);color:var(--text-secondary);border:1px solid rgba(0,0,0,.06)}
-
-    /* ── Footer ── */
-    .site-footer{background:#1a1a2e;color:#fff;padding:48px 32px 0;margin-top:auto}
-    .footer-inner{display:grid;grid-template-columns:1.8fr 1fr 1.5fr;gap:48px;max-width:920px;margin:0 auto;align-items:start}
-    .footer-brand .brand-title{font-family:'Merriweather',Georgia,serif;font-size:20px;font-weight:900;line-height:1.3;margin-bottom:12px}
-    .footer-brand .brand-title span{color:#e74c3c}
-    .footer-brand .brand-desc{font-size:13px;color:rgba(255,255,255,.55);line-height:1.7;max-width:280px}
-    .footer-col h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.4);margin-bottom:16px}
-    .footer-col ul{list-style:none}
-    .footer-col li{margin-bottom:6px}
-    .footer-col a{font-size:14px;color:rgba(255,255,255,.7);text-decoration:none;transition:color var(--transition)}
-    .footer-col a:hover{color:#fff}
-    .tech-badges{display:flex;flex-wrap:wrap;gap:8px}
-    .tech-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:20px;font-size:12px;color:rgba(255,255,255,.8);font-weight:500;transition:all var(--transition)}
-    .tech-badge:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.18)}
-    .tech-badge .dot{width:6px;height:6px;border-radius:50%;background:#4ade80;flex-shrink:0}
-    .footer-bottom{text-align:center;font-size:12px;color:rgba(255,255,255,.3);padding:20px 0;margin-top:40px;border-top:1px solid rgba(255,255,255,.06)}
-    html.dark .site-footer{background:#08080f}
-    html.dark .tech-badge{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08)}
-    html.dark .tech-badge:hover{background:rgba(255,255,255,.08)}
-
-    /* ── Animations ── */
-    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-    .animate-in{animation:fadeUp .5s ease both}
-    .delay-1{animation-delay:.1s}.delay-2{animation-delay:.2s}.delay-3{animation-delay:.3s}.delay-4{animation-delay:.4s}
-
-    /* ── Responsive ── */
-    @media(max-width:600px){
-      .navbar{padding:0 16px}
-      .navbar-links{display:none;flex-direction:column;position:absolute;top:58px;left:0;right:0;background:rgba(255,255,255,.98);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:12px 16px;gap:4px;box-shadow:0 8px 24px rgba(0,0,0,.1)}
-      html.dark .navbar-links{background:rgba(15,15,23,.98)}
-      .navbar-links.open{display:flex}
-      .hamburger{display:flex}
-      .footer-inner{grid-template-columns:1fr}
-      .page-container{padding:28px 16px 48px}
-      .page-header h1{font-size:22px}
-    }
-    @media(max-width:400px){.footer-inner{grid-template-columns:1fr}}
-
-    {% block extra_css %}{% endblock %}
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  {% block extra_css %}{% endblock %}
 </head>
 <body>
   <nav class="navbar" id="main-nav">
@@ -211,6 +17,7 @@
       <ul class="navbar-links" id="nav-links">
         <li><a href="/" class="{% if active_page == 'home' %}active{% endif %}">Home</a></li>
         <li><a href="/dashboard" class="{% if active_page == 'dashboard' %}active{% endif %}">Dashboard</a></li>
+        <li><a href="/analytics" class="{% if active_page == 'analytics' %}active{% endif %}">Analytics</a></li>
         <li><a href="/learn" class="{% if active_page == 'learn' %}active{% endif %}">Learn</a></li>
         <li><a href="/report" class="{% if active_page == 'report' %}active{% endif %}">Report</a></li>
       </ul>
@@ -254,6 +61,7 @@
         <ul>
           <li><a href="/">Home</a></li>
           <li><a href="/dashboard">Dashboard</a></li>
+          <li><a href="/analytics">Analytics</a></li>
           <li><a href="/learn">Learn</a></li>
           <li><a href="/report">Report</a></li>
         </ul>
@@ -273,28 +81,7 @@
     <div class="footer-bottom">&copy; 2025 Fake News Detector &mdash; Open source project. Powered by Groq AI + Live Web Search.</div>
   </footer>
 
-  <script>
-    // Navbar scroll effect
-    window.addEventListener('scroll',function(){document.getElementById('main-nav').classList.toggle('scrolled',window.scrollY>10)});
-    // Close mobile menu on link click
-    document.querySelectorAll('.navbar-links a').forEach(function(a){a.addEventListener('click',function(){document.getElementById('nav-links').classList.remove('open')})});
-    // Day/Night mode toggle with localStorage
-    (function(){
-      var html=document.documentElement;
-      var label=document.getElementById('dt-label');
-      function applyMode(dark){
-        if(dark){html.classList.add('dark');label.textContent='NIGHTMODE';}
-        else{html.classList.remove('dark');label.textContent='DAYMODE';}
-      }
-      var saved=localStorage.getItem('darkMode');
-      applyMode(saved==='true');
-      document.getElementById('dark-toggle').addEventListener('click',function(){
-        var isDark=!html.classList.contains('dark');
-        applyMode(isDark);
-        localStorage.setItem('darkMode',isDark);
-      });
-    })();
-  </script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>
