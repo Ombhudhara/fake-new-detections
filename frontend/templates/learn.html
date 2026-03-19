@@ -1003,71 +1003,32 @@
   });
 
   /* ── Test Your Skills Quiz ── */
-  const QUIZ_DATA = [
-    {
-      q: 'A WhatsApp message claims "Eating raw garlic daily prevents cancer." What is your first step?',
-      options: [
-        'Share it immediately — it sounds helpful',
-        'Check WHO or government health websites first',
-        'Forward it to 10 friends to warn them',
-        'Believe it since garlic is healthy'
-      ],
-      correct: 1,
-      explanation: '✓ Always verify health claims on official sources like WHO, CDC, or your government health ministry before sharing or believing them.'
-    },
-    {
-      q: 'Which headline is most likely fake news?',
-      options: [
-        '"Government announces new tax policy for 2025"',
-        '"SHOCKING!! Doctors HATE this one simple trick"',
-        '"Stock market closes up 0.3% today"',
-        '"Local council approves road construction plan"'
-      ],
-      correct: 1,
-      explanation: '✓ ALL CAPS words like "SHOCKING" and phrases like "HATE this one trick" are classic emotional manipulation tactics used in fake news headlines.'
-    },
-    {
-      q: 'A news article has no author name and no publication date. This means:',
-      options: [
-        'The author wants to stay anonymous — perfectly fine',
-        'It might be outdated or fabricated — verify carefully',
-        'It is definitely 100% fake news',
-        'Anonymous articles are actually more trustworthy'
-      ],
-      correct: 1,
-      explanation: '✓ Missing author names and publication dates are major credibility red flags. Legitimate journalism always includes these details for accountability.'
-    },
-    {
-      q: 'You see a viral photo claimed to show a recent disaster in India. Best first step?',
-      options: [
-        'Share immediately to raise awareness',
-        'Reverse image search to check the original source',
-        'Trust it since it has thousands of shares',
-        'Check if the photo looks realistic'
-      ],
-      correct: 1,
-      explanation: '✓ Reverse image search (Google Images or TinEye) can reveal if a photo is from a different event, a different year, or is digitally altered.'
-    },
-    {
-      q: 'A story is only covered by one website you have never heard of. You should:',
-      options: [
-        'Trust it — exclusive news is valuable',
-        'Be skeptical and cross-check with Reuters or BBC',
-        'Share it — you found the story first',
-        'The site design looks professional so it must be real'
-      ],
-      correct: 1,
-      explanation: '✓ Real news is reported by multiple credible outlets. A story covered only by one unknown site is a major red flag — always cross-reference.'
-    }
-  ];
-
-  let quizCurrent = 0;
-  let quizScore   = 0;
+  let QUIZ_DATA    = []; // Loaded dynamically
+  let quizCurrent  = 0;
+  let quizScore    = 0;
   let quizAnswered = false;
+
+  async function loadQuiz() {
+    const card = document.getElementById('quiz-card');
+    if (!card) return;
+
+    try {
+      const response = await fetch('/api/quiz');
+      if (!response.ok) throw new Error('Failed to load quiz');
+      QUIZ_DATA = await response.json();
+      quizRender();
+    } catch (err) {
+      console.error('Quiz Error:', err);
+      card.innerHTML = `<div style="text-align:center;padding:40px;color:#E8453C">
+        <p>⚠️ Failed to load quiz. Please check your connection and try again.</p>
+        <button onclick="loadQuiz()" style="margin-top:10px;padding:10px 20px;cursor:pointer">Retry</button>
+      </div>`;
+    }
+  }
 
   function quizRender() {
     const card = document.getElementById('quiz-card');
-    if (!card) return;
+    if (!card || QUIZ_DATA.length === 0) return;
     
     if (quizCurrent >= QUIZ_DATA.length) {
       quizShowResult(); return;
@@ -1134,6 +1095,7 @@
     quizRender();
   }
 
+
   function quizShowResult() {
     const pct = Math.round((quizScore / QUIZ_DATA.length) * 100);
     const emoji = pct >= 80 ? '🏆' : pct >= 60 ? '👍' : '📚';
@@ -1171,7 +1133,7 @@
   }, { threshold: 0.12 });
 
   document.addEventListener('DOMContentLoaded', () => {
-    quizRender();
+    loadQuiz();
     
     document.querySelectorAll('.tip-card, .misinfo-card, .resource-card, .learn-section-header, .quiz-card, .learn-cta-banner').forEach((el, i) => {
       el.style.opacity = '0';

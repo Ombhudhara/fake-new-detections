@@ -483,6 +483,96 @@ def report():
                            report_id=None)
 
 
+@app.route("/api/quiz")
+def api_quiz():
+    """Return a list of quiz questions dynamically."""
+    import random
+    
+    questions = [
+        {
+            "q": "A WhatsApp message claims 'Eating raw garlic daily prevents cancer.' What is your first step?",
+            "options": [
+                "Share it immediately — it sounds helpful",
+                "Check WHO or government health websites first",
+                "Forward it to 10 friends to warn them",
+                "Believe it since garlic is healthy"
+            ],
+            "correct": 1,
+            "explanation": "✓ Always verify health claims on official sources like WHO, CDC, or your government health ministry before sharing or believing them."
+        },
+        {
+            "q": "Which headline is most likely fake news?",
+            "options": [
+                "\"Government announces new tax policy for 2025\"",
+                "\"SHOCKING!! Doctors HATE this one simple trick\"",
+                "\"Stock market closes up 0.3% today\"",
+                "\"Local council approves road construction plan\""
+            ],
+            "correct": 1,
+            "explanation": "✓ ALL CAPS words like \"SHOCKING\" and phrases like \"HATE this one trick\" are classic emotional manipulation tactics used in fake news headlines."
+        },
+        {
+            "q": "A news article has no author name and no publication date. This means:",
+            "options": [
+                "The author wants to stay anonymous — perfectly fine",
+                "It might be outdated or fabricated — verify carefully",
+                "It is definitely 100% fake news",
+                "Anonymous articles are actually more trustworthy"
+            ],
+            "correct": 1,
+            "explanation": "✓ Missing author names and publication dates are major credibility red flags. Legitimate journalism always includes these details for accountability."
+        },
+        {
+            "q": "You see a viral photo claimed to show a recent disaster in India. Best first step?",
+            "options": [
+                "Share immediately to raise awareness",
+                "Reverse image search to check the original source",
+                "Trust it since it has thousands of shares",
+                "Check if the photo looks realistic"
+            ],
+            "correct": 1,
+            "explanation": "✓ Reverse image search (Google Images or TinEye) can reveal if a photo is from a different event, a different year, or is digitally altered."
+        },
+        {
+            "q": "A story is only covered by one website you have never heard of. You should:",
+            "options": [
+                "Trust it — exclusive news is valuable",
+                "Be skeptical and cross-check with Reuters or BBC",
+                "Share it — you found the story first",
+                "The site design looks professional so it must be real"
+            ],
+            "correct": 1,
+            "explanation": "✓ Real news is reported by multiple credible outlets. A story covered only by one unknown site is a major red flag — always cross-reference."
+        },
+        {
+            "q": "What is 'Deepfake' content?",
+            "options": [
+                "A very long news article",
+                "AI-generated realistic media that replaces someone's likeness",
+                "A news story about deep sea exploration",
+                "A password that is hard to crack"
+            ],
+            "correct": 1,
+            "explanation": "✓ Deepfakes use artificial intelligence to create convincing but entirely fake images or videos of people saying or doing things they never did."
+        },
+        {
+            "q": "If you see a post with a link to 'claim your free gift' from a major brand, but the URL is 'brand-rewards.biz', you should:",
+            "options": [
+                "Click and claim it quickly before it expires",
+                "Enter your details to verify your identity",
+                "Ignore it; brand websites usually end in .com or .in/co.in",
+                "Share it so your family can get free gifts too"
+            ],
+            "correct": 2,
+            "explanation": "✓ Scammers often use 'copycat' URLs that look similar to real brands. Always check the domain carefully—official brands rarely use obscure extensions like .biz for rewards."
+        }
+    ]
+    
+    # Shuffle and return 5 random questions
+    random.shuffle(questions)
+    return jsonify(questions[:5])
+
+
 @app.route("/analytics")
 def analytics_page():
     return render_template("analytics.html", active_page="analytics")
