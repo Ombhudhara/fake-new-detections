@@ -679,17 +679,22 @@
     btn.querySelector('#btn-text').textContent = 'Submitting...';
   });
 
-  /* Handle Flask Success State */
-  {% if report_submitted %}
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('report-form-card').style.display = 'none';
-    document.getElementById('success-card').style.display = 'block';
-    document.getElementById('success-rid').textContent = '{{ report_id }}';
-    
-    // Smooth scroll to success card
-    document.getElementById('success-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
-  {% endif %}
+  /* Handle Flask Success State — reads from JSON data island */
+  (function() {
+    try {
+      var configEl = document.getElementById('report-config-data');
+      var config = configEl ? JSON.parse(configEl.textContent) : {};
+      if (config.submitted) {
+        document.getElementById('report-form-card').style.display = 'none';
+        document.getElementById('success-card').style.display = 'block';
+        if (config.reportId) {
+          document.getElementById('success-rid').textContent = config.reportId;
+        }
+        // Smooth scroll to success card
+        document.getElementById('success-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    } catch(e) { /* ignore parse errors */ }
+  })();
 
   /* Animation for sidebar bars */
   window.addEventListener('load', () => {
@@ -699,5 +704,9 @@
       setTimeout(() => { bar.style.width = w; }, 400);
     });
   });
+</script>
+
+<script id="report-config-data" type="application/json">
+  {"submitted": {% if report_submitted %}true{% else %}false{% endif %}, "reportId": "{{ report_id or '' }}"}
 </script>
 {% endblock %}

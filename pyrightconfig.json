@@ -1,0 +1,16 @@
+{
+  "include": [
+    "backend",
+    "fake_news_chatbot",
+    "frontend"
+  ],
+  "pythonVersion": "3.12",
+  "pythonPlatform": "Windows",
+  "typeCheckingMode": "basic",
+  "useLibraryCodeForTypes": true,
+  "reportMissingImports": "none",
+  "reportMissingModuleSource": "none",
+  "extraPaths": [
+    "fake_news_chatbot"
+  ]
+}

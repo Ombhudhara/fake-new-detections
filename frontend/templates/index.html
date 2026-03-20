@@ -86,8 +86,20 @@
           </div>
         </div>
         <div class="bars">
-          <div class="bar-row"><span class="bar-name">Fake</span><div class="bar-track"><div class="bar-fill fake" style="width:{{ fake_prob }}%;"></div></div><span class="bar-pct" style="color:var(--red);">{{ fake_prob }}%</span></div>
-          <div class="bar-row"><span class="bar-name">Real</span><div class="bar-track"><div class="bar-fill real" style="width:{{ real_prob }}%;"></div></div><span class="bar-pct" style="color:var(--green);">{{ real_prob }}%</span></div>
+          <div class="bar-row">
+            <span class="bar-name">Fake</span>
+            <div class="bar-track">
+              <div class="bar-fill fake" data-width="{{ fake_prob|default(0) }}"></div>
+            </div>
+            <span class="bar-pct" style="color:var(--red);">{{ fake_prob|default(0) }}%</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-name">Real</span>
+            <div class="bar-track">
+              <div class="bar-fill real" data-width="{{ real_prob|default(0) }}"></div>
+            </div>
+            <span class="bar-pct" style="color:var(--green);">{{ real_prob|default(0) }}%</span>
+          </div>
         </div>
         <div class="meta-row">
           <span class="meta-tag">{{ verification_method }}</span>
@@ -164,4 +176,13 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/index.js') }}"></script>
-{% endblock %}
+<script>
+  // Apply data-width values to bar fills (avoids Jinja2-in-CSS IDE lint errors)
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.bar-fill[data-width]').forEach(function(el) {
+      el.style.width = el.getAttribute('data-width') + '%';
+    });
+  });
+</script>
+{% endblock %}
+

@@ -125,7 +125,7 @@ def scrape_article(url):
             return {
                 "success": True, "title": title, "text": text,
                 "authors": [], "publish_date": "Unknown",
-                "keywords": [], "summary": text[:300],
+                "keywords": [], "summary": str(text)[:300],
             }
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -139,7 +139,8 @@ def scrape_url_text(url, max_chars=1500):
         soup = BeautifulSoup(r.text, "html.parser")
         paras = soup.find_all("p")
         text = " ".join(p.get_text().strip() for p in paras if len(p.get_text().strip()) > 30)
-        return text[:max_chars] if text else ""
+        full_text: str = text
+        return full_text[:max_chars] if full_text else ""
     except Exception:
         return ""
 
@@ -288,12 +289,14 @@ def verify_claim(claim):
         print(f"[Search] Credible: {c}, Fake: {f}")
 
         # ── STEP 3: Scrape top articles for AI comparison ──
-        source_texts = []
-        urls_to_scrape = [h["url"] for h in credible_hits[:3]]
+        source_texts: list = []
+        top_credible: list = credible_hits[:3]
+        urls_to_scrape: list = [h["url"] for h in top_credible]
 
         # Also try all results if credible hits are few
         if len(urls_to_scrape) < 2:
-            for r in all_results[:5]:
+            top_all: list = all_results[:5]
+            for r in top_all:
                 u = r.get("href", r.get("url", ""))
                 if u and u not in urls_to_scrape:
                     urls_to_scrape.append(u)
@@ -360,7 +363,7 @@ def verify_claim(claim):
             "fake_prob": fake_p,
             "real_prob": real_p,
             "verification_method": "AI Fact-Check + Web Search" if ai_result else "Web Search Only",
-            "credible_sources": credible_hits[:5],
+            "credible_sources": list(credible_hits[:5]),
             "credible_count": c,
             "ai_reason": ai_reason,
             "ai_details": ai_details,
@@ -395,7 +398,7 @@ def predict_ml(text):
 #  MAIN PREDICT
 # ══════════════════════════════════════════════════════════
 
-def predict_text(raw_text, language_hint=None):
+def predict_text(raw_text: str, language_hint: str = None) -> dict:  # type: ignore[assignment]
     """
     1. Detect language (or use the provided language hint)
     2. Translate to English
@@ -405,17 +408,19 @@ def predict_text(raw_text, language_hint=None):
         detected_lang = language_hint
     else:
         detected_lang = detect_language(raw_text)
-    lang_display = LANGUAGE_NAMES.get(detected_lang, detected_lang)
+    lang_display: str = LANGUAGE_NAMES.get(detected_lang, detected_lang)
 
-    translated, was_translated = raw_text, False
+    translated: str = raw_text
+    was_translated: bool = False
     if detected_lang != "en":
         translated, was_translated = translate_to_english(raw_text)
         if detected_lang == "unknown":
             lang_display = "Hinglish / Gujlish"
 
-    word_count = len(translated.split())
+    word_count: int = len(translated.split())
 
     # Route to engine
+    result: dict
     if word_count < SHORT_CLAIM_THRESHOLD:
         result = verify_claim(translated)
         if result is None:
@@ -426,9 +431,10 @@ def predict_text(raw_text, language_hint=None):
         if result is None:
             result = predict_ml(translated)
 
+    preview_text: str = translated
     result["detected_language"] = lang_display
     result["was_translated"] = was_translated
-    result["translated_preview"] = translated[:400] + "..." if len(translated) > 400 else translated
+    result["translated_preview"] = preview_text[:400] + "..." if len(preview_text) > 400 else preview_text
     result["word_count"] = word_count
     return result
 
@@ -570,7 +576,8 @@ def api_quiz():
     
     # Shuffle and return 5 random questions
     random.shuffle(questions)
-    return jsonify(questions[:5])
+    top_questions: list = questions[:5]
+    return jsonify(top_questions)
 
 
 @app.route("/analytics")
@@ -588,11 +595,12 @@ def predict():
     if url:
         scraped = scrape_article(url)
         if scraped["success"]:
-            news = scraped["text"]
+            news = str(scraped["text"])
             article_info = scraped
         else:
+            err_msg: str = str(scraped.get("error", "Unknown error"))
             return render_template("index.html", active_page="home",
-                                   error="Could not scrape URL: " + scraped.get("error", "Unknown error"))
+                                   error="Could not scrape URL: " + err_msg)
 
     if not news:
         return render_template("index.html", active_page="home",
@@ -617,7 +625,7 @@ def predict():
         ai_reason=res["ai_reason"],
         ai_details=res["ai_details"],
         word_count=res["word_count"],
-        input_text=news[:500] + "..." if len(news) > 500 else news,
+        input_text=str(news)[:500] + "..." if len(str(news)) > 500 else str(news),
     )
 
 
@@ -655,8 +663,8 @@ def latest_factchecked():
                 if not text:
                     continue
                 # Extract headline: first sentence up to 100 chars
-                first_line = text.split(".")[0].strip()
-                headline = first_line[:100] + ("..." if len(first_line) > 100 else "")
+                first_line: str = str(text).split(".")[0].strip()
+                headline: str = first_line[:100] + ("..." if len(first_line) > 100 else "")
 
                 if len(headline) < 20:
                     continue
@@ -687,7 +695,8 @@ def latest_factchecked():
                     "category": category,
                 })
         random.shuffle(rows)
-        return jsonify(rows[:6])
+        top_rows: list = rows[:6]
+        return jsonify(top_rows)
     except Exception as e:
         print(f"[CSV Error] {e}")
         return jsonify([]), 500
@@ -820,8 +829,8 @@ def api_trending():
                     if not any(kw in t_lower for kw in kws):
                         continue  # skip rows unrelated to the requested category
 
-                first_line = text.split(".")[0].strip()
-                headline = first_line[:120] + ("..." if len(first_line) > 120 else "")
+                first_line: str = str(text).split(".")[0].strip()
+                headline: str = first_line[:120] + ("..." if len(first_line) > 120 else "")
                 if len(headline) < 25 or headline.lower() in seen:
                     continue
 
@@ -843,7 +852,8 @@ def api_trending():
         random.shuffle(csv_rows)
         need = 8 - len(rows)
         if need > 0:
-            rows.extend(csv_rows[:need])
+            top_csv: list = csv_rows[:need]
+            rows.extend(top_csv)
     except Exception:
         pass
 
@@ -852,7 +862,8 @@ def api_trending():
         rows = EMERGENCY_FALLBACK
 
     random.shuffle(rows)
-    return jsonify(rows[:8])
+    final_rows: list = rows[:8]
+    return jsonify(final_rows)
 # ── API: Live Misinformation Feed ──────────────────────────
 @app.route('/api/live-feed', methods=['POST'])
 def live_feed():
