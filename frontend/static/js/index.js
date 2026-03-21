@@ -106,6 +106,7 @@ var TS = (function() {
     els.empty = document.getElementById('ts-empty');
     els.emptyText = document.getElementById('ts-empty-text');
     els.searchInput = document.getElementById('ts-search');
+    els.locationInput = document.getElementById('ts-location');
     els.searchTag = document.getElementById('ts-search-tag');
     els.searchTagText = document.getElementById('ts-search-tag-text');
     els.filterRow = document.getElementById('ts-filter-row');
@@ -134,7 +135,7 @@ var TS = (function() {
     }
 
     if (els.grid) {
-      fetchData();
+      fetchData('', '');
     }
   }
 
@@ -160,10 +161,14 @@ var TS = (function() {
     if (els.empty) els.empty.style.display = 'none';
   }
 
-  function fetchData(category) {
+  function fetchData(category, location) {
     showSkeleton();
     var url = '/api/trending';
-    if (category) url += '?category=' + encodeURIComponent(category);
+    var params = [];
+    if (category) params.push('category=' + encodeURIComponent(category));
+    if (location) params.push('location=' + encodeURIComponent(location));
+    if (params.length > 0) url += '?' + params.join('&');
+    
     fetch(url).then(function(r) {
       return r.json();
     }).then(function(items) {
@@ -230,23 +235,31 @@ var TS = (function() {
   }
 
   function searchSubmit() {
-    if (!els.searchInput) return;
-    var term = els.searchInput.value.trim();
-    if (!term) return;
+    if (!els.searchInput && !els.locationInput) return;
+    var term = els.searchInput ? els.searchInput.value.trim() : '';
+    var loc = els.locationInput ? els.locationInput.value.trim() : '';
+    
+    if (!term && !loc) return;
+    
     state.searchTerm = term;
     state.activeCategory = 'All';
     activateFilterBtn('All');
+    
     if (els.searchTag) {
       els.searchTag.style.display = 'inline-flex';
-      if (els.searchTagText) els.searchTagText.textContent = 'Showing results for "' + term + '"';
+      var tagText = [];
+      if (term) tagText.push('"' + term + '"');
+      if (loc) tagText.push('in "' + loc + '"');
+      if (els.searchTagText) els.searchTagText.textContent = 'Showing results for ' + tagText.join(' ');
     }
-    fetchData(term);
+    fetchData(term, loc);
   }
 
   function clearSearch() {
     state.searchTerm = '';
     state.activeCategory = 'All';
     if (els.searchInput) els.searchInput.value = '';
+    if (els.locationInput) els.locationInput.value = '';
     if (els.searchTag) els.searchTag.style.display = 'none';
     activateFilterBtn('All');
     fetchData();
@@ -256,13 +269,11 @@ var TS = (function() {
     state.activeCategory = cat;
     state.searchTerm = ''; // clear local search when switching category
     if (els.searchInput) els.searchInput.value = '';
-    if (els.searchTag) els.searchTag.style.display = 'none';
+    if (els.locationInput) els.locationInput.value = ''; // Clear location input when switching categories
+    if (els.searchTag) els.searchTag.style.display = 'none'; // Hide search tag
     activateFilterBtn(cat);
-    if (cat === 'All') {
-      fetchData(); // general fetch
-    } else {
-      fetchData(cat); // category-specific fetch from API
-    }
+    var loc = els.locationInput ? els.locationInput.value.trim() : ''; // Get current location value
+    fetchData(cat === 'All' ? '' : cat, loc); // Pass category and location to fetchData
   }
 
   function activateFilterBtn(cat) {
@@ -331,3 +342,243 @@ var TS = (function() {
 })();
 
 TS.init();
+
+// Apply data-width values to bar fills
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.bar-fill[data-width]').forEach(function(el) {
+      el.style.width = el.getAttribute('data-width') + '%';
+    });
+
+    // ── FCM Deep Analysis Panel ────────────────────────────────────
+    // (Triggered from index.html via server-side context if needed)
+  });
+
+  // ── FCM Analysis Runner ─────────────────────────────────────────
+  async function runFCMAnalysis(text, is_ocr) {
+    if (!text || !text.trim()) return;
+    const panel = document.getElementById('fcm-panel');
+    if (!panel) return;
+    panel.style.display = 'block';
+    panel.innerHTML = fcmSkeleton();
+
+    try {
+      const res = await fetch('/api/fact-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text.trim(), is_ocr: is_ocr || false })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      renderFCMPanel(panel, data);
+    } catch (e) {
+      panel.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:12px 0">⚠️ Deep analysis unavailable right now.</div>';
+    }
+  }
+
+  function fcmSkeleton() {
+    return `<div style="display:flex;flex-direction:column;gap:12px;padding:4px 0">
+      <div class="ts-shimmer" style="height:40px;border-radius:10px;width:100%"></div>
+      <div class="ts-shimmer" style="height:24px;border-radius:8px;width:70%"></div>
+      <div class="ts-shimmer" style="height:60px;border-radius:8px;width:100%"></div>
+    </div>`;
+  }
+
+  function renderFCMPanel(panel, data) {
+    if (!data) return;
+
+    // Handle plain_text mode gracefully
+    if (data.output_mode === 'plain_text') {
+      panel.style.display = 'none';
+      return;
+    }
+
+    const jd = data.json_data;
+    if (!jd) { panel.style.display = 'none'; return; }
+
+    const vColors = { REAL:'#22c55e', FAKE:'#ef4444', MISLEADING:'#f59e0b' };
+    const vIcons  = { REAL:'✅', FAKE:'❌', MISLEADING:'⚠️' };
+    const sColors = { Critical:'#ef4444', High:'#f59e0b', Medium:'#3b82f6', Low:'#22c55e' };
+
+    const vKey    = (jd.verdict || 'MISLEADING').toUpperCase();
+    const vColor  = vColors[vKey] || '#a78bfa';
+    const vIcon   = vIcons[vKey]  || '🔍';
+    const sevColor = sColors[jd.severity] || '#9ca3af';
+
+    let html = `<div style="border-top:1px solid var(--card-border,rgba(0,0,0,.1));padding-top:16px;margin-top:8px">`;
+    html += `<div class="section-h" style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      🧠 FCM Deep Analysis
+      <span style="font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;background:${vColor}22;color:${vColor};border:1px solid ${vColor}44">${vIcon} ${jd.verdict}</span>
+      <span style="font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;background:${sevColor}22;color:${sevColor};border:1px solid ${sevColor}44">${jd.severity}</span>
+      <span style="font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;background:rgba(100,100,100,.12);color:var(--text-muted);margin-left:auto">${jd.category}</span>
+    </div>`;
+
+    // Key Signals
+    if (jd.key_signals && jd.key_signals.length) {
+      html += `<div style="margin-bottom:12px">
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:.5px;margin-bottom:6px">KEY SIGNALS DETECTED</div>`;
+      jd.key_signals.forEach(s => {
+        html += `<div style="display:flex;gap:7px;align-items:flex-start;margin-bottom:5px;font-size:13px;color:var(--text-secondary)">
+          <span style="color:#ef4444;flex-shrink:0">🚩</span><span>${escFCM(s)}</span></div>`;
+      });
+      html += `</div>`;
+    }
+
+    // Correct Information
+    if (jd.correct_information) {
+      html += `<div style="background:rgba(34,197,94,.07);border-left:3px solid #22c55e;border-radius:0 8px 8px 0;padding:10px 13px;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:600;color:#22c55e;margin-bottom:4px">✅ CORRECT INFORMATION</div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.5">${escFCM(jd.correct_information)}</div>
+      </div>`;
+    }
+
+    // Sources Checked
+    if (jd.sources_checked && jd.sources_checked.length) {
+      html += `<div style="margin-bottom:4px">
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:.5px;margin-bottom:7px">SOURCES CHECKED</div>`;
+      jd.sources_checked.slice(0, 4).forEach(src => {
+        const sc = src.credibility_score || 0;
+        const barColor = sc >= 80 ? '#22c55e' : sc >= 55 ? '#f59e0b' : '#ef4444';
+        html += `<div style="border:1px solid var(--card-border,rgba(0,0,0,.1));border-radius:8px;padding:9px 12px;margin-bottom:7px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+            <a href="${escFCM(src.url)}" target="_blank" rel="noopener" style="color:var(--text-primary);font-size:12.5px;font-weight:500;text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escFCM(src.title || src.url)}</a>
+            <span style="font-size:11px;font-weight:600;color:${barColor};flex-shrink:0">${sc}/100</span>
+          </div>
+          <div style="height:4px;background:rgba(0,0,0,.08);border-radius:2px;overflow:hidden">
+            <div style="height:100%;width:${sc}%;background:${barColor};border-radius:2px;transition:width .5s ease"></div>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    // ML score if present
+    if (jd.ml_model_score !== null && jd.ml_model_score !== undefined) {
+      const mlPct = Math.round(jd.ml_model_score * 100);
+      const mlLabel = mlPct >= 50 ? 'Real' : 'Fake';
+      const mlColor = mlPct >= 50 ? '#22c55e' : '#ef4444';
+      html += `<div style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-muted);margin-top:4px;margin-bottom:2px">
+        <span>🤖 ML Model: <strong style="color:${mlColor}">${mlLabel} (${mlPct}% real)</strong></span>
+        ${jd.domain_credibility_score !== null ? `<span style="margin-left:auto">🌐 Domain: <strong>${jd.domain_credibility_score}/100</strong></span>` : ''}
+      </div>`;
+    }
+
+    html += `</div>`;
+    panel.innerHTML = html;
+  }
+
+  function escFCM(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Updated switchTab to handle the third tab ────────────────
+  function switchTab(tabId, el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
+    el.classList.add('active');
+    document.getElementById('panel-' + tabId).style.display = 'block';
+    
+    // Clear other inputs so form submission uses correct one
+    if (tabId === 'text') {
+      document.getElementById('url-input').value = '';
+      if(document.getElementById('extracted-textarea')) document.getElementById('extracted-textarea').name = 'extracted_news_ignore';
+      document.getElementById('news-input').name = 'news';
+    } else if (tabId === 'url') {
+      document.getElementById('news-input').value = '';
+      if(document.getElementById('extracted-textarea')) document.getElementById('extracted-textarea').name = 'extracted_news_ignore';
+      document.getElementById('url-input').name = 'url';
+    } else if (tabId === 'image') {
+      document.getElementById('news-input').value = '';
+      document.getElementById('url-input').value = '';
+      document.getElementById('news-input').name = 'news_ignore';
+      if(document.getElementById('extracted-textarea')) document.getElementById('extracted-textarea').name = 'news';
+    }
+  }
+
+  // Image Upload Logic
+  let selectedImageFile = null;
+
+  function handleImageDrop(e) {
+    e.preventDefault();
+    document.getElementById('img-drop-zone').classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) showImagePreview(file);
+  }
+
+  function handleImageSelect(input) {
+    const file = input.files[0];
+    if (file) showImagePreview(file);
+  }
+
+  function showImagePreview(file) {
+    selectedImageFile = file;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('img-preview-thumb').src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    document.getElementById('img-file-name').textContent = file.name;
+    document.getElementById('img-file-size').textContent = (file.size/1024).toFixed(1) + ' KB';
+    document.getElementById('img-preview-section').style.display = 'block';
+    document.getElementById('extracted-section').style.display = 'none';
+    document.getElementById('img-drop-zone').style.display = 'none';
+  }
+
+  function removeImage() {
+    selectedImageFile = null;
+    document.getElementById('img-file-input').value = '';
+    document.getElementById('img-preview-section').style.display = 'none';
+    document.getElementById('img-drop-zone').style.display = 'block';
+    document.getElementById('extracted-section').style.display = 'none';
+    if(document.getElementById('extracted-textarea')) document.getElementById('extracted-textarea').value = '';
+  }
+
+  async function extractImageText() {
+    if (!selectedImageFile) return;
+    const btn = document.getElementById('extract-btn');
+    btn.textContent = '⏳ Reading image...';
+    btn.disabled = true;
+
+    const formData = new FormData();
+    formData.append('image', selectedImageFile);
+
+    try {
+      const res = await fetch('/api/extract-image-text', { method: 'POST', body: formData });
+      const d = await res.json();
+
+      if (d.success) {
+        const ta = document.getElementById('extracted-textarea');
+        ta.value = d.extracted_text;
+
+        document.getElementById('extracted-section').style.display = 'block';
+        document.getElementById('extract-meta').textContent =
+          `✓ ${d.word_count} words extracted · Language: ${d.language.toUpperCase()} · Confidence: ${d.confidence}`;
+
+        if (d.red_flags && d.red_flags.length > 0) {
+          const rfBox = document.getElementById('red-flags-box');
+          rfBox.style.display = 'block';
+          rfBox.innerHTML = '🚩 <strong>Red flags detected:</strong><br>' + d.red_flags.map(f=>`• ${f}`).join('<br>');
+        } else {
+          document.getElementById('red-flags-box').style.display = 'none';
+        }
+
+        // Also run FCM on the OCR-extracted text
+        runFCMAnalysis(d.extracted_text, true);
+
+        btn.textContent = '✓ Text Extracted!';
+        btn.style.background = '#27AE60';
+      } else {
+        btn.textContent = '⚠ ' + (d.error || 'Could not extract text');
+        btn.style.background = '#EF9F27';
+      }
+    } catch(e) {
+      btn.textContent = '⚠ Error — try again';
+      btn.style.background = '#E8453C';
+    } finally {
+      btn.disabled = false;
+      setTimeout(() => {
+        btn.textContent = '🔍 Extract Text from Image';
+        btn.style.background = '#18181b';
+      }, 3000);
+    }
+  }

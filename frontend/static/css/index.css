@@ -1007,3 +1007,90 @@ html.dark .hint {
     padding: 20px
   }
 }
+
+.drop-zone {
+    border: 2px dashed var(--card-border, rgba(0,0,0,0.12));
+    border-radius: 12px;
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-muted);
+  }
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: #E8453C;
+    background: rgba(232,69,60,0.04);
+  }
+  .dz-icon  { font-size: 32px; margin-bottom: 8px; }
+  .dz-title {
+    font-size: 14px; font-weight: 600;
+    color: var(--text-primary); margin-bottom: 4px;
+  }
+  .dz-sub   {
+    font-size: 12px; color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+  .dz-platforms {
+    display: flex; gap: 8px;
+    justify-content: center; flex-wrap: wrap;
+  }
+  .dz-platforms span {
+    font-size: 11px; padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--input-bg, #faf9f6);
+    color: var(--text-secondary);
+    border: 0.5px solid var(--card-border);
+  }
+  .img-preview-row {
+    display: flex; gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+  .img-file-info {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .img-fname {
+    font-size: 13px; font-weight: 500;
+    color: var(--text-primary);
+  }
+  .img-fsize {
+    font-size: 11px; color: var(--text-muted);
+  }
+  .img-remove-btn {
+    font-size: 11px; color: var(--text-muted);
+    background: none; border: none;
+    cursor: pointer; padding: 0; text-align: left;
+  }
+  .img-remove-btn:hover { color: #E8453C; }
+  .extract-btn {
+    width: 100%; padding: 10px;
+    border-radius: 10px; border: none;
+    background: #18181b; color: #fff;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    transition: background 0.15s;
+  }
+  .extract-btn:hover { background: #2d2d30; }
+  .extract-meta {
+    font-size: 11px; color: var(--text-muted);
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+  .red-flags-box {
+    background: rgba(232,69,60,0.06);
+    border-left: 3px solid #E8453C;
+    border-radius: 0 8px 8px 0;
+    padding: 10px 14px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  /* Style for third tab layout */
+  .tabs {
+    display: flex;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--card-border, rgba(0,0,0,0.1));
+    margin-bottom: 18px;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
