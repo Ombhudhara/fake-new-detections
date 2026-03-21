@@ -18,17 +18,30 @@
     #vb-trigger {
       position: fixed; bottom: 28px; right: 28px; z-index: 9999;
       width: 60px; height: 60px; border-radius: 50%;
-      background: linear-gradient(135deg, #6c63ff, #8b5cf6);
-      border: none; cursor: pointer;
+      background: #F2EDE4;
+      border: 1.5px solid #D4C9B8;
+      cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      font-size: 26px;
-      box-shadow: 0 4px 24px rgba(108,99,255,0.55);
-      transition: transform .25s, box-shadow .25s;
+      padding: 0;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.16), 0 1px 4px rgba(0,0,0,0.08);
+      transition: transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s;
       animation: vb-pop .4s cubic-bezier(.34,1.56,.64,1) both;
     }
     #vb-trigger:hover {
-      transform: scale(1.13);
-      box-shadow: 0 6px 32px rgba(108,99,255,0.75);
+      transform: scale(1.10);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.20), 0 2px 6px rgba(0,0,0,0.10);
+    }
+    #vb-trigger img {
+      width: 80%; height: 80%;
+      border-radius: 50%; object-fit: cover;
+      pointer-events: none;
+    }
+    /* Dark mode: launcher */
+    body.dark-mode #vb-trigger,
+    body.night-mode #vb-trigger,
+    [data-theme="dark"] #vb-trigger {
+      background: #14213D;
+      border-color: #2A3F60;
     }
     @keyframes vb-pop {
       from { transform: scale(0); opacity: 0; }
@@ -48,10 +61,10 @@
     #vb-window {
       position: fixed; bottom: 100px; right: 28px; z-index: 9998;
       width: 380px; height: 560px;
-      background: #0f1117;
-      border-radius: 20px;
-      border: 1px solid rgba(108,99,255,0.25);
-      box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(108,99,255,0.1);
+      background: #F2EDE4;
+      border-radius: 16px;
+      border: 1px solid #D4C9B8;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
       display: flex; flex-direction: column;
       overflow: hidden;
       transform: scale(0.85) translateY(30px);
@@ -71,34 +84,45 @@
     #vb-header {
       display: flex; align-items: center; gap: 10px;
       padding: 14px 16px;
-      background: linear-gradient(135deg, rgba(108,99,255,.2), rgba(139,92,246,.1));
-      border-bottom: 1px solid rgba(108,99,255,0.2);
+      background: #FFFFFF;
+      border-bottom: 1px solid #E0D8CC;
       flex-shrink: 0;
     }
     #vb-avatar {
       width: 38px; height: 38px; border-radius: 50%;
-      background: linear-gradient(135deg,#6c63ff,#8b5cf6);
+      background: #F2EDE4;
+      border: 1.5px solid #D4C9B8;
       display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
-      box-shadow: 0 0 16px rgba(108,99,255,0.5);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    #vb-avatar img {
+      width: 82%; height: 82%;
+      border-radius: 50%; object-fit: cover;
     }
     #vb-header-info { flex: 1; }
-    #vb-header-info h3 { font-size: 13px; font-weight: 700; color: #e8eaf6; margin: 0; }
-    #vb-header-info p  { font-size: 11px; color: #9095b4; margin: 0; }
+    #vb-header-info h3 { font-size: 13px; font-weight: 700; color: #1A1A2E; margin: 0; }
+    .vb-header-status-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+    .vb-online-badge {
+      display: inline-flex; align-items: center;
+      background: #E1F5EE; color: #0F6E56;
+      padding: 2px 6px; border-radius: 12px; font-size: 10px; font-weight: 600;
+    }
     .vb-status-dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: #22c55e; display: inline-block; margin-right: 4px;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #0F6E56; display: inline-block; margin-right: 4px;
       animation: vb-pulse 2s infinite;
     }
     @keyframes vb-pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
 
     #vb-close {
       background: none; border: none; cursor: pointer;
-      color: #9095b4; font-size: 18px; line-height: 1;
+      color: #1A1A2E; font-size: 18px; line-height: 1;
       padding: 4px;
       transition: color .2s, transform .2s;
     }
-    #vb-close:hover { color: #e8eaf6; transform: rotate(90deg); }
+    #vb-close:hover { color: #666666; transform: rotate(90deg); }
+    #vb-move-btn { color: #1A1A2E !important; }
 
     /* Messages */
     #vb-messages {
@@ -109,7 +133,8 @@
       scrollbar-color: rgba(108,99,255,0.3) transparent;
     }
     #vb-messages::-webkit-scrollbar { width: 4px; }
-    #vb-messages::-webkit-scrollbar-thumb { background: rgba(108,99,255,0.3); border-radius: 2px; }
+    #vb-messages::-webkit-scrollbar-track { background: #F2EDE4; }
+    #vb-messages::-webkit-scrollbar-thumb { background: #C8BFB0; border-radius: 4px; }
 
     .vb-row { display: flex; gap: 8px; animation: vb-fadeup .3s ease; }
     .vb-row.user { flex-direction: row-reverse; }
@@ -121,28 +146,33 @@
     .vb-msg-avatar {
       width: 28px; height: 28px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 13px; flex-shrink: 0; margin-top: 2px;
+      flex-shrink: 0; margin-top: 2px;
+      overflow: hidden;
     }
-    .vb-row.bot .vb-msg-avatar  { background: linear-gradient(135deg,#6c63ff,#8b5cf6); }
-    .vb-row.user .vb-msg-avatar { background: linear-gradient(135deg,#22c55e,#16a34a); }
+    .vb-row.bot  .vb-msg-avatar {
+      background: #F2EDE4;
+      border: 1.5px solid #D4C9B8;
+    }
+    .vb-row.user .vb-msg-avatar { background: #1A1A2E; color: #FFFFFF; font-size: 13px; }
 
     .vb-bubble-wrap { display: flex; flex-direction: column; gap: 4px; max-width: 82%; }
     .vb-row.user .vb-bubble-wrap { align-items: flex-end; }
 
     .vb-bubble {
-      padding: 10px 13px;
-      border-radius: 14px;
-      font-size: 13px; line-height: 1.55; color: #e8eaf6;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13px; line-height: 1.55;
     }
     .vb-row.bot .vb-bubble {
-      background: #1a1d27;
-      border: 1px solid rgba(108,99,255,0.15);
+      background: #FFFFFF;
+      color: #1A1A2E;
+      border: 0.5px solid #E0D8CC;
       border-top-left-radius: 4px;
     }
     .vb-row.user .vb-bubble {
-      background: linear-gradient(135deg,#6c63ff,#8b5cf6);
+      background: #1A1A2E;
+      color: #FFFFFF;
       border-top-right-radius: 4px;
-      color: #fff;
     }
 
     /* Markdown in bot bubbles */
@@ -150,21 +180,23 @@
     .vb-bubble p:last-child { margin-bottom: 0; }
     .vb-bubble ul, .vb-bubble ol { margin: 0.3rem 0 0.6rem 1.1rem; }
     .vb-bubble li { margin-bottom: 0.3rem; }
-    .vb-bubble strong { color: #c4b9ff; }
-    .vb-bubble code  { background: rgba(0,0,0,.3); padding: 1px 4px; border-radius: 3px; font-size: 11px; }
-    .vb-bubble h2, .vb-bubble h3 { color: #a78bfa; font-size: 13px; margin: 0.5rem 0 0.3rem; }
+    .vb-bubble strong { font-weight: 700; color: inherit; }
+    .vb-bubble code  { background: rgba(0,0,0,.05); padding: 1px 4px; border-radius: 3px; font-size: 11px; }
+    .vb-bubble h2, .vb-bubble h3 { font-size: 13px; margin: 0.5rem 0 0.3rem; }
 
-    /* Quick replies */
+    /* Quick replies mode buttons */
     .vb-qr-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
     .vb-qr {
-      padding: 5px 11px; border-radius: 16px;
-      border: 1px solid rgba(108,99,255,0.5);
-      background: rgba(108,99,255,0.08);
-      color: #a78bfa; font-size: 11px;
-      cursor: pointer; transition: all .2s;
-      font-family: inherit;
+      padding: 5px 11px; border-radius: 6px;
+      border: none;
+      background: #E8E2D8;
+      color: #666666; font-size: 11px;
+      cursor: pointer; transition: all .2s ease;
+      font-family: inherit; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
     }
-    .vb-qr:hover { background: #6c63ff; color: #fff; border-color: #6c63ff; }
+    .vb-qr:hover { background: #E0D8CC; }
+    .vb-qr.active { background: #1A1A2E; color: #FFFFFF; }
 
     /* Typing indicator */
     #vb-typing {
@@ -178,13 +210,13 @@
     }
     #vb-typing.active { max-height: 40px; padding: 0 14px 8px; }
     .vb-tdots {
-      background: #1a1d27; border: 1px solid rgba(108,99,255,.15);
+      background: #FFFFFF; border: 0.5px solid #E0D8CC;
       border-radius: 14px; border-top-left-radius: 4px;
       padding: 8px 14px; display: flex; gap: 5px; align-items: center;
     }
     .vb-tdot {
       width: 6px; height: 6px; border-radius: 50%;
-      background: #6c63ff;
+      background: #1A1A2E;
     }
     .vb-tdot:nth-child(1){animation:vb-bounce .9s 0s infinite}
     .vb-tdot:nth-child(2){animation:vb-bounce .9s .15s infinite}
@@ -196,8 +228,8 @@
     /* Input */
     #vb-input-area {
       padding: 10px 12px 12px;
-      background: #0f1117;
-      border-top: 1px solid rgba(108,99,255,0.15);
+      background: #F2EDE4;
+      border-top: 1px solid #D4C9B8;
       flex-shrink: 0;
     }
     #vb-input-row {
@@ -205,11 +237,11 @@
     }
     #vb-input {
       flex: 1;
-      background: #1a1d27;
-      border: 1px solid rgba(108,99,255,0.25);
+      background: #FFFFFF;
+      border: 1px solid #D4C9B8;
       border-radius: 10px;
-      padding: 9px 12px;
-      color: #e8eaf6;
+      padding: 10px 14px;
+      color: #1A1A2E;
       font-family: inherit;
       font-size: 13px;
       resize: none;
@@ -218,28 +250,28 @@
       outline: none;
       transition: border-color .2s;
     }
-    #vb-input:focus { border-color: #6c63ff; }
-    #vb-input::placeholder { color: #9095b4; }
+    #vb-input:focus { border-color: #1A1A2E; outline: none; }
+    #vb-input::placeholder { color: #999999; }
     #vb-send {
-      width: 40px; height: 40px; border-radius: 10px;
+      width: 40px; height: 40px; border-radius: 50%;
       border: none;
-      background: linear-gradient(135deg,#6c63ff,#8b5cf6);
+      background: #1A1A2E;
       color: #fff; font-size: 16px; cursor: pointer;
-      transition: all .2s; display: flex; align-items: center; justify-content: center;
+      transition: all .2s ease; display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
-    #vb-send:hover { transform: scale(1.08); box-shadow: 0 4px 16px rgba(108,99,255,0.5); }
+    #vb-send:hover { background: #2C3E50; transform: scale(1.05); }
     #vb-send:disabled { opacity: .45; cursor: not-allowed; transform: none; }
 
-    #vb-hint { font-size: 10px; color: rgba(144,149,180,.5); text-align: center; margin-top: 6px; }
+    #vb-hint { font-size: 10px; color: rgba(26,26,46,.5); text-align: center; margin-top: 6px; }
 
     /* Offline banner */
     #vb-offline-banner {
       display: none;
-      background: rgba(239,68,68,.15);
-      border-bottom: 1px solid rgba(239,68,68,.3);
-      color: #fca5a5;
-      font-size: 11px; padding: 6px 14px;
+      background: #FFF3CD;
+      border-bottom: 1px solid #FFEAA7;
+      color: #856404;
+      font-size: 12px; padding: 6px 14px;
       text-align: center;
       flex-shrink: 0;
     }
@@ -255,11 +287,11 @@
     #vb-drag-handle:active { cursor: grabbing; }
     #vb-drag-handle span {
       display: block; width: 14px; height: 2px;
-      background: rgba(255,255,255,0.6); border-radius: 1px;
+      background: rgba(26,26,46,0.5); border-radius: 1px;
     }
 
     #vb-window.dragging {
-      opacity: 0.95; box-shadow: 0 28px 70px rgba(0,0,0,0.4);
+      opacity: 0.95; box-shadow: 0 28px 70px rgba(0,0,0,0.25);
       transition: none !important;
     }
 
@@ -272,59 +304,72 @@
     #vb-resize-handle:hover { opacity: 0.8; }
     #vb-resize-handle::before {
       content: ''; position: absolute; bottom: 4px; right: 4px;
-      width: 8px; height: 8px; border-right: 2px solid #fff; border-bottom: 2px solid #fff; border-radius: 0 0 2px 0;
+      width: 8px; height: 8px; border-right: 2px solid #1A1A2E; border-bottom: 2px solid #1A1A2E; border-radius: 0 0 2px 0;
     }
 
     /* Position Panel */
     #vb-position-panel {
       display: none; position: absolute; top: 56px; right: 12px;
-      background: #1a1d27; border: 1px solid rgba(108,99,255,0.25);
-      border-radius: 12px; padding: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      background: #FFFFFF; border: 1px solid #D4C9B8;
+      border-radius: 12px; padding: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);
       z-index: 10; width: 220px;
     }
     #vb-position-panel.open { display: block; }
     .vb-pos-title {
-      font-size: 11px; font-weight: 600; color: #9095b4;
+      font-size: 11px; font-weight: 600; color: #666666;
       letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; padding: 0 4px;
     }
     .vb-pos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
-    .vb-pos-btn {
-      padding: 8px 6px; border-radius: 8px; border: 1px solid rgba(108,99,255,0.2);
-      background: #0f1117; font-size: 11px; font-weight: 500; color: #e8eaf6;
+    .vb-pos-btn, .vb-size-btn {
+      padding: 8px 6px; border-radius: 8px; border: 1px solid #D4C9B8;
+      background: #F2EDE4; font-size: 11px; font-weight: 500; color: #1A1A2E;
       cursor: pointer; text-align: center; transition: all 0.15s;
     }
-    .vb-pos-btn:hover { background: rgba(108,99,255,0.2); border-color: #6c63ff; color: #fff; }
-    .vb-pos-divider { height: 1px; background: rgba(108,99,255,0.15); margin: 6px 0; }
+    .vb-pos-btn:hover, .vb-size-btn:hover { background: #1A1A2E; border-color: #1A1A2E; color: #fff; }
+    .vb-pos-divider { height: 1px; background: #E0D8CC; margin: 6px 0; }
     .vb-size-row { display: flex; gap: 6px; }
-    .vb-size-btn {
-      flex: 1; padding: 7px 4px; border-radius: 8px; border: 1px solid rgba(108,99,255,0.2);
-      background: #0f1117; font-size: 11px; font-weight: 500; color: #e8eaf6;
-      cursor: pointer; text-align: center; transition: all 0.15s;
-    }
-    .vb-size-btn:hover { background: rgba(108,99,255,0.2); border-color: #6c63ff; color: #fff; }
+    .vb-size-btn { flex: 1; padding: 7px 4px; }
 
     .vb-chips-row {
       display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 6px 6px 42px;
       animation: vb-pop 0.2s ease;
     }
     .vb-chip {
-      font-size: 11px; font-weight: 500; padding: 5px 12px;
-      border-radius: 20px; border: 1px solid rgba(255,255,255,0.15);
-      background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.75);
-      cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s;
+      font-size: 12px; font-weight: 500; padding: 6px 14px;
+      border-radius: 20px; border: 1px solid #C8BFB0;
+      background: #FFFFFF; color: #1A1A2E;
+      cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s ease;
       white-space: nowrap;
     }
     .vb-chip:hover {
-      background: rgba(108,99,255,0.25); border-color: #6c63ff; color: #fff;
+      background: #1A1A2E; border-color: #1A1A2E; color: #FFFFFF;
     }
     .vb-list-item { display: flex; gap: 8px; align-items: flex-start; margin: 3px 0; line-height: 1.5; }
     .vb-list-num {
-      min-width: 18px; height: 18px; background: #6c63ff; color: #fff; border-radius: 50%;
+      min-width: 18px; height: 18px; background: #1A1A2E; color: #fff; border-radius: 50%;
       font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;
       flex-shrink: 0; margin-top: 2px;
     }
     .vb-bullet-item { display: flex; gap: 8px; align-items: flex-start; margin: 2px 0; line-height: 1.5; }
-    .vb-bullet-dot { color: #6c63ff; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+    .vb-bullet-dot { color: #1A1A2E; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+
+    /* Dark mode overrides */
+    body.dark-mode #vb-window, body.night-mode #vb-window, [data-theme="dark"] #vb-window { background: #1A1A2E; border-color: #2A3F60; }
+    body.dark-mode #vb-header, body.night-mode #vb-header, [data-theme="dark"] #vb-header { background: #16213E; border-color: #2A3F60; }
+    body.dark-mode #vb-header-info h3, body.night-mode #vb-header-info h3, [data-theme="dark"] #vb-header-info h3 { color: #FFFFFF; }
+    body.dark-mode #vb-header-info p, body.night-mode #vb-header-info p, [data-theme="dark"] #vb-header-info p { color: #CCCCCC; }
+    body.dark-mode #vb-close, body.night-mode #vb-close, [data-theme="dark"] #vb-close { color: #CCCCCC; }
+    body.dark-mode #vb-move-btn, body.night-mode #vb-move-btn, [data-theme="dark"] #vb-move-btn { color: #CCCCCC !important; }
+    body.dark-mode .vb-row.bot .vb-bubble, body.night-mode .vb-row.bot .vb-bubble, [data-theme="dark"] .vb-row.bot .vb-bubble { background: #16213E; color: #FFFFFF; border-color: #2A3F60; }
+    body.dark-mode #vb-input-area, body.night-mode #vb-input-area, [data-theme="dark"] #vb-input-area { background: #1A1A2E; border-color: #2A3F60; }
+    body.dark-mode #vb-input, body.night-mode #vb-input, [data-theme="dark"] #vb-input { background: #16213E; color: #FFFFFF; border-color: #2A3F60; }
+    body.dark-mode .vb-qr, body.night-mode .vb-qr, [data-theme="dark"] .vb-qr { background: #2D2B55; color: #CCCCCC; }
+    body.dark-mode .vb-chip, body.night-mode .vb-chip, [data-theme="dark"] .vb-chip { background: #16213E; color: #FFFFFF; border-color: #2A3F60; }
+    body.dark-mode .vb-chip:hover, body.night-mode .vb-chip:hover, [data-theme="dark"] .vb-chip:hover { background: #2D2B55; color: #FFFFFF; border-color: #2D2B55; }
+    body.dark-mode .vb-tdots, body.night-mode .vb-tdots, [data-theme="dark"] .vb-tdots { background: #16213E; border-color: #2A3F60; }
+    body.dark-mode .vb-tdot, body.night-mode .vb-tdot, [data-theme="dark"] .vb-tdot { background: #FFFFFF; }
+    body.dark-mode .vb-msg-avatar, body.night-mode .vb-msg-avatar, [data-theme="dark"] .vb-msg-avatar { background: #14213D; border-color: #2A3F60; }
+    body.dark-mode #vb-position-panel, body.night-mode #vb-position-panel, [data-theme="dark"] #vb-position-panel { background: #16213E; border-color: #2A3F60; }
 
     /* Mobile responsive */
     @media (max-width: 480px) {
@@ -342,7 +387,7 @@
   const html = `
   <!-- VerifyBot Trigger Button -->
   <button id="vb-trigger" title="Chat with VerifyBot" aria-label="Open VerifyBot">
-    🤖
+    <img src="/static/images/CHATBOT_ICON.png" alt="VerifyBot" style="width:38px;height:38px;border-radius:50%;object-fit:cover;pointer-events:none;">
     <span id="vb-badge">1</span>
   </button>
 
@@ -372,13 +417,13 @@
     <!-- Header -->
     <div id="vb-header">
       <div id="vb-drag-handle" title="Drag to move"><span></span><span></span><span></span></div>
-      <div id="vb-avatar">🤖</div>
+      <div id="vb-avatar"><img src="/static/images/CHATBOT_ICON.png" alt="VerifyBot" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"></div>
       <div id="vb-header-info">
         <h3>VerifyBot</h3>
-        <p>
-          <span class="vb-status-dot"></span>Online
-          <span id="vb-mode-badge" style="display:none;font-size:10px;font-weight:600;padding:1px 6px;border-radius:20px;color:#fff;margin-left:6px;"></span>
-        </p>
+        <div class="vb-header-status-row">
+          <div class="vb-online-badge"><span class="vb-status-dot"></span>Online</div>
+          <span id="vb-mode-badge" style="display:none;font-size:10px;font-weight:600;padding:1px 6px;border-radius:20px;color:#fff;"></span>
+        </div>
       </div>
       <button onclick="document.getElementById('vb-position-panel').classList.toggle('open')" title="Move / resize" id="vb-move-btn" style="background:none;border:none;color:#9095b4;cursor:pointer;font-size:16px;">⤢</button>
       <button id="vb-close" aria-label="Close chat" style="background:none;border:none;color:#9095b4;cursor:pointer;font-size:18px;margin-left:4px;">✕</button>
@@ -392,7 +437,7 @@
 
     <!-- Quick Actions -->
     <div id="vb-quick-actions" style="padding: 0 14px 4px; display:flex; gap:6px;">
-      <button class="vb-qr" onclick="window.vbSetModeQuick('auto')" title="Switch to auto answers">🤖 Auto</button>
+      <button class="vb-qr" onclick="window.vbSetModeQuick('auto')" title="Switch to auto answers"><img src="/static/images/CHATBOT_ICON.png" alt="" style="width:12px;height:12px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:2px;margin-bottom:2px;">Auto</button>
       <button class="vb-qr" onclick="window.vbSetModeQuick('brief')" title="Switch to brief answers">⚡ Brief</button>
       <button class="vb-qr" onclick="window.vbSetModeQuick('detailed')" title="Switch to detailed answers">📖 Detailed</button>
     </div>
@@ -494,12 +539,21 @@
     const labels = {
       'brief':   { text: '⚡ Brief', bg: '#EF9F27' },
       'detailed':{ text: '📖 Detailed', bg: '#378ADD' },
-      'auto':    { text: '🤖 Auto', bg: '#22c55e' },
+      'auto':    { text: '<img src="/static/images/CHATBOT_ICON.png" alt="" style="width:10px;height:10px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:2px;margin-bottom:1px;">Auto', bg: '#22c55e' },
     };
     const m = labels[RESPONSE_MODE];
-    el.textContent = m.text;
+    el.innerHTML = m.text;
     el.style.background = m.bg;
     el.style.display = 'inline-block';
+
+    const btns = document.querySelectorAll('#vb-quick-actions .vb-qr');
+    btns.forEach(b => {
+      if (b.getAttribute('onclick').includes("('" + RESPONSE_MODE + "')")) {
+        b.classList.add('active');
+      } else {
+        b.classList.remove('active');
+      }
+    });
   }
 
   function getAutoComplexity(text) {
@@ -673,7 +727,7 @@
     row.className = 'vb-row bot';
 
     row.innerHTML = `
-      <div class="vb-msg-avatar">🤖</div>
+      <div class="vb-msg-avatar"><img src="/static/images/CHATBOT_ICON.png" alt="VerifyBot" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"></div>
       <div class="vb-bubble-wrap">
         <div class="vb-bubble">${formatBotText(text)}</div>
       </div>`;
@@ -874,7 +928,7 @@
     const msgs = {
       'brief':   '⚡ Brief mode on! Short answers from now.',
       'detailed':'📖 Detailed mode on! Full answers from now.',
-      'auto':    '🤖 Auto mode enabled!'
+      'auto':    '🤖 Auto mode enabled!' // Note: We keep this one as emoji because it is raw text inserted into a message bubble that already has its own avatar
     };
     addBotMessage(msgs[mode]);
   };
