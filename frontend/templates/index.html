@@ -4,6 +4,94 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+<style>
+  .drop-zone {
+    border: 2px dashed var(--card-border, rgba(0,0,0,0.12));
+    border-radius: 12px;
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-muted);
+  }
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: #E8453C;
+    background: rgba(232,69,60,0.04);
+  }
+  .dz-icon  { font-size: 32px; margin-bottom: 8px; }
+  .dz-title {
+    font-size: 14px; font-weight: 600;
+    color: var(--text-primary); margin-bottom: 4px;
+  }
+  .dz-sub   {
+    font-size: 12px; color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+  .dz-platforms {
+    display: flex; gap: 8px;
+    justify-content: center; flex-wrap: wrap;
+  }
+  .dz-platforms span {
+    font-size: 11px; padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--input-bg, #faf9f6);
+    color: var(--text-secondary);
+    border: 0.5px solid var(--card-border);
+  }
+  .img-preview-row {
+    display: flex; gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+  .img-file-info {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .img-fname {
+    font-size: 13px; font-weight: 500;
+    color: var(--text-primary);
+  }
+  .img-fsize {
+    font-size: 11px; color: var(--text-muted);
+  }
+  .img-remove-btn {
+    font-size: 11px; color: var(--text-muted);
+    background: none; border: none;
+    cursor: pointer; padding: 0; text-align: left;
+  }
+  .img-remove-btn:hover { color: #E8453C; }
+  .extract-btn {
+    width: 100%; padding: 10px;
+    border-radius: 10px; border: none;
+    background: #18181b; color: #fff;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    transition: background 0.15s;
+  }
+  .extract-btn:hover { background: #2d2d30; }
+  .extract-meta {
+    font-size: 11px; color: var(--text-muted);
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+  .red-flags-box {
+    background: rgba(232,69,60,0.06);
+    border-left: 3px solid #E8453C;
+    border-radius: 0 8px 8px 0;
+    padding: 10px 14px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  /* Style for third tab layout */
+  .tabs {
+    display: flex;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--card-border, rgba(0,0,0,0.1));
+    margin-bottom: 18px;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+</style>
 {% endblock %}
 
 {% block body %}
@@ -29,11 +117,11 @@
       <h1>The Fake News Detector</h1>
       <p class="subtitle">Paste any claim or article — we verify it against live news sources.</p>
       <div class="lang-row">
-        <span class="lang-tag active" data-lang="en" onclick="selectLanguage(this)">English</span>
-        <span class="lang-tag" data-lang="hi" onclick="selectLanguage(this)">Hindi</span>
-        <span class="lang-tag" data-lang="gu" onclick="selectLanguage(this)">Gujarati</span>
-        <span class="lang-tag" data-lang="hi" onclick="selectLanguage(this)">Hinglish</span>
-        <span class="lang-tag" data-lang="gu" onclick="selectLanguage(this)">Gujlish</span>
+        <span class="lang-tag active" data-lang="en" onclick="selectLanguage(this)" title="Standard English verification">English</span>
+        <span class="lang-tag" data-lang="hi" onclick="selectLanguage(this)" title="Hindi text + AltNews sources">Hindi</span>
+        <span class="lang-tag" data-lang="gu" onclick="selectLanguage(this)" title="Gujarati + regional sources">Gujarati</span>
+        <span class="lang-tag" data-lang="hi" onclick="selectLanguage(this)" title="Hindi written in English letters e.g. Modi ne aaj bola...">Hinglish</span>
+        <span class="lang-tag" data-lang="gu" onclick="selectLanguage(this)" title="Gujarati written in English letters e.g. Aaj Gujarat ma...">Gujlish</span>
       </div>
       <input type="hidden" name="selected_language" id="selected_language" value="en" />
     </div>
@@ -52,6 +140,7 @@
       <div class="tabs">
         <button class="tab active" onclick="switchTab('text',this)" id="tab-text">Paste Text / Claim</button>
         <button class="tab" onclick="switchTab('url',this)" id="tab-url">Scrape from URL</button>
+        <button class="tab" onclick="switchTab('image',this)" id="tab-image">📷 Upload Image</button>
       </div>
       <form action="/predict" method="post" id="main-form">
         <div class="panel active" id="panel-text">
@@ -59,10 +148,57 @@
           <textarea class="form-textarea" name="news" id="news-input"
             placeholder="Type or paste anything, for example:&#10;&#10;• India won T20 World Cup 2024&#10;• भारत ने 2024 टी20 विश्व कप जीता&#10;• Or paste a full news article...">{{ input_text or '' }}</textarea>
         </div>
-        <div class="panel" id="panel-url">
+        <div class="panel" id="panel-url" style="display:none;">
           <label class="form-label">Article URL</label>
           <input class="form-input" type="text" name="url" id="url-input" placeholder="https://www.bbc.com/news/..." />
           <p class="hint">The article will be scraped and analysed automatically.</p>
+        </div>
+        
+        <!-- Add image panel after URL panel -->
+        <div class="panel" id="panel-image" style="display:none">
+          <label class="form-label">SCREENSHOT OR IMAGE</label>
+          <!-- Drop zone -->
+          <div class="drop-zone" id="img-drop-zone"
+               onclick="document.getElementById('img-file-input').click()"
+               ondragover="event.preventDefault(); this.classList.add('dragover')"
+               ondragleave="this.classList.remove('dragover')"
+               ondrop="handleImageDrop(event)">
+            <div class="dz-icon">📸</div>
+            <div class="dz-title">Drop screenshot here or click to browse</div>
+            <div class="dz-sub">WhatsApp, Twitter, Facebook screenshots · PNG, JPG, WEBP · Max 10MB</div>
+            <div class="dz-platforms">
+              <span>💬 WhatsApp</span>
+              <span>📘 Facebook</span>
+              <span>🐦 Twitter</span>
+              <span>✈️ Telegram</span>
+            </div>
+          </div>
+
+          <input type="file" id="img-file-input" accept="image/*" style="display:none" onchange="handleImageSelect(this)">
+
+          <!-- Preview + extracted text -->
+          <div id="img-preview-section" style="display:none;margin-top:14px">
+            <div class="img-preview-row">
+              <img id="img-preview-thumb" style="width:100px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--card-border)">
+              <div class="img-file-info">
+                <div id="img-file-name" class="img-fname"></div>
+                <div id="img-file-size" class="img-fsize"></div>
+                <button type="button" class="img-remove-btn" onclick="removeImage()">Remove ✕</button>
+              </div>
+            </div>
+
+            <button type="button" class="extract-btn" id="extract-btn" onclick="extractImageText()">
+              🔍 Extract Text from Image
+            </button>
+
+            <!-- Extracted text area -->
+            <div id="extracted-section" style="display:none;margin-top:12px">
+              <label class="form-label">EXTRACTED TEXT (EDIT IF NEEDED)</label>
+              <textarea id="extracted-textarea" class="form-textarea" name="extracted_news" rows="4" placeholder="Extracted text will appear here..."></textarea>
+              <div class="extract-meta" id="extract-meta"></div>
+              <div class="red-flags-box" id="red-flags-box" style="display:none"></div>
+            </div>
+          </div>
         </div>
         <button type="submit" class="btn-primary" style="width:100%;margin-top:18px;padding:14px;" id="submit-btn">Verify This</button>
       </form>
@@ -119,9 +255,13 @@
         {% if was_translated and translated_preview %}<hr class="divider"><div class="section-h">Translated to English</div><div class="translation-box"><p>{{ translated_preview }}</p></div>{% endif %}
         {% if article %}<hr class="divider"><div class="section-h">Scraped Article</div><div class="article-title">{{ article.title }}</div>{% if article.publish_date and article.publish_date != 'None' %}<div class="article-date">{{ article.publish_date }}</div>{% endif %}
         {% elif input_text %}<hr class="divider"><div class="section-h">Analysed Text</div><p class="preview-text">{{ input_text }}</p>{% endif %}
+
+        <!-- FCM Deep Analysis Panel (populated async via /api/fact-check) -->
+        <div id="fcm-panel" style="display:none;margin-top:4px"></div>
       </div>
       {% endif %}
     </div>
+
 
     <!-- Trending Misinformation -->
     <hr class="section-divider">
@@ -177,12 +317,251 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/index.js') }}"></script>
 <script>
-  // Apply data-width values to bar fills (avoids Jinja2-in-CSS IDE lint errors)
+  // Apply data-width values to bar fills
   document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.bar-fill[data-width]').forEach(function(el) {
       el.style.width = el.getAttribute('data-width') + '%';
     });
+
+    // ── FCM Deep Analysis Panel ────────────────────────────────────
+    // Fire automatically if a result is already showing on page load
+    {% if prediction and input_text %}
+    runFCMAnalysis({{ input_text | tojson }}, false);
+    {% elif prediction and article %}
+    runFCMAnalysis({{ article.url | tojson if article.url else '' | tojson }}, false);
+    {% endif %}
   });
+
+  // ── FCM Analysis Runner ─────────────────────────────────────────
+  async function runFCMAnalysis(text, is_ocr) {
+    if (!text || !text.trim()) return;
+    const panel = document.getElementById('fcm-panel');
+    if (!panel) return;
+    panel.style.display = 'block';
+    panel.innerHTML = fcmSkeleton();
+
+    try {
+      const res = await fetch('/api/fact-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text.trim(), is_ocr: is_ocr || false })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      renderFCMPanel(panel, data);
+    } catch (e) {
+      panel.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:12px 0">⚠️ Deep analysis unavailable right now.</div>';
+    }
+  }
+
+  function fcmSkeleton() {
+    return `<div style="display:flex;flex-direction:column;gap:12px;padding:4px 0">
+      <div class="ts-shimmer" style="height:40px;border-radius:10px;width:100%"></div>
+      <div class="ts-shimmer" style="height:24px;border-radius:8px;width:70%"></div>
+      <div class="ts-shimmer" style="height:60px;border-radius:8px;width:100%"></div>
+    </div>`;
+  }
+
+  function renderFCMPanel(panel, data) {
+    if (!data) return;
+
+    // Handle plain_text mode gracefully
+    if (data.output_mode === 'plain_text') {
+      panel.style.display = 'none';
+      return;
+    }
+
+    const jd = data.json_data;
+    if (!jd) { panel.style.display = 'none'; return; }
+
+    const vColors = { REAL:'#22c55e', FAKE:'#ef4444', MISLEADING:'#f59e0b' };
+    const vIcons  = { REAL:'✅', FAKE:'❌', MISLEADING:'⚠️' };
+    const sColors = { Critical:'#ef4444', High:'#f59e0b', Medium:'#3b82f6', Low:'#22c55e' };
+
+    const vKey    = (jd.verdict || 'MISLEADING').toUpperCase();
+    const vColor  = vColors[vKey] || '#a78bfa';
+    const vIcon   = vIcons[vKey]  || '🔍';
+    const sevColor = sColors[jd.severity] || '#9ca3af';
+
+    let html = `<div style="border-top:1px solid var(--card-border,rgba(0,0,0,.1));padding-top:16px;margin-top:8px">`;
+    html += `<div class="section-h" style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      🧠 FCM Deep Analysis
+      <span style="font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;background:${vColor}22;color:${vColor};border:1px solid ${vColor}44">${vIcon} ${jd.verdict}</span>
+      <span style="font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;background:${sevColor}22;color:${sevColor};border:1px solid ${sevColor}44">${jd.severity}</span>
+      <span style="font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;background:rgba(100,100,100,.12);color:var(--text-muted);margin-left:auto">${jd.category}</span>
+    </div>`;
+
+    // Key Signals
+    if (jd.key_signals && jd.key_signals.length) {
+      html += `<div style="margin-bottom:12px">
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:.5px;margin-bottom:6px">KEY SIGNALS DETECTED</div>`;
+      jd.key_signals.forEach(s => {
+        html += `<div style="display:flex;gap:7px;align-items:flex-start;margin-bottom:5px;font-size:13px;color:var(--text-secondary)">
+          <span style="color:#ef4444;flex-shrink:0">🚩</span><span>${escFCM(s)}</span></div>`;
+      });
+      html += `</div>`;
+    }
+
+    // Correct Information
+    if (jd.correct_information) {
+      html += `<div style="background:rgba(34,197,94,.07);border-left:3px solid #22c55e;border-radius:0 8px 8px 0;padding:10px 13px;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:600;color:#22c55e;margin-bottom:4px">✅ CORRECT INFORMATION</div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.5">${escFCM(jd.correct_information)}</div>
+      </div>`;
+    }
+
+    // Sources Checked
+    if (jd.sources_checked && jd.sources_checked.length) {
+      html += `<div style="margin-bottom:4px">
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:.5px;margin-bottom:7px">SOURCES CHECKED</div>`;
+      jd.sources_checked.slice(0, 4).forEach(src => {
+        const sc = src.credibility_score || 0;
+        const barColor = sc >= 80 ? '#22c55e' : sc >= 55 ? '#f59e0b' : '#ef4444';
+        html += `<div style="border:1px solid var(--card-border,rgba(0,0,0,.1));border-radius:8px;padding:9px 12px;margin-bottom:7px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+            <a href="${escFCM(src.url)}" target="_blank" rel="noopener" style="color:var(--text-primary);font-size:12.5px;font-weight:500;text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escFCM(src.title || src.url)}</a>
+            <span style="font-size:11px;font-weight:600;color:${barColor};flex-shrink:0">${sc}/100</span>
+          </div>
+          <div style="height:4px;background:rgba(0,0,0,.08);border-radius:2px;overflow:hidden">
+            <div style="height:100%;width:${sc}%;background:${barColor};border-radius:2px;transition:width .5s ease"></div>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    // ML score if present
+    if (jd.ml_model_score !== null && jd.ml_model_score !== undefined) {
+      const mlPct = Math.round(jd.ml_model_score * 100);
+      const mlLabel = mlPct >= 50 ? 'Real' : 'Fake';
+      const mlColor = mlPct >= 50 ? '#22c55e' : '#ef4444';
+      html += `<div style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-muted);margin-top:4px;margin-bottom:2px">
+        <span>🤖 ML Model: <strong style="color:${mlColor}">${mlLabel} (${mlPct}% real)</strong></span>
+        ${jd.domain_credibility_score !== null ? `<span style="margin-left:auto">🌐 Domain: <strong>${jd.domain_credibility_score}/100</strong></span>` : ''}
+      </div>`;
+    }
+
+    html += `</div>`;
+    panel.innerHTML = html;
+  }
+
+  function escFCM(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Updated switchTab to handle the third tab ────────────────
+  function switchTab(tabId, el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
+    el.classList.add('active');
+    document.getElementById('panel-' + tabId).style.display = 'block';
+    
+    // Clear other inputs so form submission uses correct one
+    if (tabId === 'text') {
+      document.getElementById('url-input').value = '';
+      if(document.getElementById('extracted-textarea')) document.getElementById('extracted-textarea').name = 'extracted_news_ignore';
+      document.getElementById('news-input').name = 'news';
+    } else if (tabId === 'url') {
+      document.getElementById('news-input').value = '';
+      if(document.getElementById('extracted-textarea')) document.getElementById('extracted-textarea').name = 'extracted_news_ignore';
+      document.getElementById('url-input').name = 'url';
+    } else if (tabId === 'image') {
+      document.getElementById('news-input').value = '';
+      document.getElementById('url-input').value = '';
+      document.getElementById('news-input').name = 'news_ignore';
+      if(document.getElementById('extracted-textarea')) document.getElementById('extracted-textarea').name = 'news';
+    }
+  }
+
+  // Image Upload Logic
+  let selectedImageFile = null;
+
+  function handleImageDrop(e) {
+    e.preventDefault();
+    document.getElementById('img-drop-zone').classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) showImagePreview(file);
+  }
+
+  function handleImageSelect(input) {
+    const file = input.files[0];
+    if (file) showImagePreview(file);
+  }
+
+  function showImagePreview(file) {
+    selectedImageFile = file;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('img-preview-thumb').src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    document.getElementById('img-file-name').textContent = file.name;
+    document.getElementById('img-file-size').textContent = (file.size/1024).toFixed(1) + ' KB';
+    document.getElementById('img-preview-section').style.display = 'block';
+    document.getElementById('extracted-section').style.display = 'none';
+    document.getElementById('img-drop-zone').style.display = 'none';
+  }
+
+  function removeImage() {
+    selectedImageFile = null;
+    document.getElementById('img-file-input').value = '';
+    document.getElementById('img-preview-section').style.display = 'none';
+    document.getElementById('img-drop-zone').style.display = 'block';
+    document.getElementById('extracted-section').style.display = 'none';
+    if(document.getElementById('extracted-textarea')) document.getElementById('extracted-textarea').value = '';
+  }
+
+  async function extractImageText() {
+    if (!selectedImageFile) return;
+    const btn = document.getElementById('extract-btn');
+    btn.textContent = '⏳ Reading image...';
+    btn.disabled = true;
+
+    const formData = new FormData();
+    formData.append('image', selectedImageFile);
+
+    try {
+      const res = await fetch('/api/extract-image-text', { method: 'POST', body: formData });
+      const d = await res.json();
+
+      if (d.success) {
+        const ta = document.getElementById('extracted-textarea');
+        ta.value = d.extracted_text;
+
+        document.getElementById('extracted-section').style.display = 'block';
+        document.getElementById('extract-meta').textContent =
+          `✓ ${d.word_count} words extracted · Language: ${d.language.toUpperCase()} · Confidence: ${d.confidence}`;
+
+        if (d.red_flags && d.red_flags.length > 0) {
+          const rfBox = document.getElementById('red-flags-box');
+          rfBox.style.display = 'block';
+          rfBox.innerHTML = '🚩 <strong>Red flags detected:</strong><br>' + d.red_flags.map(f=>`• ${f}`).join('<br>');
+        } else {
+          document.getElementById('red-flags-box').style.display = 'none';
+        }
+
+        // Also run FCM on the OCR-extracted text
+        runFCMAnalysis(d.extracted_text, true);
+
+        btn.textContent = '✓ Text Extracted!';
+        btn.style.background = '#27AE60';
+      } else {
+        btn.textContent = '⚠ ' + (d.error || 'Could not extract text');
+        btn.style.background = '#EF9F27';
+      }
+    } catch(e) {
+      btn.textContent = '⚠ Error — try again';
+      btn.style.background = '#E8453C';
+    } finally {
+      btn.disabled = false;
+      setTimeout(() => {
+        btn.textContent = '🔍 Extract Text from Image';
+        btn.style.background = '#18181b';
+      }, 3000);
+    }
+  }
 </script>
+
 {% endblock %}
 

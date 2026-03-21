@@ -4,6 +4,9 @@
       "root": "."
     }
   ],
+  "search_path": [
+    "C:\\Users\\OM BHUDHARA\\AppData\\Roaming\\Python\\Python312\\site-packages"
+  ],
   "site_package_search_strategy": "all",
   "ignore_all_errors": true
 }

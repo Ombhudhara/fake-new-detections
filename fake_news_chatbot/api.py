@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from typing import List, Dict, Optional, Any
 import os
 import sys
+import re
 
 # --- IDE Compatibility Patch ---
 # Ensures local modules like 'chatbot_engine' are found even if run from a parent folder
@@ -16,13 +17,22 @@ from chain import get_rag_chain, get_rag_response
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-import os
-import sys
 import logging
+
+# Attempt to import httpx for internal calls to Flask /api/fact-check
+try:
+    import httpx
+    _HTTPX_AVAILABLE = True
+except ImportError:
+    _HTTPX_AVAILABLE = False
+
+# Flask backend base URL (must be running for inline FCM analysis)
+_FLASK_BASE = os.getenv("FLASK_BASE_URL", "http://127.0.0.1:5000")
 
 # Configure logging to help debugging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 # Global persistent chain
 rag_chain = None
@@ -205,19 +215,60 @@ async def root():
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     """
-    Main chat endpoint handling routing and RAG pipelines.
+    Main chat endpoint — handles routing, RAG, and FCM inline analysis.
+
+    Flow:
+    1. route_message() decides if it's guided flow, inline news check, or free Q&A
+    2. If use_rag=True AND the message looks like a news claim (>12 words, not conversational):
+       → calls Flask /api/fact-check for a structured FCM plain-text verdict
+       → prepends that verdict to the RAG answer
+    3. Otherwise: pure RAG response
     """
     session = get_or_create_session(request.session_id)
-    
+
     # 1. Routing & Base Reply Generation
     engine_res = route_message(request.session_id, request.message)
-    
     page_context_str = get_page_context(request.page)
-    
-    # 2. RAG Logic (if engine decides it's Q&A mode)
+
+    # 2. Detect if message is a news claim (vs conversational)
+    msg = request.message.strip()
+    word_count = len(msg.split())
+    _CONV_STARTERS = [
+        "hello", "hi", "hey", "what is", "how do", "can you", "please",
+        "help me", "thanks", "kya", "kyun", "kaise", "batao", "shukriya",
+        "namaste", "?",
+    ]
+    is_news_claim = (
+        word_count >= 12
+        and not any(msg.lower().startswith(s) or msg.lower().endswith("?") for s in _CONV_STARTERS)
+        and not re.match(r"^https?://", msg)  # URLs handled differently
+    )
+
+    # 3. If RAG mode + looks like a news claim → hit FCM first
+    if engine_res.get("use_rag", False) and is_news_claim and _HTTPX_AVAILABLE:
+        try:
+            async with httpx.AsyncClient(timeout=12.0) as client:
+                fcm_res = await client.post(
+                    f"{_FLASK_BASE}/api/fact-check",
+                    json={
+                        "text": msg,
+                        "is_ocr": False,
+                        "lang_hint": session.detected_language if session.detected_language != "en" else None,
+                    }
+                )
+                if fcm_res.status_code == 200:
+                    fcm_data = fcm_res.json()
+                    if fcm_data.get("output_mode") == "plain_text" and fcm_data.get("plain_text"):
+                        # FCM returned a verdict — use it as main response
+                        engine_res["message"] = fcm_data["plain_text"]
+                        engine_res["use_rag"] = False  # skip RAG, verdict is complete
+                        return engine_res
+        except Exception as _fcm_err:
+            logger.warning(f"[FCM] Flask backend unavailable: {_fcm_err} — falling back to RAG")
+
+    # 4. RAG Logic (if engine decides it's Q&A mode, or FCM was skipped/failed)
     if engine_res.get("use_rag", False):
         try:
-            # Call RAG Chain
             rag_result = get_rag_response(
                 rag_chain,
                 request.message,
@@ -227,8 +278,6 @@ async def chat(request: ChatRequest):
                 response_mode=request.response_mode,
                 mode_instruction=request.mode_instruction
             )
-            
-            # Use the RAG answer as message
             engine_res["message"] = rag_result["answer"]
         except Exception as e:
             print(f"RAG Error: {e}")
@@ -236,6 +285,7 @@ async def chat(request: ChatRequest):
             engine_res["use_rag"] = False
 
     return engine_res
+
 
 @app.get("/languages")
 async def list_languages():

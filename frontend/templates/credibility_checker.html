@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Credibility Checker — The Fake News Detector{% endblock %}
+{% block meta_desc %}Check the credibility score of any news domain or website instantly.{% endblock %}
+
+{% block extra_css %}
+<style>
+  .credibility-page {
+    max-width: 600px;
+    margin: 80px auto;
+    padding: 40px;
+    background: var(--card-bg, #fff);
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    text-align: center;
+    border: 1px solid var(--card-border, rgba(0,0,0,0.08));
+  }
+  .credibility-widget {
+    background: var(--input-bg, #faf9f6);
+    border: 0.5px solid var(--card-border, rgba(0,0,0,0.08));
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-top: 14px;
+    text-align: left;
+  }
+  .cw-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+  .cw-input-row {
+    display: flex;
+    gap: 8px;
+  }
+  .cw-input {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--card-border, rgba(0,0,0,0.1));
+    font-size: 15px;
+    font-family: 'Space Grotesk', sans-serif;
+    background: var(--card-bg, #fff);
+    color: var(--text-primary);
+    outline: none;
+  }
+  .cw-input:focus {
+    border-color: #E8453C;
+    box-shadow: 0 0 0 2px rgba(232,69,60,0.1);
+  }
+  .cw-btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    background: #E8453C;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    transition: background 0.15s;
+  }
+  .cw-btn:hover { background: #c73228; }
+  .cw-result {
+    margin-top: 16px;
+    padding: 16px 20px;
+    border-radius: 8px;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .cw-result.green {
+    background: rgba(39,174,96,0.08);
+    border-left: 4px solid #27AE60;
+    color: var(--text-primary);
+  }
+  .cw-result.amber {
+    background: rgba(239,159,39,0.08);
+    border-left: 4px solid #EF9F27;
+    color: var(--text-primary);
+  }
+  .cw-result.red {
+    background: rgba(232,69,60,0.08);
+    border-left: 4px solid #E8453C;
+    color: var(--text-primary);
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="page-container">
+  <div class="credibility-page">
+    <h1 style="font-family:'Playfair Display',serif;font-size:36px;color:var(--navy);margin-bottom:10px;">Credibility Checker</h1>
+    <p style="color:var(--text-muted);font-size:16px;margin-bottom:30px;">Instantly check if a news source is trustworthy or known for spreading misinformation.</p>
+
+    <div class="credibility-widget" id="inline-cred-checker">
+      <div class="cw-label">🔍 Quick Credibility Check</div>
+      <div class="cw-input-row">
+        <input type="text" id="cw-input" class="cw-input" placeholder="e.g. ndtv.com or bbc.com" onkeydown="if(event.key==='Enter') checkCredibilityInline()">
+        <button class="cw-btn" onclick="checkCredibilityInline()">Check</button>
+      </div>
+      <div class="cw-result" id="cw-result" style="display:none"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  async function checkCredibilityInline() {
+    const input = document.getElementById('cw-input');
+    const result= document.getElementById('cw-result');
+    const val   = input.value.trim();
+    if (!val) return;
+
+    result.style.display = 'block';
+    result.className     = 'cw-result';
+    result.innerHTML     = '⏳ Checking...';
+
+    try {
+      const res = await fetch('/api/check-credibility', {
+        method: 'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ domain: val })
+      });
+      const d = await res.json();
+
+      if (d.success) {
+        result.className = `cw-result ${d.color}`;
+        result.innerHTML =
+          `<strong>${d.domain}</strong> — ` +
+          `${d.tier} · Score: ` +
+          `<strong>${d.score}/100</strong><br>` +
+          `${d.advice}`;
+      } else {
+        result.className = 'cw-result amber';
+        result.innerHTML = '⚠ Could not check. Try entering just the domain name.';
+      }
+    } catch(e) {
+      result.className = 'cw-result red';
+      result.innerHTML = '⚠ Connection error. Try again.';
+    }
+  }
+</script>
+{% endblock %}

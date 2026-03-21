@@ -539,6 +539,12 @@
   function formatBotText(text) {
     if (!text) return '';
 
+    // ── Detect FCM Section 7A verdict block ──────────────────────
+    // Pattern: starts with ━━ line, then Verdict: / Confidence: lines
+    if (/^━+\s*\nVerdict:/m.test(text) || /^━{10,}/.test(text.trim())) {
+      return renderVerdictCard(text);
+    }
+
     let formatted = text
       /* Escape HTML first */
       .replace(/&/g,'&amp;')
@@ -569,6 +575,70 @@
 
     return formatted;
   }
+
+  // ── FCM Verdict Card Renderer ─────────────────────────────────
+  function renderVerdictCard(text) {
+    const lines = text.split('\n');
+    let verdict = '', confidence = '', explanation = [], signals = [], correct = [], inSignals = false, inCorrect = false, inExplain = false;
+
+    for (const raw of lines) {
+      const line = raw.trim();
+      if (!line || /^━+$/.test(line)) { inSignals = false; inCorrect = false; inExplain = false; continue; }
+
+      if (line.startsWith('Verdict:'))     { verdict     = line.replace('Verdict:', '').trim(); inSignals=false; inCorrect=false; inExplain=false; continue; }
+      if (line.startsWith('Confidence:'))  { confidence  = line.replace('Confidence:', '').trim(); inSignals=false; inCorrect=false; inExplain=false; continue; }
+      if (line.startsWith('Explanation:')) { inExplain=true; inSignals=false; inCorrect=false; continue; }
+      if (line.startsWith('Key Signals:')) { inSignals=true; inExplain=false; inCorrect=false; continue; }
+      if (line.startsWith('Correct Information:')) { inCorrect=true; inSignals=false; inExplain=false; continue; }
+
+      if (inSignals && line.startsWith('-')) { signals.push(line.slice(1).trim()); continue; }
+      if (inCorrect && line) { correct.push(line); continue; }
+      if (inExplain && line) { explanation.push(line); continue; }
+    }
+
+    const colors = { REAL:'#22c55e', FAKE:'#ef4444', MISLEADING:'#f59e0b' };
+    const icons  = { REAL:'✅', FAKE:'❌', MISLEADING:'⚠️' };
+    const vKey   = verdict.toUpperCase();
+    const vColor = colors[vKey] || '#a78bfa';
+    const vIcon  = icons[vKey]  || '🔍';
+
+    const confColor = { High:'#22c55e', Medium:'#f59e0b', Low:'#9ca3af' }[confidence] || '#9ca3af';
+
+    let html = `<div style="border:1px solid ${vColor}33;border-radius:12px;overflow:hidden;margin:-2px;font-size:12.5px;">`;
+
+    // Header strip
+    html += `<div style="background:${vColor}22;padding:10px 13px;display:flex;align-items:center;gap:8px;border-bottom:1px solid ${vColor}33;">`;
+    html += `<span style="font-size:18px">${vIcon}</span>`;
+    html += `<div style="flex:1"><div style="font-weight:700;font-size:13px;color:${vColor}">${verdict}</div>`;
+    html += `<div style="font-size:11px;color:${confColor};margin-top:1px;">Confidence: ${confidence}</div></div></div>`;
+
+    // Body
+    html += `<div style="padding:10px 13px;display:flex;flex-direction:column;gap:8px;">`;
+
+    if (explanation.length) {
+      html += `<div style="color:#d1d5db;line-height:1.5">${explanation.map(l=>escapeHtml(l)).join('<br>')}</div>`;
+    }
+
+    if (signals.length) {
+      html += `<div><div style="font-size:10px;font-weight:600;color:#9095b4;letter-spacing:.5px;margin-bottom:4px">KEY SIGNALS</div>`;
+      html += signals.map(s => `<div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:3px"><span style="color:#ef4444;flex-shrink:0">🚩</span><span style="color:#d1d5db">${escapeHtml(s)}</span></div>`).join('');
+      html += `</div>`;
+    }
+
+    if (correct.length) {
+      html += `<div style="background:rgba(34,197,94,.1);border-left:3px solid #22c55e;border-radius:0 6px 6px 0;padding:8px 10px;">`;
+      html += `<div style="font-size:10px;font-weight:600;color:#22c55e;margin-bottom:3px">✅ CORRECT INFORMATION</div>`;
+      html += `<div style="color:#d1d5db;line-height:1.4">${correct.map(l=>escapeHtml(l)).join('<br>')}</div></div>`;
+    }
+
+    // CTA link
+    html += `<div style="font-size:10.5px;color:#6c63ff;border-top:1px solid rgba(108,99,255,.15);padding-top:7px;margin-top:2px">`;
+    html += `<a href="/" style="color:#6c63ff;text-decoration:none">🚀 Get full 3-layer AI analysis on the Home page →</a></div>`;
+
+    html += `</div></div>`;
+    return html;
+  }
+
 
   // ── Helpers ──────────────────────────────────────────────────────────
   function escapeHtml(s) {

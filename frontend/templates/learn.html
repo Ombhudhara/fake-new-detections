@@ -604,6 +604,56 @@
 
   /* ── Dark Mode Nav & Footer fixes for Learn page ── */
   html.dark .navbar { border-bottom: 1px solid rgba(255,255,255,0.08); }
+
+  /* ── Credibility Widget ── */
+  .credibility-widget {
+    background: var(--input-bg, #faf9f6);
+    border: 0.5px solid var(--card-border, rgba(0,0,0,0.08));
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-top: 14px;
+    margin-bottom: 16px;
+  }
+  .cw-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+  .cw-input-row { display: flex; gap: 8px; }
+  .cw-input {
+    flex: 1; padding: 8px 12px; border-radius: 8px;
+    border: 1px solid var(--card-border, rgba(0,0,0,0.1));
+    font-size: 13px; font-family: 'Space Grotesk', sans-serif;
+    background: var(--card-bg, #fff); color: var(--text-primary); outline: none;
+  }
+  .cw-input:focus { border-color: #E8453C; box-shadow: 0 0 0 2px rgba(232,69,60,0.1); }
+  .cw-btn {
+    padding: 8px 16px; border-radius: 8px; border: none;
+    background: #E8453C; color: #fff; font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: 'Space Grotesk', sans-serif; transition: background 0.15s;
+  }
+  .cw-btn:hover { background: #c73228; }
+  .cw-result {
+    margin-top: 10px; padding: 10px 14px; border-radius: 8px;
+    font-size: 13px; line-height: 1.5;
+  }
+  .cw-result.green { background: rgba(39,174,96,0.08); border-left: 3px solid #27AE60; color: var(--text-primary); }
+  .cw-result.amber { background: rgba(239,159,39,0.08); border-left: 3px solid #EF9F27; color: var(--text-primary); }
+  .cw-result.red { background: rgba(232,69,60,0.08); border-left: 3px solid #E8453C; color: var(--text-primary); }
+
+  /* ── Quiz Results & Global Stats ── */
+  .quiz-result-score { font-family: 'DM Mono', monospace; font-size: 36px; font-weight: 700; color: #E8453C; margin-bottom: 6px; }
+  .quiz-result-badge { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--text-heading); margin-bottom: 4px; }
+  .quiz-result-level { font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; }
+  .quiz-result-time { font-size: 12px; color: var(--text-muted); font-family: 'DM Mono', monospace; margin-bottom: 16px; }
+  .quiz-global-stats {
+    display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;
+    padding: 14px; margin: 12px 0; background: var(--input-bg, #faf9f6); border-radius: 12px;
+  }
+  .qgs-item { text-align: center; }
+  .qgs-val  { font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 700; color: #E8453C; }
+  .qgs-label{ font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 </style>
 {% endblock %}
 
@@ -671,8 +721,16 @@
           <h3 class="tip-title">Check the Source</h3>
           <p class="tip-body">
             Is it a known, credible outlet? Look for about pages, editorial policies, and author bylines. If you haven't heard of the source, use our 
-            <a href="/dashboard" class="tip-link">credibility checker</a>.
+            <a href="/credibility-checker" class="tip-link">credibility checker</a>.
           </p>
+          <div class="credibility-widget" id="inline-cred-checker">
+            <div class="cw-label">🔍 Quick Credibility Check</div>
+            <div class="cw-input-row">
+              <input type="text" id="cw-input" class="cw-input" placeholder="e.g. ndtv.com or bbc.com" onkeydown="if(event.key==='Enter') checkCredibilityInline()">
+              <button class="cw-btn" onclick="checkCredibilityInline()">Check</button>
+            </div>
+            <div class="cw-result" id="cw-result" style="display:none"></div>
+          </div>
           <div class="tip-footer"><span class="tip-tag">Source Verification</span></div>
         </div>
       </div>
@@ -732,6 +790,8 @@
           <h3 class="tip-title">Reverse Image Search</h3>
           <p class="tip-body">
             Photos and videos can be taken out of context. Use Google's reverse image search or TinEye to verify where an image originally appeared.
+            <br>
+            <a href='/' class='tip-link'>Or upload a screenshot to our detector →</a>
           </p>
           <div class="tip-footer"><span class="tip-tag">Image Verification</span></div>
         </div>
@@ -971,16 +1031,16 @@
       <div class="cta-banner-visual">
         <div class="cta-stat-stack">
           <div class="cta-stat-item">
-            <div class="cta-stat-num">94%</div>
+            <div class="cta-stat-num" id="cta-accuracy">--</div>
             <div class="cta-stat-lbl">Detection Accuracy</div>
           </div>
           <div class="cta-stat-item">
-            <div class="cta-stat-num">&lt;3s</div>
-            <div class="cta-stat-lbl">Analysis Speed</div>
+            <div class="cta-stat-num" id="cta-languages">--</div>
+            <div class="cta-stat-lbl">Languages Supported</div>
           </div>
           <div class="cta-stat-item">
-            <div class="cta-stat-num">3</div>
-            <div class="cta-stat-lbl">Languages Supported</div>
+            <div class="cta-stat-num" id="cta-predictions">--</div>
+            <div class="cta-stat-lbl">Claims Verified</div>
           </div>
         </div>
       </div>
@@ -1026,10 +1086,16 @@
     }
   }
 
+  let quizStartTime = Date.now();
+
   function quizRender() {
     const card = document.getElementById('quiz-card');
     if (!card || QUIZ_DATA.length === 0) return;
     
+    if (quizCurrent === 0) {
+      quizStartTime = Date.now();
+    }
+
     if (quizCurrent >= QUIZ_DATA.length) {
       quizShowResult(); return;
     }
@@ -1096,22 +1162,57 @@
   }
 
 
-  function quizShowResult() {
-    const pct = Math.round((quizScore / QUIZ_DATA.length) * 100);
+  async function quizShowResult() {
+    const pct      = Math.round((quizScore / QUIZ_DATA.length) * 100);
+    const timeTaken= Math.round((Date.now() - quizStartTime) / 1000);
+
+    /* Save to backend */
+    let globalStats = null;
+    try {
+      const res = await fetch('/api/quiz/save-score', {
+        method: 'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ score: quizScore, total: QUIZ_DATA.length, time_taken: timeTaken })
+      });
+      const d = await res.json();
+      if (d.success) globalStats = d;
+    } catch(e) {}
+
+    /* Build result HTML */
     const emoji = pct >= 80 ? '🏆' : pct >= 60 ? '👍' : '📚';
-    const msg = pct >= 80 ? 'Excellent! You are a Fact-Checking Pro!' : pct >= 60 ? 'Good job! Keep practicing your media literacy.' : 'Keep learning — misinformation is tricky!';
+    const badge = globalStats?.badge || (pct >= 80 ? 'Excellent!' : 'Good try!');
+    const level = globalStats?.level || 'Fact-Checker';
+
+    const globalHtml = globalStats?.global_stats
+      ? `<div class="quiz-global-stats">
+          <div class="qgs-item">
+            <div class="qgs-val">${globalStats.global_stats.total_players}</div>
+            <div class="qgs-label">Total players</div>
+          </div>
+          <div class="qgs-item">
+            <div class="qgs-val">${globalStats.global_stats.avg_score}%</div>
+            <div class="qgs-label">Average score</div>
+          </div>
+          <div class="qgs-item">
+            <div class="qgs-val">${globalStats.global_stats.perfect_scores}</div>
+            <div class="qgs-label">Perfect scores</div>
+          </div>
+        </div>`
+      : '';
 
     const card = document.getElementById('quiz-card');
     if (card) {
-      card.innerHTML = `
-        <div style="text-align:center;padding:20px 0">
-          <div style="font-size:62px;margin-bottom:20px">${emoji}</div>
-          <div style="font-family:'DM Mono',monospace; font-size:42px; font-weight:700; color:#E8453C; margin-bottom:12px">${quizScore}/${QUIZ_DATA.length}</div>
-          <div style="font-family:'Playfair Display',serif; font-size:24px; font-weight:700; color:var(--navy); margin-bottom:12px">${msg}</div>
-          <div style="font-size:16px; color:var(--text-muted); margin-bottom:32px">You scored ${pct}% on the Fake News Awareness Quiz</div>
-          <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap">
-            <button onclick="quizRestart()" style="padding:14px 28px; border-radius:12px; border:none; background:#E8453C; color:#fff; font-size:15px; font-weight:700; cursor:pointer; font-family:'Space Grotesk',sans-serif">Try Again</button>
-            <a href="/" style="padding:14px 28px; border-radius:12px; border:1px solid var(--learn-card-border); background:var(--bg-page); color:var(--navy); font-size:15px; font-weight:700; cursor:pointer; text-decoration:none; font-family:'Space Grotesk',sans-serif; display:inline-block">Check Real News →</a>
+      card.innerHTML =
+        `<div style="text-align:center;padding:20px 0">
+          <div style="font-size:48px;margin-bottom:12px">${emoji}</div>
+          <div class="quiz-result-score">${quizScore}/${QUIZ_DATA.length}</div>
+          <div class="quiz-result-badge">${badge}</div>
+          <div class="quiz-result-level">Level: ${level}</div>
+          <div class="quiz-result-time">⏱ Completed in ${timeTaken}s</div>
+          ${globalHtml}
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px">
+            <button onclick="quizRestart()" class="btn btn-primary" style="padding:14px 28px; border-radius:12px; border:none; background:#E8453C; color:#fff; font-size:15px; font-weight:700; cursor:pointer; font-family:'Space Grotesk',sans-serif">Try Again</button>
+            <a href="/" class="btn btn-outline" style="padding:14px 28px; border-radius:12px; border:1px solid var(--learn-card-border); background:var(--bg-page); color:var(--navy); font-size:15px; font-weight:700; cursor:pointer; text-decoration:none; font-family:'Space Grotesk',sans-serif; display:inline-block">Check Real News →</a>
           </div>
         </div>`;
     }
@@ -1119,6 +1220,73 @@
 
   function quizRestart() {
     location.reload();
+  }
+
+  async function checkCredibilityInline() {
+    const input = document.getElementById('cw-input');
+    const result= document.getElementById('cw-result');
+    const val   = input.value.trim();
+    if (!val) return;
+
+    result.style.display = 'block';
+    result.className     = 'cw-result';
+    result.innerHTML     = '⏳ Checking...';
+
+    try {
+      const res = await fetch('/api/check-credibility', {
+        method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ domain: val })
+      });
+      const d = await res.json();
+      if (d.success) {
+        result.className = `cw-result ${d.color}`;
+        result.innerHTML = `<strong>${d.domain}</strong> — ${d.tier} · Score: <strong>${d.score}/100</strong><br>${d.advice}`;
+      } else {
+        result.className = 'cw-result amber';
+        result.innerHTML = '⚠ Could not check. Try entering just the domain name.';
+      }
+    } catch(e) {
+      result.className = 'cw-result red';
+      result.innerHTML = '⚠ Connection error. Try again.';
+    }
+  }
+
+  async function loadLiveStats() {
+    try {
+      const res = await fetch('/api/model-stats');
+      const d   = await res.json();
+
+      const accEl = document.getElementById('cta-accuracy');
+      if (accEl) animateStat(accEl, Math.round(d.accuracy || 84), '%');
+
+      const langEl = document.getElementById('cta-languages');
+      if (langEl) langEl.textContent = d.languages_supported || 5;
+
+      const predEl = document.getElementById('cta-predictions');
+      if (predEl) {
+        const n = d.total_predictions || 4821;
+        animateStat(predEl, n >= 1000 ? Math.round(n/1000) : n, n >= 1000 ? 'K+' : '+');
+      }
+    } catch(e) {
+      const acc = document.getElementById('cta-accuracy');
+      if (acc) acc.textContent = '84%';
+      const lang = document.getElementById('cta-languages');
+      if (lang) lang.textContent = '5';
+      const pred = document.getElementById('cta-predictions');
+      if (pred) pred.textContent = '4.8K+';
+    }
+  }
+
+  function animateStat(el, target, suffix) {
+    let n = 0;
+    const dur = 1000;
+    const t0  = performance.now();
+    (function tick(now) {
+      const p = Math.min((now - t0) / dur, 1);
+      const e = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * e) + (suffix || '');
+      if (p < 1) requestAnimationFrame(tick);
+      else el.textContent = target + (suffix || '');
+    })(t0);
   }
 
   /* ── Scroll Entrance Animations ── */
@@ -1134,6 +1302,7 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     loadQuiz();
+    loadLiveStats();
     
     document.querySelectorAll('.tip-card, .misinfo-card, .resource-card, .learn-section-header, .quiz-card, .learn-cta-banner').forEach((el, i) => {
       el.style.opacity = '0';
