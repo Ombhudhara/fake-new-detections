@@ -144,6 +144,26 @@
   color: var(--text-secondary)
 }
 
+.stat-up {
+  animation: statGlowUp 0.8s ease-in-out;
+}
+
+.stat-down {
+  animation: statGlowDown 0.8s ease-in-out;
+}
+
+@keyframes statGlowUp {
+  0% { transform: scale(1); color: inherit; }
+  40% { transform: scale(1.06); color: #23a25f; }
+  100% { transform: scale(1); color: inherit; }
+}
+
+@keyframes statGlowDown {
+  0% { transform: scale(1); color: inherit; }
+  40% { transform: scale(1.06); color: #e14b4b; }
+  100% { transform: scale(1); color: inherit; }
+}
+
 html.dark .stat-card {
   background: var(--surface);
   border-color: var(--border)

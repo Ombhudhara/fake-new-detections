@@ -288,12 +288,110 @@ function animateCounter(id, target, suffix, duration) {
     if (start >= target) clearInterval(timer);
   }, 16);
 }
-setTimeout(function() {
-  animateCounter('s1', 152, '', 1500);
-  animateCounter('s2', 87, '%', 1600);
-  animateCounter('s3', 30, '', 1400);
-  animateCounter('s4', 8327, '', 1800);
-}, 300);
+var currentStats = {
+  fake_detected_today: null,
+  avg_confidence: null,
+  countries_affected: null,
+  total_checked: null
+};
+
+function formatCardNumber(value) {
+  if (value >= 1000) return (value / 1000).toFixed(1) + 'k';
+  return String(Math.round(value));
+}
+
+function flashStat(id, direction) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('stat-up', 'stat-down');
+  void el.offsetWidth; // trigger reflow
+  if (direction === 'up') {
+    el.classList.add('stat-up');
+  } else if (direction === 'down') {
+    el.classList.add('stat-down');
+  }
+  setTimeout(function() {
+    el.classList.remove('stat-up', 'stat-down');
+  }, 900);
+}
+
+function updateCard(id, value, suffix, previousValue) {
+  if (previousValue === value) {
+    return;
+  }
+  var direction;
+  if (previousValue != null) {
+    direction = value > previousValue ? 'up' : 'down';
+  }
+
+  animateCounter(id, value, suffix, 1000);
+
+  if (direction) {
+    flashStat(id, direction);
+  }
+}
+
+async function loadLiveStats() {
+  var fallback = {
+    fake_detected_today: 152,
+    avg_confidence: 87,
+    countries_affected: 30,
+    total_checked: 8327
+  };
+
+  try {
+    var res = await fetch('/api/live-stats');
+    if (!res.ok) throw new Error('HTTP status ' + res.status);
+    var data = await res.json();
+
+    if (data && typeof data === 'object') {
+      var fdt = Number(data.fake_detected_today || fallback.fake_detected_today);
+      var avg = Number(data.avg_confidence || fallback.avg_confidence);
+      var ctry = Number(data.countries_affected || fallback.countries_affected);
+      var total = Number(data.total_checked || fallback.total_checked);
+
+      updateCard('s1', fdt, '', currentStats.fake_detected_today);
+      updateCard('s2', avg, '%', currentStats.avg_confidence);
+      updateCard('s3', ctry, '', currentStats.countries_affected);
+      updateCard('s4', total, '', currentStats.total_checked);
+
+      currentStats.fake_detected_today = fdt;
+      currentStats.avg_confidence = avg;
+      currentStats.countries_affected = ctry;
+      currentStats.total_checked = total;
+      return;
+    }
+
+    throw new Error('Invalid payload');
+  } catch (err) {
+    console.error('Error fetching live data', err);
+    // Do not override existing card values unless present
+    if (currentStats.fake_detected_today == null) {
+      currentStats = fallback;
+      animateCounter('s1', fallback.fake_detected_today, '', 1000);
+      animateCounter('s2', fallback.avg_confidence, '%', 1000);
+      animateCounter('s3', fallback.countries_affected, '', 1000);
+      animateCounter('s4', fallback.total_checked, '', 1000);
+    }
+  }
+}
+
+loadLiveStats();
+setInterval(loadLiveStats, 5000);
+
+// Optional Real-Time Upgrade (Socket.IO):
+// - backend should emit 'live-stats' events 
+// - this path replaces polling for instant updates.
+// const socket = io();
+// socket.on('live-stats', data => {
+//   if (data) {
+//     currentStats = data;
+//     updateCard('s1', Number(data.fake_detected_today), '', currentStats.fake_detected_today);
+//     updateCard('s2', Number(data.avg_confidence), '%', currentStats.avg_confidence);
+//     updateCard('s3', Number(data.countries_affected), '', currentStats.countries_affected);
+//     updateCard('s4', Number(data.total_checked), '', currentStats.total_checked);
+//   }
+// });
 
 /* ═══════════════════════════════════════════════
    CATEGORY BARS (Horizontal animated)
