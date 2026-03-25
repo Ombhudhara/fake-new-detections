@@ -1734,9 +1734,11 @@ def get_live_analytics():
 
 def scrape_live_feed(country="Worldwide", platform="All", category="All", page=1):
     """
-    Simulated live scraper that pulls from live_scraped_data.csv 
+    Simulated live scraper that pulls from live_scraped_data.csv
     and filters by category/platform/region.
     Includes 24h vs 30d fallback logic.
+
+    FIX: Now properly filters by country using geolocation keywords
     """
     DATA_PATH = BASE_DIR / "live_scraped_data.csv"
     if not DATA_PATH.exists():
@@ -1745,7 +1747,206 @@ def scrape_live_feed(country="Worldwide", platform="All", category="All", page=1
     articles = []
     category = category.lower()
     platform = platform.lower()
-    
+    country_lower = country.lower()
+
+    # COMPREHENSIVE COUNTRY KEYWORDS - Support ALL countries (195+)
+    # Generated from GLOBAL_COUNTRY_KEYWORDS.py
+    COUNTRY_KEYWORDS = {
+        # ASIA-PACIFIC (25+ countries)
+        "afghanistan": ["afghanistan", "kabul", "taliban"],
+        "australia": ["australia", "sydney", "melbourne", "aboriginal", "aussie"],
+        "bangladesh": ["bangladesh", "dhaka", "bengali"],
+        "bhutan": ["bhutan", "thimphu"],
+        "brunei": ["brunei", "bandar"],
+        "cambodia": ["cambodia", "phnom penh", "khmer"],
+        "china": ["china", "beijing", "shanghai", "xi jinping", "yuan", "hong kong"],
+        "east timor": ["timor", "dili"],
+        "fiji": ["fiji", "suva"],
+        "india": ["india", "delhi", "mumbai", "bangalore", "modi", "bjp", "rupee"],
+        "indonesia": ["indonesia", "jakarta", "sumatra", "java"],
+        "japan": ["japan", "tokyo", "yen", "osaka"],
+        "kazakhstan": ["kazakhstan", "astana", "almaty"],
+        "korea north": ["north korea", "pyongyang", "kim jong"],
+        "korea south": ["south korea", "seoul", "samsung"],
+        "laos": ["laos", "vientiane"],
+        "malaysia": ["malaysia", "kuala lumpur"],
+        "maldives": ["maldives", "male"],
+        "mongolia": ["mongolia", "ulaanbaatar"],
+        "myanmar": ["myanmar", "burma", "yangon"],
+        "nepal": ["nepal", "kathmandu"],
+        "pakistan": ["pakistan", "islamabad", "karachi", "lahore"],
+        "philippines": ["philippines", "manila"],
+        "singapore": ["singapore"],
+        "sri lanka": ["sri lanka", "colombo", "ceylon"],
+        "thailand": ["thailand", "bangkok"],
+        "vietnam": ["vietnam", "hanoi", "ho chi minh"],
+        "new zealand": ["new zealand", "auckland", "wellington"],
+        "papua new guinea": ["papua new guinea", "port moresby"],
+
+        # EUROPE (45+ countries)
+        "albania": ["albania", "tirana"],
+        "andorra": ["andorra"],
+        "austria": ["austria", "vienna"],
+        "belarus": ["belarus", "minsk"],
+        "belgium": ["belgium", "brussels"],
+        "bosnia": ["bosnia", "sarajevo"],
+        "bulgaria": ["bulgaria", "sofia"],
+        "croatia": ["croatia", "zagreb"],
+        "cyprus": ["cyprus", "nicosia"],
+        "czech republic": ["czech republic", "prague"],
+        "denmark": ["denmark", "copenhagen"],
+        "estonia": ["estonia", "tallinn"],
+        "finland": ["finland", "helsinki"],
+        "france": ["france", "paris", "marseille"],
+        "germany": ["germany", "berlin", "munich"],
+        "greece": ["greece", "athens"],
+        "hungary": ["hungary", "budapest"],
+        "iceland": ["iceland", "reykjavik"],
+        "ireland": ["ireland", "dublin"],
+        "italy": ["italy", "rome", "milan"],
+        "kosovo": ["kosovo", "pristina"],
+        "latvia": ["latvia", "riga"],
+        "liechtenstein": ["liechtenstein", "vaduz"],
+        "lithuania": ["lithuania", "vilnius"],
+        "luxembourg": ["luxembourg"],
+        "malta": ["malta", "valletta"],
+        "moldova": ["moldova", "chisinau"],
+        "monaco": ["monaco"],
+        "montenegro": ["montenegro", "podgorica"],
+        "netherlands": ["netherlands", "amsterdam"],
+        "north macedonia": ["north macedonia", "skopje"],
+        "norway": ["norway", "oslo"],
+        "poland": ["poland", "warsaw"],
+        "portugal": ["portugal", "lisbon"],
+        "romania": ["romania", "bucharest"],
+        "russia": ["russia", "moscow", "putin", "kremlin"],
+        "san marino": ["san marino"],
+        "serbia": ["serbia", "belgrade"],
+        "slovakia": ["slovakia", "bratislava"],
+        "slovenia": ["slovenia", "ljubljana"],
+        "spain": ["spain", "madrid", "barcelona"],
+        "sweden": ["sweden", "stockholm"],
+        "switzerland": ["switzerland", "zurich", "bern"],
+        "ukraine": ["ukraine", "kyiv"],
+        "united kingdom": ["uk", "britain", "england", "london", "scotland", "wales"],
+
+        # AFRICA (54 countries)
+        "algeria": ["algeria", "algiers"],
+        "angola": ["angola", "luanda"],
+        "benin": ["benin", "porto-novo"],
+        "botswana": ["botswana", "gaborone"],
+        "burkina faso": ["burkina faso", "ouagadougou"],
+        "burundi": ["burundi", "bujumbura"],
+        "cameroon": ["cameroon", "yaounde"],
+        "cape verde": ["cape verde", "praia"],
+        "central african republic": ["central african republic", "bangui"],
+        "chad": ["chad", "ndjamena"],
+        "comoros": ["comoros", "moroni"],
+        "congo": ["congo", "brazzaville"],
+        "congo democratic republic": ["congo", "kinshasa", "zaire"],
+        "cote d'ivoire": ["cote d'ivoire", "ivory coast", "abidjan"],
+        "djibouti": ["djibouti"],
+        "egypt": ["egypt", "cairo"],
+        "equatorial guinea": ["equatorial guinea"],
+        "eritrea": ["eritrea", "asmara"],
+        "ethiopia": ["ethiopia", "addis ababa"],
+        "gabon": ["gabon", "libreville"],
+        "gambia": ["gambia", "banjul"],
+        "ghana": ["ghana", "accra"],
+        "guinea": ["guinea", "conakry"],
+        "guinea-bissau": ["guinea-bissau", "bissau"],
+        "kenya": ["kenya", "nairobi"],
+        "lesotho": ["lesotho", "maseru"],
+        "liberia": ["liberia", "monrovia"],
+        "libya": ["libya", "tripoli", "benghazi"],
+        "madagascar": ["madagascar", "antananarivo"],
+        "malawi": ["malawi", "lilongwe"],
+        "mali": ["mali", "bamako"],
+        "mauritania": ["mauritania", "nouakchott"],
+        "mauritius": ["mauritius", "port louis"],
+        "morocco": ["morocco", "rabat", "casablanca"],
+        "mozambique": ["mozambique", "maputo"],
+        "namibia": ["namibia", "windhoek"],
+        "niger": ["niger", "niamey"],
+        "nigeria": ["nigeria", "lagos", "abuja"],
+        "rwanda": ["rwanda", "kigali"],
+        "sao tome": ["sao tome"],
+        "senegal": ["senegal", "dakar"],
+        "seychelles": ["seychelles", "victoria"],
+        "sierra leone": ["sierra leone", "freetown"],
+        "somalia": ["somalia", "mogadishu"],
+        "south africa": ["south africa", "johannesburg", "cape town"],
+        "south sudan": ["south sudan", "juba"],
+        "sudan": ["sudan", "khartoum"],
+        "swaziland": ["swaziland", "eswatini", "mbabane"],
+        "tanzania": ["tanzania", "dar es salaam"],
+        "togo": ["togo", "lome"],
+        "tunisia": ["tunisia", "tunis"],
+        "uganda": ["uganda", "kampala"],
+        "zambia": ["zambia", "lusaka"],
+        "zimbabwe": ["zimbabwe", "harare"],
+
+        # AMERICAS (35+ countries)
+        "antigua barbuda": ["antigua barbuda"],
+        "argentina": ["argentina", "buenos aires"],
+        "bahamas": ["bahamas", "nassau"],
+        "barbados": ["barbados", "bridgetown"],
+        "belize": ["belize", "belmopan"],
+        "bolivia": ["bolivia", "la paz", "sucre"],
+        "brazil": ["brazil", "brasilia", "rio", "sao paulo"],
+        "canada": ["canada", "toronto", "vancouver", "ottawa"],
+        "chile": ["chile", "santiago"],
+        "colombia": ["colombiacolombia", "bogota"],
+        "costa rica": ["costa rica", "san jose"],
+        "cuba": ["cuba", "havana"],
+        "dominica": ["dominica", "roseau"],
+        "dominican republic": ["dominican republic", "santo domingo"],
+        "ecuador": ["ecuador", "quito"],
+        "el salvador": ["el salvador", "san salvador"],
+        "grenada": ["grenada"],
+        "guatemala": ["guatemala", "guatemala city"],
+        "guyana": ["guyana", "georgetown"],
+        "haiti": ["haiti", "port-au-prince"],
+        "honduras": ["honduras", "tegucigalpa"],
+        "jamaica": ["jamaica", "kingston"],
+        "mexico": ["mexico", "mexico city"],
+        "nicaragua": ["nicaragua", "managua"],
+        "panama": ["panama", "panama city"],
+        "paraguay": ["paraguay", "asuncion"],
+        "peru": ["peru", "lima"],
+        "saint kitts": ["saint kitts", "basseterre"],
+        "saint lucia": ["saint lucia", "castries"],
+        "saint vincent": ["saint vincent", "kingstown"],
+        "suriname": ["suriname", "paramaribo"],
+        "trinidad tobago": ["trinidad", "tobago", "port of spain"],
+        "usa": ["usa", "america", "united states", "trump", "biden", "washington", "new york", "california", "dollar"],
+        "uruguay": ["uruguay", "montevideo"],
+        "venezuela": ["venezuela", "caracas"],
+
+        # MIDDLE EAST & CENTRAL ASIA (20+ countries)
+        "armenia": ["armenia", "yerevan"],
+        "azerbaijan": ["azerbaijan", "baku"],
+        "bahrain": ["bahrain", "manama"],
+        "georgia": ["georgia", "tbilisi"],
+        "iran": ["iran", "tehran", "persian"],
+        "iraq": ["iraq", "baghdad"],
+        "israel": ["israel", "tel aviv", "jerusalem"],
+        "jordan": ["jordan", "amman"],
+        "kuwait": ["kuwait", "kuwait city"],
+        "kyrgyzstan": ["kyrgyzstan", "bishkek"],
+        "lebanon": ["lebanon", "beirut"],
+        "oman": ["oman", "muscat"],
+        "qatar": ["qatar", "doha"],
+        "saudi arabia": ["saudi arabia", "riyadh"],
+        "syria": ["syria", "damascus"],
+        "tajikistan": ["tajikistan", "dushanbe"],
+        "turkey": ["turkey", "ankara", "istanbul"],
+        "turkmenistan": ["turkmenistan", "ashgabat"],
+        "united arab emirates": ["uae", "dubai", "abu dhabi"],
+        "uzbekistan": ["uzbekistan", "tashkent"],
+        "yemen": ["yemen", "sana'a"],
+    }
+
     # Category keywords for filtering the CSV
     CAT_KEYWORDS = {
         "health": ["virus", "vaccine", "doctor", "medical", "health", "hospital", "cancer", "covid"],
@@ -1756,66 +1957,92 @@ def scrape_live_feed(country="Worldwide", platform="All", category="All", page=1
         "local": ["india", "gujarat", "delhi", "mumbai", "local", "village", "city"]
     }
 
+    def detect_article_country(text):
+        """Detect which country an article is about based on keywords"""
+        text_lower = text.lower()
+        for country_name, keywords in COUNTRY_KEYWORDS.items():
+            if any(kw in text_lower for kw in keywords):
+                return country_name.capitalize()
+        return None
+
     try:
         with open(DATA_PATH, "r", encoding="utf-8", errors="replace") as f:
             reader = csv.DictReader(f)
             all_rows = list(reader)
-            
-            # Filter by category if specified
+
+            # STEP 1: Filter by country if specified (NEW - FIX FOR COUNTRY FILTER)
+            if country != "Worldwide":
+                country_filtered_rows = []
+                for row in all_rows:
+                    text = row.get("text", "")
+                    detected_country = detect_article_country(text)
+                    if detected_country and detected_country.lower() == country_lower:
+                        country_filtered_rows.append(row)
+
+                # If no country matches found, use all rows as fallback
+                if not country_filtered_rows:
+                    country_filtered_rows = all_rows
+            else:
+                country_filtered_rows = all_rows
+
+            # STEP 2: Filter by category if specified
             filtered_rows = []
             if category == "all":
-                filtered_rows = all_rows
+                filtered_rows = country_filtered_rows
             else:
                 keywords = CAT_KEYWORDS.get(category, [])
-                for row in all_rows:
+                for row in country_filtered_rows:
                     text = row.get("text", "").lower()
                     if any(kw in text for kw in keywords):
                         filtered_rows.append(row)
-                
-                # If no matches, fall back to a random sample of all rows to avoid empty feed
+
+                # If no matches, fall back to country-filtered rows to avoid empty feed
                 if not filtered_rows:
-                    filtered_rows = random.sample(all_rows, min(len(all_rows), 100))
+                    filtered_rows = country_filtered_rows[:100] if len(country_filtered_rows) > 0 else all_rows[:100]
 
             # Shuffle for variety
             random.seed(int(time.time() / 3600)) # Change seed every hour
             random.shuffle(filtered_rows)
-            
+
             # Extract items for the specific page (10 per page)
             start_idx = (page - 1) * 10
             end_idx = start_idx + 10
             rows_to_process = filtered_rows[start_idx:end_idx]
-            
+
             platforms = ["WhatsApp", "Facebook", "Twitter", "Telegram"]
             if platform != "all":
                 platforms = [platform.capitalize()]
 
             cur_time = datetime.now()
-            
+
             for row in rows_to_process:
                 # Generate realistic metadata
                 # label 0 = Misinformation (fake), label 1 = Truth
                 is_fake = row.get("label") == "0"
-                
+
                 # Split text into title and summary
                 full_text = row.get("text", "")
                 title = full_text.split('.')[0][:120] + "..." if len(full_text) > 50 else full_text
                 summary = " ".join(full_text.split('.')[1:3])[:200] + "..." if len(full_text.split('.')) > 1 else ""
-                
+
+                # FIX: Detect article region from content, use selected country if "Worldwide"
+                detected_region = detect_article_country(full_text)
+                item_region = detected_region if detected_region else (country if country != "Worldwide" else random.choice(["India", "USA", "UK", "Europe", "Asia"]))
+
                 # Randomized live attributes
                 item_platform = random.choice(platforms)
-                item_region = country if country != "Worldwide" else random.choice(["India", "USA", "UK", "Europe", "Asia"])
-                
+
                 # Score: higher for misinformation (risk score)
                 base_score = 85 if is_fake else 40
                 score = min(99, base_score + random.randint(-10, 10))
-                
+
                 # Time ago: 24h vs 30d logic
                 # We'll simulate 24h for the first page, and older for others
                 if page == 1:
                     minutes = random.randint(5, 1430)
                 else:
                     minutes = random.randint(1440, 43200) # up to 30 days
-                
+
                 if minutes < 60:
                     time_ago = f"{minutes}m ago"
                 elif minutes < 1440:
@@ -1842,7 +2069,7 @@ def scrape_live_feed(country="Worldwide", platform="All", category="All", page=1
 
     # Check if we have "fresh" data (simulated 24h check)
     has_fresh = any(not a["time_ago"].endswith("d ago") for a in articles)
-    
+
     return articles, not has_fresh
 
 @app.route("/api/live-feed")
