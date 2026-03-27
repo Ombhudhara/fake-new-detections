@@ -14,7 +14,7 @@ import sqlite3
 import hashlib
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 import concurrent.futures
 import random
 import time
@@ -22,7 +22,7 @@ import csv
 from pathlib import Path
 from GLOBAL_COUNTRY_KEYWORDS import COMPREHENSIVE_COUNTRY_KEYWORDS
 from trending_scraper import get_trending_data
-from news_scraper import get_latest_india_news
+from news_scraper import get_integrated_news
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -254,7 +254,7 @@ def scrape_article(url):
             return {
                 "success": True, "title": title, "text": text,
                 "authors": [], "publish_date": "Unknown",
-                "keywords": [], "summary": str(text)[:300],
+                "keywords": [], "summary": str(text)[0:300], # type: ignore
             }
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -429,6 +429,17 @@ def verify_claim(claim: str, lang: str = "en"):
             news_results = fut_news.result()
             text_results = fut_text.result()
 
+        # --- SMART FALLBACK: If 0 news/text results, retry with reduced keywords ---
+        if not news_results and not text_results and len(claim.split()) > 6:
+            import re
+            # Extract Numbers (₹ 354, 13.96 lakh) and Proper Nouns (Gujarat)
+            entities: list[str] = re.findall(r'[A-Z][a-z]+|\d+(?:\.\d+)?(?:\s*lakh|\s*crore)?', claim)
+            if len(entities) >= 2:
+                reduced_query = " ".join(entities[0:6])
+                print(f"[Fallback] Retrying search with: {reduced_query}")
+                news_results = fetch_ddgs_news() # Simple retry with reduced query
+                text_results = fetch_ddgs_text()
+
         # Step 1 — RSS integration
         for r in rss_hits:
             url = r.get("href", "")
@@ -469,10 +480,14 @@ def verify_claim(claim: str, lang: str = "en"):
                     break
 
             if not is_fake_src:
-                for cd in CREDIBLE_DOMAINS:
-                    if cd in url:
-                        credible_hits.append({"domain": cd, "title": title, "url": link})
-                        break
+                # Automatic trust for GOV/NIC domains
+                if url.endswith(".gov.in") or url.endswith(".nic.in") or ".gov.in/" in url or ".nic.in/" in url:
+                    credible_hits.append({"domain": "Official Govt", "title": title, "url": link})
+                else:
+                    for cd in CREDIBLE_DOMAINS:
+                        if cd in url:
+                            credible_hits.append({"domain": cd, "title": title, "url": link})
+                            break
 
         # De-duplicate by domain
         unique: dict = {}
@@ -736,22 +751,26 @@ def predict_text(raw_text: str, language_hint: str = None) -> dict:  # type: ign
     word_count: int = len(translated.split())
 
     # Route to engine
-    result: dict
+    result: dict[str, Any]
     if word_count < SHORT_CLAIM_THRESHOLD:
-        result = verify_claim(translated)
-        if result is None:
+        res_check = verify_claim(translated)
+        if res_check is None:
             result = predict_ml(translated)
+        else:
+            result = res_check
     else:
         # For long articles: try AI fact-check first, fall back to ML
-        result = verify_claim(translated)
-        if result is None:
+        res_check = verify_claim(translated)
+        if res_check is None:
             result = predict_ml(translated)
+        else:
+            result = res_check
 
-    preview_text: str = translated
-    result["detected_language"] = lang_display
-    result["was_translated"] = was_translated
-    result["translated_preview"] = preview_text[:400] + "..." if len(preview_text) > 400 else preview_text
-    result["word_count"] = word_count
+    preview_text: str = str(translated)
+    result["detected_language"] = lang_display # type: ignore
+    result["was_translated"] = was_translated # type: ignore
+    result["translated_preview"] = preview_text[0:400] + "..." if len(preview_text) > 400 else preview_text # type: ignore
+    result["word_count"] = word_count # type: ignore
     return result
 
 
@@ -785,11 +804,22 @@ def report():
         category    = request.form.get("category", "")
         description = request.form.get("description", "")
         platform    = request.form.get("platform", "WhatsApp")
-        anonymous   = request.form.get("anonymous", "off") # Flask switch is "on" or absent
+        is_anon     = "True" if request.form.get("anonymous") else "False"
+        timestamp   = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        # Logic to save the report would go here
-        # (e.g., db.session.add(NewReport(...)) or log to CSV)
-        print(f"[Report Log] New report submitted: {url} | Platform: {platform}")
+        # Save to CSV (Excel compatible)
+        csv_path = BASE_DIR / "reports.csv"
+        file_exists = os.path.isfile(csv_path)
+        
+        try:
+            with open(csv_path, mode="a", encoding="utf-8", newline="") as f:
+                writer = csv.writer(f)
+                if not file_exists:
+                    writer.writerow(["Timestamp", "Platform", "URL", "Category", "Description", "Anonymous"])
+                writer.writerow([timestamp, platform, url, category, description, is_anon])
+            print(f"[Report Saved] {url} -> {csv_path}")
+        except Exception as e:
+            print(f"[CSV Error] {e}")
 
         # Generate a random report ID
         report_id = "RPT-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
@@ -1449,13 +1479,19 @@ def check_credibility():
             country = info.get('country','Unknown')
             summary = info.get('summary','')
 
-        if score >= 85:
+        # Ensure score is numeric for safe comparison
+        try:
+            score_num = float(score)
+        except:
+            score_num = 0
+
+        if score_num >= 85:
             verdict, advice = 'Highly Credible', 'This is a well-established, trustworthy source.'
-        elif score >= 70:
+        elif score_num >= 70:
             verdict, advice = 'Generally Reliable', 'Usually reliable but verify important claims.'
-        elif score >= 50:
+        elif score_num >= 50:
             verdict, advice = 'Mixed Credibility', 'Verify claims from this source with other outlets.'
-        elif score >= 30:
+        elif score_num >= 30:
             verdict, advice = 'Low Credibility', 'Be very skeptical of claims from this source.'
         else:
             verdict, advice = 'Not Credible', 'Avoid sharing content from this source.'
@@ -2046,9 +2082,15 @@ def live_misinformation():
                         'platforms': {},
                         'avgConfidence': 0
                     }
-                country_stats[country_name]['count'] += 1
-                country_stats[country_name]['categories'][cat] = country_stats[country_name]['categories'].get(cat, 0) + 1
-                country_stats[country_name]['platforms'][platform] = country_stats[country_name]['platforms'].get(platform, 0) + 1
+                # Safeguard count increments
+                current_count = country_stats[country_name].get('count', 0)
+                country_stats[country_name]['count'] = int(current_count) + 1
+                
+                cat_count = country_stats[country_name]['categories'].get(cat, 0)
+                country_stats[country_name]['categories'][cat] = int(cat_count) + 1
+                
+                plat_count = country_stats[country_name]['platforms'].get(platform, 0)
+                country_stats[country_name]['platforms'][platform] = int(plat_count) + 1
 
         except Exception as e:
             app.logger.debug(f"/api/live-misinformation csv error: {e}")
@@ -2517,13 +2559,25 @@ def get_live_feed():
 @app.route("/get_news")
 def get_all_news():
     """Route specifically for India-live real news as requested."""
+    # Get parameters from frontend dropdowns
+    country = request.args.get('country', 'India')
+    state = request.args.get('state', 'All')
+    
     try:
-        news = get_latest_india_news()
+        # Use our new integrated scraper that handles states
+        news = get_integrated_news(country=country, state=state)
+        
         if not news:
             return jsonify({"news": [], "type": "latest", "status": "no_data"})
-        return jsonify({"news": news, "type": "latest", "region": "India", "status": "success"})
+            
+        return jsonify({
+            "news": news, 
+            "type": "latest", 
+            "region": state if state != "All" else country,
+            "status": "success"
+        })
     except Exception as e:
-        print(f"Server-side news error: {e}")
+        print(f"Integrated news error: {e}")
         return jsonify({"news": [], "error": str(e), "type": "latest", "status": "error"})
 
 

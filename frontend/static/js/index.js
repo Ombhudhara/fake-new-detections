@@ -103,9 +103,10 @@ document.addEventListener('DOMContentLoaded', function() {
 /* ════════════════════════════════════════
    Trending Misinformation State Machine
    ════════════════════════════════════════ */
-var TS = (function() {
+var MisinfoTracker = (function() {
   var state = {
     allCards: [],
+    visibleCount: 0,
     activeCategory: 'All',
     activePlatform: 'All',
     searchTerm: ''
@@ -120,111 +121,73 @@ var TS = (function() {
     els.searchInput = document.getElementById('ts-search');
     els.searchTag = document.getElementById('ts-search-tag');
     els.searchTagText = document.getElementById('ts-search-tag-text');
-    
-    // Selects
+    els.loadMoreContainer = document.getElementById('misinfo-load-more-container');
     els.country = document.getElementById('ts-country');
 
-    if (els.searchInput) {
-      els.searchInput.addEventListener('input', liveFilter);
-    }
-    
+    if (els.searchInput) els.searchInput.addEventListener('input', liveFilter);
     if (els.grid) fetchData(true);
   }
 
-  function onCountryChange() {
-    searchSubmit();
-  }
+  function onCountryChange() { searchSubmit(); }
 
   function showSkeleton() {
     if (!els.grid) return;
     var s = '';
     for (var i = 0; i < 4; i++) {
-      s += '<div class="trending-card ts-skeleton"><div class="ts-shimmer ts-skeleton-title"></div><div class="ts-shimmer ts-skeleton-block"></div></div>';
+        s += '<div class="trending-card ts-skeleton"><div class="ts-shimmer ts-skeleton-title"></div><div class="ts-shimmer ts-skeleton-block"></div></div>';
     }
     els.grid.innerHTML = s;
     if (els.empty) els.empty.style.display = 'none';
+    if (els.loadMoreContainer) els.loadMoreContainer.style.display = 'none';
   }
 
   function updateStats(items) {
     var st = document.getElementById('stat-total');
     if (st) st.textContent = items.length;
-    
-    var localCount = 0;
-    var whatsappCount = 0;
-    
+    var localCount = 0, whatsappCount = 0;
     items.forEach(function(it) {
       if (it.platform && it.platform.toLowerCase() === 'whatsapp') whatsappCount++;
       if (it.state || it.district) localCount++;
     });
-    
-    var sr = document.getElementById('stat-region');
-    if (sr) sr.textContent = localCount;
-
-    var sw = document.getElementById('stat-whatsapp');
-    if (sw) sw.textContent = items.length ? Math.round((whatsappCount / items.length) * 100) + '%' : '0%';
-    
-    var lu = document.getElementById('ts-last-updated');
-    if (lu) lu.textContent = 'Updated just now';
+    if (document.getElementById('stat-region')) document.getElementById('stat-region').textContent = localCount;
+    if (document.getElementById('stat-whatsapp')) document.getElementById('stat-whatsapp').textContent = items.length ? Math.round((whatsappCount / items.length) * 100) + '%' : '0%';
+    if (document.getElementById('ts-last-updated')) document.getElementById('ts-last-updated').textContent = 'Updated just now';
   }
 
   function fetchData(refresh=false) {
     showSkeleton();
     var term = state.searchTerm;
     var cat = state.activeCategory !== 'All' ? state.activeCategory : '';
-    
     var url = '/fake-trending?';
     var params = [];
-    
-    // Send either term or category as topic
     var finalTopic = term || cat;
     if (finalTopic) params.push('topic=' + encodeURIComponent(finalTopic));
-    
     if (els.country && els.country.value) params.push('country=' + encodeURIComponent(els.country.value));
-    
     if (refresh) params.push('refresh=true');
     url += params.join('&');
     
-    fetch(url).then(function(r) { return r.json(); }).then(function(items) {
+    fetch(url).then(r => r.json()).then(items => {
       startUpdateTimer();
-      var finalItems = items || [];
-      updateStats(finalItems);
-      state.allCards = finalItems;
-      renderCards();
-    }).catch(function() {
+      state.allCards = items || [];
+      updateStats(state.allCards);
+      renderCards(true);
+    }).catch(() => {
       state.allCards = [];
       updateStats([]);
-      renderCards();
+      renderCards(true);
     });
   }
 
   function getFiltered() {
     var items = state.allCards;
-    
-    // Perform local platform filter
     if (state.activePlatform !== 'All') {
       var target = state.activePlatform.toLowerCase();
-      if (target === 'twitter/x') target = 'twitter';
-      
-      var platItems = items.filter(function(it) {
-        var p = (it.platform || '').toLowerCase();
-        if (target === 'twitter') return p.includes('twitter') || p.includes('x');
-        return p.includes(target);
-      });
-      
-      // If user selected a specific platform but we have ZERO matches,
-      // it's better to show them everything than a dead screen, 
-      // but we'll mark them as "Global/Web" if needed.
-      if (platItems.length > 0) items = platItems;
+      items = items.filter(it => (it.platform || '').toLowerCase().includes(target === 'twitter/x' ? 'twitter' : target));
     }
-    
-    // local search term filter 
     if (state.searchTerm) {
       var term = state.searchTerm.toLowerCase();
-      items = items.filter(function(it) {
-        return (it.title || '').toLowerCase().includes(term);
-      });
+      items = items.filter(it => (it.title || '').toLowerCase().includes(term));
     }
-    
     return items;
   }
 
@@ -236,113 +199,95 @@ var TS = (function() {
     if (!el) return;
     updateInterval = setInterval(() => {
       const diff = Math.floor((new Date() - start) / 1000);
-      if (diff < 60) el.textContent = diff + ' sec ago';
-      else el.textContent = Math.floor(diff / 60) + ' min ago';
+      el.textContent = diff < 60 ? diff + ' sec ago' : Math.floor(diff / 60) + ' min ago';
     }, 5000);
   }
 
-  function renderCards() {
+  function renderCards(reset = false) {
     if (!els.grid) return;
     var filtered = getFiltered();
-    
     if (filtered.length === 0) {
       els.grid.innerHTML = '';
       if (els.empty) els.empty.style.display = 'block';
+      if (els.loadMoreContainer) els.loadMoreContainer.style.display = 'none';
       return;
     }
-    
     if (els.empty) els.empty.style.display = 'none';
-    var html = '';
+    if (reset) {
+      els.grid.innerHTML = '';
+      state.visibleCount = 0;
+    }
+
+    var start = state.visibleCount;
+    var end = start + 6;
+    var batch = filtered.slice(start, end);
     
-    filtered.forEach(function(item, i) {
-      var sourceUrl = item.link || '#';
+    batch.forEach(function(item, i) {
       var fake_score = parseInt(item.trend_score || item.fake_score) || 70;
       var verdict = item.verdict || 'Fake';
       var platform = item.platform || 'Web';
       var locationStr = (item.district ? item.district + ', ' : '') + (item.state || item.country || '');
       var titleEscaped = (item.title || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-      
       var verdictIcon = verdict === 'Fake' ? '🔴' : (verdict === 'Misleading' ? '🟡' : '🟢');
-      var fakeColorClass = 'pill-red';
-      if (verdict === 'Misleading') fakeColorClass = 'pill-yellow';
-      else if (verdict === 'True') fakeColorClass = 'pill-green';
-      
-      // Platform Icon logic
-      var pIcon = '🌐';
-      if (platform.toLowerCase().includes('whatsapp')) pIcon = '💬';
-      else if (platform.toLowerCase().includes('twitter') || platform.toLowerCase().includes('x')) pIcon = '𝕏';
-      else if (platform.toLowerCase().includes('youtube')) pIcon = '📺';
+      var fakeColorClass = verdict === 'Misleading' ? 'pill-yellow' : (verdict === 'True' ? 'pill-green' : 'pill-red');
+      var pIcon = platform.toLowerCase().includes('whatsapp') ? '💬' : (platform.toLowerCase().includes('twitter') ? '𝕏' : '🌐');
 
-      html += '<div class="trending-card animate-in delay-' + (Math.min(i + 1, 4)) + '">' +
-        '<div class="card-badge-top"><span class="pill ' + fakeColorClass + '">' + verdictIcon + ' ' + verdict + ' ~ ' + fake_score + '%</span></div>' +
-        '<div class="t-headline">"' + item.title + '"</div>' +
-        
-        '<div class="ts-list-meta">' +
-        (locationStr && locationStr.toLowerCase() !== 'unknown' ? '📍 <b>Location:</b> ' + locationStr + '<br>' : '') +
-        '✔️ <b>Source:</b> ' + (item.source || 'Fact Check') + '<br>' +
-        '🕒 <b>Date:</b> ' + (item.date || 'Just now') + '<br>' +
-        '📱 <b>Platform:</b> ' + pIcon + ' ' + platform +
-        '</div>' +
-        
-        '<div class="ts-ai-insight">' +
-        '🚨 This claim is spreading via ' + platform + '. AI suggests immediate verification.' +
-        '</div>' +
-
-        '<div class="ts-card-action-wrap">' +
-          '<button class="verify-claim-btn" style="width:100%;" onclick="TS.verifyNow(\'' + titleEscaped + '\')">Check This Now →</button>' +
-        '</div>' +
-        '</div>';
+      var card = document.createElement('div');
+      card.className = 'trending-card animate-in delay-' + (Math.min(i + 1, 6));
+      card.innerHTML = `<div class="card-badge-top"><span class="pill ${fakeColorClass}">${verdictIcon} ${verdict} ~ ${fake_score}%</span></div>
+        <div class="t-headline">"${item.title}"</div>
+        <div class="ts-list-meta">
+          ${locationStr && locationStr.toLowerCase() !== 'unknown' ? '📍 <b>Location:</b> '+locationStr+'<br>' : ''}
+          ✔️ <b>Source:</b> ${item.source || 'Fact Check'}<br>
+          🕒 <b>Date:</b> ${item.date || 'Just now'}<br>
+          📱 <b>Platform:</b> ${pIcon} ${platform}
+        </div>
+        <div class="ts-ai-insight">🚨 This claim is spreading via ${platform}. AI suggests immediate verification.</div>
+        <div class="ts-card-action-wrap"><button class="verify-claim-btn" style="width:100%;" onclick="MisinfoTracker.verifyNow('${titleEscaped}')">Check This Now →</button></div>`;
+      els.grid.appendChild(card);
     });
-    els.grid.innerHTML = html;
+
+    state.visibleCount = Math.min(end, filtered.length);
+    if (els.loadMoreContainer) els.loadMoreContainer.style.display = (state.visibleCount < filtered.length) ? 'block' : 'none';
+  }
+
+  function loadMore() {
+    var btn = els.loadMoreContainer ? els.loadMoreContainer.querySelector('.ts-load-more-btn') : null;
+    if (btn) btn.classList.add('is-loading');
+    setTimeout(() => {
+      renderCards(false);
+      if (btn) btn.classList.remove('is-loading');
+    }, 500);
   }
 
   function verifyNow(text) {
-    const input = document.getElementById('news-input');
-    const btn = document.getElementById('verifyBtn');
-    const tabBtn = document.getElementById('tab-text');
-    
+    const input = document.getElementById('news-input'), btn = document.getElementById('verifyBtn'), tabBtn = document.getElementById('tab-text');
     if (!input || !btn || !tabBtn) return;
-    
-    // Switch to text tab first
-    if (typeof switchTab === 'function') {
-      switchTab('text', tabBtn);
-    }
-    
+    if (typeof switchTab === 'function') switchTab('text', tabBtn);
     input.value = text;
     input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    
-    // Highlight effect on the input
     input.style.boxShadow = '0 0 0 4px rgba(30, 27, 75, 0.2)';
     setTimeout(() => { input.style.boxShadow = ''; }, 2000);
-    
-    // Auto-trigger disabled per user note: "after user click on verify"
-    // We let them click the main verify button manually for confirmation.
   }
 
   function liveFilter() {
     if (els.searchInput) {
       state.searchTerm = els.searchInput.value.trim();
-      renderCards();
+      renderCards(true);
     }
   }
 
   function searchSubmit() {
     var term = els.searchInput ? els.searchInput.value.trim() : '';
     state.searchTerm = term;
-    
     var tags = [];
     if (term) tags.push('"' + term + '"');
-    
     var c = els.country ? els.country.value : '';
     if (c) tags.push('in ' + c);
-    
     if (tags.length > 0 && els.searchTag) {
       els.searchTag.style.display = 'flex';
       els.searchTagText.textContent = 'Showing results for ' + tags.join(' ');
-    } else if (els.searchTag) {
-      els.searchTag.style.display = 'none';
-    }
-    
+    } else if (els.searchTag) els.searchTag.style.display = 'none';
     fetchData();
   }
 
@@ -352,39 +297,29 @@ var TS = (function() {
     state.activePlatform = 'All';
     if (els.searchInput) els.searchInput.value = '';
     if (els.country) els.country.value = '';
-    onCountryChange(); // resets others
+    onCountryChange();
     if (els.searchTag) els.searchTag.style.display = 'none';
-    
-    document.querySelectorAll('.ts-filter-btn').forEach(function(b) { b.classList.remove('active'); });
-    
+    document.querySelectorAll('.ts-filter-btn').forEach(b => b.classList.remove('active'));
     var tAll = document.querySelector('#ts-topic-row .ts-filter-btn[data-cat="All"]');
     if (tAll) tAll.classList.add('active');
-    
     var pAll = document.querySelector('#ts-platform-row .ts-filter-btn[data-plat="All"]');
     if (pAll) pAll.classList.add('active');
-    
     fetchData(true);
   }
 
   function setCategory(cat, btn) {
     state.activeCategory = cat;
-    document.querySelectorAll('#ts-topic-row .ts-filter-btn').forEach(function(b) {
-      b.classList.toggle('active', b === btn);
-    });
+    document.querySelectorAll('#ts-topic-row .ts-filter-btn').forEach(b => b.classList.toggle('active', b === btn));
     fetchData();
   }
 
   function setPlatform(plat, btn) {
     state.activePlatform = plat;
-    document.querySelectorAll('#ts-platform-row .ts-filter-btn').forEach(function(b) {
-      b.classList.toggle('active', b === btn);
-    });
-    renderCards();
+    document.querySelectorAll('#ts-platform-row .ts-filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+    renderCards(true);
   }
 
-  function refresh() {
-    fetchData(true);
-  }
+  function refresh() { fetchData(true); }
 
   return {
     init: init,
@@ -394,11 +329,12 @@ var TS = (function() {
     setCategory: setCategory,
     setPlatform: setPlatform,
     onCountryChange: onCountryChange,
+    loadMore: loadMore,
     verifyNow: verifyNow
   };
 })();
 
-TS.init();
+MisinfoTracker.init();
 
 // Apply data-width values to bar fills
   document.addEventListener('DOMContentLoaded', function() {

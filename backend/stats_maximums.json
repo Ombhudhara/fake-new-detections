@@ -1,9 +1,9 @@
 {
   "Worldwide": {
-    "max_fake_detected": 377,
+    "max_fake_detected": 470,
     "max_confidence": 99,
     "max_countries": 195,
-    "max_total_checked": 882
+    "max_total_checked": 1213
   },
   "India": {
     "max_fake_detected": 7,

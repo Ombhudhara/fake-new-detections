@@ -446,12 +446,12 @@
       <div class="res-bars-container">
         <div class="res-bar-row">
           <span>Fake</span>
-          <div class="res-track"><div class="res-fill fake-fill" style="width:calc({{ fake_prob|default(0) }} * 1%)"></div></div>
+          <div class="res-track"><div class="res-fill fake-fill" style="width:{{ fake_prob|default(0) }}%"></div></div>
           <div class="res-pct" style="color:#c0392b;">{{ fake_prob|default(0) }}%</div>
         </div>
         <div class="res-bar-row">
           <span>Real</span>
-          <div class="res-track"><div class="res-fill real-fill" style="width:calc({{ real_prob|default(0) }} * 1%)"></div></div>
+          <div class="res-track"><div class="res-fill real-fill" style="width:{{ real_prob|default(0) }}%"></div></div>
           <div class="res-pct" style="color:#1e8449;">{{ real_prob|default(0) }}%</div>
         </div>
       </div>
@@ -546,6 +546,12 @@
         ⏳ Fetching latest global broadcast headlines...
       </div>
     </div>
+    <div id="news-load-more-container" class="load-more-container" style="text-align:center; margin-top:30px; display:none;">
+      <button class="ts-load-more-btn" onclick="LiveNewsEngine.loadMore()">
+        <span>Show More News</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+    </div>
   </div>
 
 
@@ -561,7 +567,7 @@
       </div>
       <div class="ts-refresh-wrap">
         <span id="ts-last-updated" class="ts-last-updated-text">Just now</span>
-        <button onclick="TS.refresh()" class="ts-filter-btn live-refresh-btn">🔄 Refresh (Live)</button>
+        <button onclick="MisinfoTracker.refresh(); LiveNewsEngine.refresh();" class="ts-filter-btn live-refresh-btn">🔄 Refresh (Live)</button>
       </div>
     </div>
 
@@ -571,19 +577,37 @@
       <!-- Modern Search Bar -->
       <div class="ts-search-wrap modern-search ts-search-flex">
         <span class="ts-search-icon-abs">🔍</span>
-        <input class="form-input ts-search-input-styled" type="text" id="ts-search" placeholder="Search fake news (e.g., exam leak, bank scam, gas, war...)" onkeypress="if(event.key==='Enter') TS.searchSubmit()">
-        <button class="btn-primary ts-search-btn" onclick="TS.searchSubmit()">Search</button>
+        <input class="form-input ts-search-input-styled" type="text" id="ts-search" placeholder="Search fake news (e.g., exam leak, bank scam, gas, war...)" onkeypress="if(event.key==='Enter') { MisinfoTracker.searchSubmit(); LiveNewsEngine.searchSubmit(); }">
+        <button class="btn-primary ts-search-btn" onclick="MisinfoTracker.searchSubmit(); LiveNewsEngine.searchSubmit();">Search</button>
       </div>
 
       <!-- Location Selection -->
-      <div class="ts-dropdown-row">
-        <select class="form-input ts-select-input" id="ts-country" onchange="TS.onCountryChange()" style="width:100%;">
-          <option value="">🌎 Worldwide (All Countries)</option>
-          <option value="India">🇮🇳 India</option>
+      <div class="ts-dropdown-row" style="display: flex; gap: 15px; margin-top: 15px;">
+        <select class="form-input ts-select-input" id="ts-country" onchange="MisinfoTracker.onCountryChange(); LiveNewsEngine.onLocationChange();" style="flex: 1;">
+          <option value="Worldwide">🌎 Worldwide (All Countries)</option>
+          <option value="India" selected>🇮🇳 India</option>
           <option value="USA">🇺🇸 USA</option>
-          <option value="UK">🇬🇧 UK</option>
-          <option value="Canada">🇨🇦 Canada</option>
-          <option value="Global">🌐 Global fact-checkers</option>
+          <option value="Global">🌐 Global Fact-Checkers</option>
+        </select>
+
+        <select class="form-input ts-select-input" id="ts-state" onchange="MisinfoTracker.onCountryChange(); LiveNewsEngine.onLocationChange();" style="flex: 1; display: none;">
+          <option value="All">📍 All States (National)</option>
+          <option value="Gujarat">Gujarat</option>
+          <option value="Maharashtra">Maharashtra</option>
+          <option value="Delhi">Delhi (NCR)</option>
+          <option value="Uttar Pradesh">Uttar Pradesh</option>
+          <option value="Bihar">Bihar</option>
+          <option value="West Bengal">West Bengal</option>
+          <option value="Tamil Nadu">Tamil Nadu</option>
+          <option value="Kerala">Kerala</option>
+          <option value="Telangana">Telangana / AP</option>
+          <option value="Karnataka">Karnataka</option>
+          <option value="Rajasthan">Rajasthan</option>
+          <option value="Punjab">Punjab</option>
+          <option value="Haryana">Haryana</option>
+          <option value="Madhya Pradesh">Madhya Pradesh</option>
+          <option value="Odisha">Odisha</option>
+          <option value="Assam">Assam / NE</option>
         </select>
       </div>
     </div>
@@ -591,7 +615,7 @@
     <!-- Active search tag -->
     <div id="ts-search-tag" class="ts-search-tag ts-search-tag-styled" style="display:none;">
       <span id="ts-search-tag-text"></span>
-      <button class="ts-tag-close ts-tag-close-styled" onclick="TS.clearSearch()">✕</button>
+      <button class="ts-tag-close ts-tag-close-styled" onclick="MisinfoTracker.clearSearch(); LiveNewsEngine.clearSearch();">✕</button>
     </div>
 
     <!-- 4. Category / Filter Section -->
@@ -599,21 +623,21 @@
       <div class="ts-filter-group">
         <div class="ts-filter-label ts-topic-label">Topic Filter</div>
         <div class="ts-filter-row ts-filter-row-wrap" id="ts-topic-row">
-          <button class="ts-filter-btn active" data-cat="All" onclick="TS.setCategory('All',this)">📄 All</button>
-          <button class="ts-filter-btn" data-cat="Trending" onclick="TS.setCategory('Trending',this)">🔥 Trending</button>
-          <button class="ts-filter-btn" data-cat="Politics" onclick="TS.setCategory('Politics',this)">🏛 Politics</button>
-          <button class="ts-filter-btn" data-cat="Health" onclick="TS.setCategory('Health',this)">🏥 Health</button>
-          <button class="ts-filter-btn" data-cat="Technology" onclick="TS.setCategory('Technology',this)">💻 Tech</button>
-          <button class="ts-filter-btn" data-cat="Viral" onclick="TS.setCategory('Viral',this)">📲 Viral</button>
+          <button class="ts-filter-btn active" data-cat="All" onclick="MisinfoTracker.setCategory('All',this)">📄 All</button>
+          <button class="ts-filter-btn" data-cat="Trending" onclick="MisinfoTracker.setCategory('Trending',this)">🔥 Trending</button>
+          <button class="ts-filter-btn" data-cat="Politics" onclick="MisinfoTracker.setCategory('Politics',this)">🏛 Politics</button>
+          <button class="ts-filter-btn" data-cat="Health" onclick="MisinfoTracker.setCategory('Health',this)">🏥 Health</button>
+          <button class="ts-filter-btn" data-cat="Technology" onclick="MisinfoTracker.setCategory('Technology',this)">💻 Tech</button>
+          <button class="ts-filter-btn" data-cat="Viral" onclick="MisinfoTracker.setCategory('Viral',this)">📲 Viral</button>
         </div>
       </div>
       <div class="ts-filter-group">
         <div class="ts-filter-label ts-topic-label">Platform</div>
         <div class="ts-filter-row ts-filter-row-wrap" id="ts-platform-row">
-          <button class="ts-filter-btn active" data-plat="All" onclick="TS.setPlatform('All',this)">🌐 All</button>
-          <button class="ts-filter-btn" data-plat="WhatsApp" onclick="TS.setPlatform('WhatsApp',this)">💬 WhatsApp</button>
-          <button class="ts-filter-btn" data-plat="Twitter/X" onclick="TS.setPlatform('Twitter/X',this)">𝕏 Twitter/X</button>
-          <button class="ts-filter-btn" data-plat="YouTube" onclick="TS.setPlatform('YouTube',this)">📺 YouTube</button>
+          <button class="ts-filter-btn active" data-plat="All" onclick="MisinfoTracker.setPlatform('All',this)">🌐 All</button>
+          <button class="ts-filter-btn" data-plat="WhatsApp" onclick="MisinfoTracker.setPlatform('WhatsApp',this)">💬 WhatsApp</button>
+          <button class="ts-filter-btn" data-plat="Twitter/X" onclick="MisinfoTracker.setPlatform('Twitter/X',this)">𝕏 Twitter/X</button>
+          <button class="ts-filter-btn" data-plat="YouTube" onclick="MisinfoTracker.setPlatform('YouTube',this)">📺 YouTube</button>
         </div>
       </div>
     </div>
@@ -621,11 +645,18 @@
     <!-- Cards Grid -->
     <div class="trending-grid ts-cards-grid" id="trending-grid"></div>
 
+    <div id="misinfo-load-more-container" class="load-more-container" style="text-align:center; margin-top:30px; display:none;">
+      <button class="ts-load-more-btn" onclick="MisinfoTracker.loadMore()">
+        <span>Show More Misinformation</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+    </div>
+
     <!-- Empty State -->
     <div class="ts-empty ts-empty-styled" id="ts-empty" style="display:none;">
       <div class="ts-empty-icon ts-empty-icon-lg">🔍</div>
       <div id="ts-empty-text" class="ts-empty-text-styled">No fake news found for this search. Showing trending misinformation instead.</div>
-      <button class="btn-primary ts-empty-btn" onclick="TS.clearSearch()">Reset Search</button>
+      <button class="btn-primary ts-empty-btn" onclick="MisinfoTracker.clearSearch(); LiveNewsEngine.clearSearch();">Reset Search</button>
     </div>
   </div>
 

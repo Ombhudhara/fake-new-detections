@@ -1094,3 +1094,110 @@ html.dark .hint {
     margin-bottom: 18px;
   }
   .tabs::-webkit-scrollbar { display: none; }
+
+/* ── Load More Functionality ── */
+.load-more-container {
+  margin-bottom: 40px;
+  animation: fadeIn 0.6s ease;
+}
+
+.ts-load-more-btn {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  gap: 10px;
+  padding: 12px 30px;
+  background: var(--surface);
+  border: 2px solid var(--navy);
+  color: var(--navy);
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(26, 35, 126, 0.1);
+}
+
+.ts-load-more-btn:hover {
+  background: var(--navy);
+  color: #fff;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(26, 35, 126, 0.2);
+}
+
+.ts-load-more-btn:active {
+  transform: translateY(-1px);
+}
+
+.ts-load-more-btn svg {
+  transition: transform 0.3s ease;
+}
+
+.ts-load-more-btn:hover svg {
+  transform: translateY(3px);
+}
+
+.ts-load-more-btn.is-loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.ts-load-more-btn.is-loading span {
+  visibility: hidden;
+}
+
+.ts-load-more-btn.is-loading::after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Card Animations */
+.news-card, .trending-card {
+  animation: cardFadeIn 0.5s ease backwards;
+}
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hidden-card {
+  display: none !important;
+}
+
+/* Staggered animation for better feel */
+.ts-cards-grid > div:nth-child(1) { animation-delay: 0.05s; }
+.ts-cards-grid > div:nth-child(2) { animation-delay: 0.1s; }
+.ts-cards-grid > div:nth-child(3) { animation-delay: 0.15s; }
+.ts-cards-grid > div:nth-child(4) { animation-delay: 0.2s; }
+.ts-cards-grid > div:nth-child(5) { animation-delay: 0.25s; }
+.ts-cards-grid > div:nth-child(6) { animation-delay: 0.3s; }
+
+html.dark .ts-load-more-btn {
+  background: #1a1a2e;
+  border-color: #5566aa;
+  color: var(--text);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+html.dark .ts-load-more-btn:hover {
+  background: #5566aa;
+  border-color: #5566aa;
+}

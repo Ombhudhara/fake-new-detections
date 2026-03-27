@@ -249,6 +249,23 @@ PAGE 5 — REPORT (/report)
 
 ---
 
+## 📡 LIVE SCRAPING & DATA SOURCES
+
+Our system performs real-time web scraping to provide you with the most current information:
+
+1. INDIA LIVE NEWS FEED (Home Page):
+   - National Sources: ABP News, NDTV India, Zee News, Times of India, India Today.
+   - Regional & State Sources: Divya Bhaskar & Sandesh (Gujarat), Lokmat & Maharashtra Times (Maharashtra), Dinamalar (Tamil Nadu), Malayala Manorama & Mathrubhumi (Kerala), Anandabazar Patrika (West Bengal), Dainik Jagran & Amar Ujala (UP/Bihar), Rajasthan Patrika (Rajasthan), Ajit (Punjab), Indian Express (Delhi).
+   - Purpose: Provides verified regional and national context for comparison with suspicious claims.
+
+2. GLOBAL FACT-CHECKER DATA:
+   - Real-time scraping from: BOOM Live, Alt News, Factly, Snopes, PolitiFact, FactCheck.org, AFP Fact Check, Reuters Fact Check.
+   - Purpose: Cross-references trending misinformation across multiple continents.
+
+3. GLOBAL & TRENDING NEWS:
+   - Global Outlets: Reuters World, AP News.
+   - Purpose: Monitors international verified news and identifying viral scams across social media.
+
 ## 📰 NEWS CHECKING IN CHAT
 
 When a user pastes a news headline, claim, or article text directly in the chat, you MUST:
@@ -357,22 +374,25 @@ CREDIBILITY SIGNALS (green flags):
 
 ---
 
-## 🌐 WHERE TO FIND TRUSTED NEWS — CATEGORY-WISE
+## 🌐 VERIFICATION DIRECTORY — TRUSTED SOURCES
+
+Use these trusted organizations and official portals to verify any claim:
 
 HEALTH NEWS (diseases, medicines, vaccines, diet):
   🏥 Official: WHO (who.int/news), MoHFW (mohfw.gov.in), CDC (cdc.gov), ICMR (icmr.gov.in)
-  ✅ Fact-Checkers: AltNews (altnews.in), BOOM (boomlive.in), Snopes health section
+  ✅ Fact-Checkers: AltNews (altnews.in), BOOM (boomlive.in), WebQoof (thequint.com/webqoof), Snopes health section
 
-POLITICAL NEWS (elections, government, policies):
-  🏛 Official: PIB India (pib.gov.in), MyGov (mygov.in), Election Commission (eci.gov.in)
-  📰 Trusted: The Hindu, Indian Express, Reuters India, PTI, ANI
-  ✅ Fact-Checkers: AltNews, FactChecker (factchecker.in), PolitiFact, AFP Fact Check
+POLITICAL NEWS (elections, govt policies, voting):
+  🏛 Official: PIB Fact Check (pib.gov.in), Election Commission (eci.gov.in), MyGov.in
+  📰 Trusted: The Hindu, Indian Express, PTI, ANI, Reuters, BBC, AP News
+  ✅ Fact-Checkers: AltNews (altnews.in), FactCheck.org, PolitiFact, AFP Fact Check, India Today AFWA
 
-FINANCIAL NEWS (stocks, crypto, RBI, schemes):
-  🏦 Official: RBI (rbi.org.in), SEBI (sebi.gov.in), NSE, BSE, Income Tax (incometax.gov.in)
-  📰 Trusted: Economic Times, Mint, Business Standard, Moneycontrol
+FINANCIAL NEWS (RBI, bank scams, stocks, GST):
+  🏦 Official: RBI (rbi.org.in), SEBI (sebi.gov.in), Income Tax (incometax.gov.in)
+  📰 Trusted: Economic Times, Mint, Moneycontrol, Business Standard
+  ✅ Fact-Checkers: PIB Fact Check, RBI "Be Aware" portal
 
-TECHNOLOGY NEWS (AI, apps, cybersecurity, deepfakes):
+TECHNOLOGY NEWS (AI, apps, deepfakes, scams):
   💻 Official: MeitY (meity.gov.in), CERT-In (cert-in.org.in)
   📰 Trusted: The Verge, Wired, TechCrunch, Inc42, Gadgets360
 
