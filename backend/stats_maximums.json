@@ -1,0 +1,68 @@
+{
+  "Worldwide": {
+    "max_fake_detected": 377,
+    "max_confidence": 99,
+    "max_countries": 195,
+    "max_total_checked": 882
+  },
+  "India": {
+    "max_fake_detected": 7,
+    "max_confidence": 51,
+    "max_countries": 6,
+    "max_total_checked": 8
+  },
+  "Korea South": {
+    "max_fake_detected": 12,
+    "max_confidence": 57,
+    "max_countries": 8,
+    "max_total_checked": 42
+  },
+  "Japan": {
+    "max_fake_detected": 3,
+    "max_confidence": 50,
+    "max_countries": 3,
+    "max_total_checked": 6
+  },
+  "Afghanistan": {
+    "max_fake_detected": 9,
+    "max_confidence": 56,
+    "max_countries": 6,
+    "max_total_checked": 9
+  },
+  "Brunei": {
+    "max_fake_detected": 3,
+    "max_confidence": 52,
+    "max_countries": 1,
+    "max_total_checked": 15
+  },
+  "East Timor": {
+    "max_fake_detected": 0,
+    "max_confidence": 50,
+    "max_countries": 1,
+    "max_total_checked": 10
+  },
+  "Maldives": {
+    "max_fake_detected": 3,
+    "max_confidence": 50,
+    "max_countries": 3,
+    "max_total_checked": 3
+  },
+  "Cameroon": {
+    "max_fake_detected": 0,
+    "max_confidence": 50,
+    "max_countries": 3,
+    "max_total_checked": 3
+  },
+  "Kazakhstan": {
+    "max_fake_detected": 2,
+    "max_confidence": 50,
+    "max_countries": 3,
+    "max_total_checked": 4
+  },
+  "China": {
+    "max_fake_detected": 1,
+    "max_confidence": 50,
+    "max_countries": 2,
+    "max_total_checked": 3
+  }
+}

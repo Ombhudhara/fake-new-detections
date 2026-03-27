@@ -21,7 +21,19 @@
       <h1>Fake News Analytics</h1>
       <p>Category breakdown &middot; Country heatmap &middot; Platform analysis</p>
     </div>
-    <div class="live-badge"><span class="live-pulse"></span>LIVE DATA</div>
+    <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+      <!-- Auto-Refresh Toggle -->
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">Auto-Refresh:</label>
+        <input type="checkbox" id="auto-refresh-toggle" style="cursor: pointer; width: 18px; height: 18px;">
+      </div>
+
+      <!-- Last Sync Timer -->
+      <div id="last-sync-timer" style="font-size: 11px; color: var(--text-secondary); font-style: italic;">Never synced</div>
+
+      <!-- Refresh Badge -->
+      <div class="live-badge"><span class="live-pulse"></span>LIVE DATA</div>
+    </div>
   </div>
 
   <!-- ── Stat Cards ── -->
@@ -180,6 +192,8 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard-state.js') }}"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}
 

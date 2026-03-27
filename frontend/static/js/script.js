@@ -14,15 +14,15 @@ document.addEventListener("DOMContentLoaded", function() {
         .then(data => {
             newsContainer.innerHTML = ''; // clear loading state
             
-            if (data.error && (!data.news || data.news.length === 0)) {
-                newsContainer.innerHTML = `<div class="news-error">⚠️ Could not load news: ${data.error}</div>`;
+            if (data.status === "error" || (data.error && (!data.news || data.news.length === 0))) {
+                newsContainer.innerHTML = `<div class="news-error" style="grid-column: 1/-1;">⚠️ Could not load news: ${data.error || 'Unknown Error'}</div>`;
                 return;
             }
 
             let newsItems = data.news || [];
             
-            if (newsItems.length === 0) {
-                newsContainer.innerHTML = `<div class="news-error">📭 No live news found at the moment.</div>`;
+            if (newsItems.length === 0 || data.status === "no_data") {
+                newsContainer.innerHTML = `<div class="news-error" style="grid-column: 1/-1;">📭 No live news found from Indian networks at the moment.</div>`;
                 return;
             }
 
@@ -79,15 +79,15 @@ function createNewsCard(item, feedType) {
     const badgeClass = feedType === "latest" ? "badge-live" : "badge-recent";
 
     card.innerHTML = `
-        <div class="news-card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <div class="news-source">${safeSource || 'Web'}</div>
+        <div class="news-card-header">
+            <div class="news-source">🌐 ${safeSource || 'Web News'}</div>
             <div class="news-badge ${badgeClass}">${badgeText}</div>
         </div>
         <h3 class="news-title">${safeTitle}</h3>
         <p class="news-snippet">${safeSnippet}</p>
-        <div class="news-card-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 10px;">
-            <span class="news-time" style="font-size: 12px; color: var(--text-muted, #6b7280);">${formattedTime}</span>
-            <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="news-link">Read Full Article &rarr;</a>
+        <div class="news-card-footer">
+            <span class="news-time">🕒 ${formattedTime}</span>
+            <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="news-link">READ ARTICLE &rarr;</a>
         </div>
     `;
 

@@ -4,258 +4,881 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+  /* ══════════════════════════════════════════════════════
+     MIC BUTTON & VOICE INPUT STYLES
+     ══════════════════════════════════════════════════════ */
+
+  .voice-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+  }
+
+  .voice-input-wrapper textarea {
+    flex: 1;
+    padding-right: 50px; /* Space for mic button */
+  }
+
+  .mic-btn {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    color: #666;
+    z-index: 10;
+  }
+
+  .mic-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2;
+  }
+
+  .mic-btn:hover:not(.recording) {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  /* Recording state - pulsing red glow */
+  .mic-btn.recording {
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.1);
+    animation: mic-pulse 1.2s infinite;
+  }
+
+  @keyframes mic-pulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7);
+    }
+    50% {
+      box-shadow: 0 0 0 12px rgba(231, 76, 60, 0);
+    }
+  }
+
+  /* Cancelled state - red trash */
+  .mic-btn.cancelled {
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.1);
+  }
+
+  /* Locked state - lock icon */
+  .mic-btn.locked {
+    color: #3498db;
+    background: rgba(52, 152, 219, 0.1);
+  }
+
+  .voice-status {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+    min-height: 16px;
+  }
+
+  .voice-status.recording {
+    color: #e74c3c;
+    font-weight: 500;
+  }
+
+  .voice-status.locked {
+    color: #3498db;
+    font-weight: 500;
+  }
+
+  /* Cancel/Lock zones indicator during recording */
+  .voice-indicator {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    font-size: 12px;
+    color: #666;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    display: none;
+    z-index: 1000;
+    pointer-events: none;
+  }
+
+  .voice-indicator.show {
+    display: block;
+  }
+
+  .voice-indicator.cancel-zone {
+    color: #e74c3c;
+  }
+
+  .voice-indicator.lock-zone {
+    color: #3498db;
+  }
+
+  /* ══════════════════════════════════════════════════════
+     MIC BUTTON & VOICE INPUT STYLES
+     ══════════════════════════════════════════════════════ */
+  .result {
+    margin-top: 30px;
+    background: #eafbee; /* Default to real/green theme */
+    border: 1px solid #c3e6cb;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    padding: 0;
+  }
+  .result.fake {
+    background: #fdf5f4;
+    border-color: #f5c6cb;
+  }
+  .result.unsure {
+    background: #fff8e1;
+    border-color: #ffe082;
+  }
+  .result::before {
+    content: ""; position: absolute; top:0; left:0; bottom:0; width: 6px;
+    background: #1e8449; /* Real */
+  }
+  .result.fake::before { background: #e74c3c; }
+  .result.unsure::before { background: #f39c12; }
+
+  .res-header {
+    padding: 24px 30px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .res-icon {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 20px;
+    background: #1e8449;
+  }
+  .result.fake .res-icon { background: #e74c3c; }
+  .result.unsure .res-icon { background: #f39c12; }
+  .res-title {
+    font-family: 'Merriweather', Georgia, serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e8449;
+    margin: 0 0 2px 0;
+  }
+  .result.fake .res-title { color: #c0392b; }
+  .result.unsure .res-title { color: #d35400; }
+  .res-subtitle { font-size: 13px; color: #555; }
+
+  /* Trust Bars */
+  .res-bars-container {
+    padding: 0 30px 20px;
+  }
+  .res-bar-row {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 8px;
+  }
+  .res-bar-row span {
+    font-size: 12px; font-weight: 700; width: 40px; text-transform: uppercase; color: #666;
+  }
+  .res-track {
+    flex: 1; height: 8px; background: rgba(0,0,0,0.08); border-radius: 4px; overflow: hidden;
+  }
+  .res-fill { height: 100%; border-radius: 4px; }
+  .res-fill.fake-fill { background: #e74c3c; }
+  .res-fill.real-fill { background: #1e8449; }
+  .res-pct { width: 30px; text-align: right; font-weight: 700; font-size: 13px; }
+
+  /* Meta tags row */
+  .res-meta {
+    padding: 0 30px 20px;
+    display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .res-tag {
+    font-size: 11px; padding: 4px 10px; border-radius: 4px;
+    border: 1px solid rgba(0,0,0,0.1); color: #555; background: rgba(0,0,0,0.02);
+  }
+
+  /* Sources section */
+  .res-section { padding: 20px 30px; }
+  .res-section-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+    text-transform: uppercase; color: #666; margin-bottom: 12px;
+  }
+  .res-source-card {
+    background: #fff; border: 1px solid #c3e6cb; border-radius: 6px; padding: 12px 16px;
+    margin-bottom: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  }
+  .result.fake .res-source-card { border-color: #f5c6cb; }
+  .result.unsure .res-source-card { border-color: #ffe082; }
+  .res-src-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .res-src-dot { width: 8px; height: 8px; border-radius: 50%; background: #1e8449; }
+  .result.fake .res-src-dot { background: #e74c3c; }
+  .res-src-domain { font-weight: 700; font-size: 14px; color: #1e8449; }
+  .result.fake .res-src-domain { color: #c0392b; }
+  .res-src-title { font-size: 13px; color: #444; margin-bottom: 2px; }
+  .res-src-url { font-size: 11px; color: #888; text-decoration: none; word-break: break-all; }
+  .res-src-url:hover { text-decoration: underline; }
+
+  /* AI Analysis section */
+  .res-ai-card {
+    background: #fcf6e5; border: 1px solid #f1dda3; padding: 16px; border-radius: 6px;
+    font-size: 14px; line-height: 1.6; color: #444; margin-bottom: 16px;
+  }
+  .res-checks { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .res-checks span {
+    font-size: 11px; background: rgba(0,0,0,0.05); padding: 3px 8px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.05);
+  }
+
+  /* Analysed text at bottom */
+  .res-text-sec { padding: 0 30px 24px; }
+  .res-raw { font-size: 14px; color: #555; background: rgba(255,255,255,0.4); padding: 12px; border-radius: 6px; }
+
+
+  .related-news-section {
+    margin-top: 40px;
+    padding: 22px 24px;
+    background: #fff;
+    border: 1px solid var(--card-border, rgba(0,0,0,0.1));
+    border-radius: 14px;
+    max-width: 680px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .related-news-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .related-news-title {
+    font-family: 'Merriweather', Georgia, serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy, #1a237e);
+  }
+  .related-news-loc {
+    font-size: 11px;
+    background: rgba(26,35,126,0.09);
+    color: var(--navy, #1a237e);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-weight: 600;
+  }
+  .related-news-card {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.07);
+  }
+  .related-news-card:last-child { border-bottom: none; }
+  .related-news-card a {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #18181b;
+    text-decoration: none;
+    line-height: 1.4;
+  }
+  .related-news-card a:hover { color: var(--navy, #1a237e); text-decoration: underline; }
+  .related-news-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 11px;
+    color: #888;
+    flex-wrap: wrap;
+  }
+  .related-news-snippet {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.5;
+    margin-top: 2px;
+  }
+
+  /* ══════════════════════════════════════════════════════
+     CHATBOT STYLES
+     ══════════════════════════════════════════════════════ */
+
+</style>
 {% endblock %}
 
 {% block body %}
-  <div class="page-container">
-    <!-- Stats Bar -->
-    <div class="stats-bar animate-in">
-      <div class="stat-card" style="border-left-color:var(--red);">
-        <div class="stat-value">152</div>
-        <div class="stat-label">Fake news detected today</div>
+<div class="page-container">
+  <!-- Stats Bar -->
+  <div class="stats-bar animate-in">
+    <div class="stat-card" style="border-left-color:var(--red);">
+      <div class="stat-value">152</div>
+      <div class="stat-label">Fake news detected today</div>
+    </div>
+    <div class="stat-card delay-1" style="border-left-color:var(--amber);">
+      <div class="stat-value">Health</div>
+      <div class="stat-label">Most targeted category</div>
+    </div>
+    <div class="stat-card delay-2" style="border-left-color:var(--navy);">
+      <div class="stat-value">WhatsApp</div>
+      <div class="stat-label">Top platform</div>
+    </div>
+  </div>
+
+  <!-- Hero Header -->
+  <div class="hero animate-in delay-1">
+    <h1>The Fake News Detector</h1>
+    <p class="subtitle">Paste any claim or article — we verify it against live news sources.</p>
+    <div class="lang-row">
+      <span class="lang-tag active" data-lang="en" onclick="selectLanguage(this)" title="Standard English verification">English</span>
+      <span class="lang-tag" data-lang="hi" onclick="selectLanguage(this)" title="Hindi text + AltNews sources">Hindi</span>
+      <span class="lang-tag" data-lang="gu" onclick="selectLanguage(this)" title="Gujarati + regional sources">Gujarati</span>
+      <span class="lang-tag" data-lang="hi" onclick="selectLanguage(this)" title="Hindi written in English letters e.g. Modi ne aaj bola...">Hinglish</span>
+      <span class="lang-tag" data-lang="gu" onclick="selectLanguage(this)" title="Gujarati written in English letters e.g. Aaj Gujarat ma...">Gujlish</span>
+    </div>
+    <input type="hidden" name="selected_language" id="selected_language" value="en" />
+  </div>
+
+  <!-- Verify Card -->
+  <div class="verify-card animate-in delay-2">
+    <div class="how-row">
+      <div class="how-box active" data-mode="short" onclick="selectMode('short', this)">
+        <strong>Short Claims</strong>Under 60 words — verified against live news sources on the web.
       </div>
-      <div class="stat-card delay-1" style="border-left-color:var(--amber);">
-        <div class="stat-value">Health</div>
-        <div class="stat-label">Most targeted category</div>
-      </div>
-      <div class="stat-card delay-2" style="border-left-color:var(--navy);">
-        <div class="stat-value">WhatsApp</div>
-        <div class="stat-label">Top platform</div>
+      <div class="how-box" data-mode="full" onclick="selectMode('full', this)">
+        <strong>Full Articles</strong>60+ words — analysed with machine learning for writing patterns.
       </div>
     </div>
-
-    <!-- Hero Header -->
-    <div class="hero animate-in delay-1">
-      <h1>The Fake News Detector</h1>
-      <p class="subtitle">Paste any claim or article — we verify it against live news sources.</p>
-      <div class="lang-row">
-        <span class="lang-tag active" data-lang="en" onclick="selectLanguage(this)" title="Standard English verification">English</span>
-        <span class="lang-tag" data-lang="hi" onclick="selectLanguage(this)" title="Hindi text + AltNews sources">Hindi</span>
-        <span class="lang-tag" data-lang="gu" onclick="selectLanguage(this)" title="Gujarati + regional sources">Gujarati</span>
-        <span class="lang-tag" data-lang="hi" onclick="selectLanguage(this)" title="Hindi written in English letters e.g. Modi ne aaj bola...">Hinglish</span>
-        <span class="lang-tag" data-lang="gu" onclick="selectLanguage(this)" title="Gujarati written in English letters e.g. Aaj Gujarat ma...">Gujlish</span>
-      </div>
-      <input type="hidden" name="selected_language" id="selected_language" value="en" />
+    <div id="client-error" class="error-box" style="display:none;"></div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('text',this)" id="tab-text">Paste Text / Claim</button>
+      <button class="tab" onclick="switchTab('url',this)" id="tab-url">Scrape from URL</button>
+      <button class="tab" onclick="switchTab('image',this)" id="tab-image">📷 Upload Image</button>
     </div>
-
-    <!-- Verify Card -->
-    <div class="verify-card animate-in delay-2">
-      <div class="how-row">
-        <div class="how-box active" data-mode="short" onclick="selectMode('short', this)">
-          <strong>Short Claims</strong>Under 60 words — verified against live news sources on the web.
-        </div>
-        <div class="how-box" data-mode="full" onclick="selectMode('full', this)">
-          <strong>Full Articles</strong>60+ words — analysed with machine learning for writing patterns.
-        </div>
-      </div>
-      <div id="client-error" class="error-box" style="display:none;"></div>
-      <div class="tabs">
-        <button class="tab active" onclick="switchTab('text',this)" id="tab-text">Paste Text / Claim</button>
-        <button class="tab" onclick="switchTab('url',this)" id="tab-url">Scrape from URL</button>
-        <button class="tab" onclick="switchTab('image',this)" id="tab-image">📷 Upload Image</button>
-      </div>
-      <form action="/predict" method="post" id="main-form">
-        <div class="panel active" id="panel-text">
-          <label class="form-label">News Text or Short Claim</label>
+    <form action="/predict" method="post" id="main-form">
+      <div class="panel active" id="panel-text">
+        <label class="form-label">News Text or Short Claim</label>
+        <div class="voice-input-wrapper">
           <textarea class="form-textarea" name="news" id="news-input"
-            placeholder="Type or paste anything, for example:&#10;&#10;• India won T20 World Cup 2024&#10;• भारत ने 2024 टी20 विश्व कप जीता&#10;• Or paste a full news article...">{{ input_text or '' }}</textarea>
+            placeholder="🎤 Hold the mic to speak — or paste text here...&#10;&#10;• India won T20 World Cup 2024&#10;• भारत ने 2024 टी20 विश्व कप जीता">{{ input_text or '' }}</textarea>
+          <button type="button" id="main-mic-btn" class="mic-btn" title="Hold to record voice">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="2" width="6" height="12" rx="3"/>
+              <path d="M5 10a7 7 0 0 0 14 0"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+              <line x1="8" y1="22" x2="16" y2="22"/>
+            </svg>
+          </button>
         </div>
-        <div class="panel" id="panel-url" style="display:none;">
-          <label class="form-label">Article URL</label>
-          <input class="form-input" type="text" name="url" id="url-input" placeholder="https://www.bbc.com/news/..." />
-          <p class="hint">The article will be scraped and analysed automatically.</p>
-        </div>
-        
-        <!-- Add image panel after URL panel -->
-        <div class="panel" id="panel-image" style="display:none">
-          <label class="form-label">SCREENSHOT OR IMAGE</label>
-          <!-- Drop zone -->
-          <div class="drop-zone" id="img-drop-zone"
-               onclick="document.getElementById('img-file-input').click()"
-               ondragover="event.preventDefault(); this.classList.add('dragover')"
-               ondragleave="this.classList.remove('dragover')"
-               ondrop="handleImageDrop(event)">
-            <div class="dz-icon">📸</div>
-            <div class="dz-title">Drop screenshot here or click to browse</div>
-            <div class="dz-sub">WhatsApp, Twitter, Facebook screenshots · PNG, JPG, WEBP · Max 10MB</div>
-            <div class="dz-platforms">
-              <span>💬 WhatsApp</span>
-              <span>📘 Facebook</span>
-              <span>🐦 Twitter</span>
-              <span>✈️ Telegram</span>
-            </div>
-          </div>
+        <div class="voice-status" id="main-voice-status"></div>
+      </div>
 
-          <input type="file" id="img-file-input" accept="image/*" style="display:none" onchange="handleImageSelect(this)">
+      <div class="panel" id="panel-url" style="display:none;">
+        <label class="form-label">Article URL</label>
+        <input class="form-input" type="text" name="url" id="url-input" placeholder="https://www.bbc.com/news/..." />
+        <p class="hint">The article will be scraped and analysed automatically.</p>
+      </div>
 
-          <!-- Preview + extracted text -->
-          <div id="img-preview-section" style="display:none;margin-top:14px">
-            <div class="img-preview-row">
-              <img id="img-preview-thumb" style="width:100px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--card-border)">
-              <div class="img-file-info">
-                <div id="img-file-name" class="img-fname"></div>
-                <div id="img-file-size" class="img-fsize"></div>
-                <button type="button" class="img-remove-btn" onclick="removeImage()">Remove ✕</button>
-              </div>
-            </div>
-
-            <button type="button" class="extract-btn" id="extract-btn" onclick="extractImageText()">
-              🔍 Extract Text from Image
-            </button>
-
-            <!-- Extracted text area -->
-            <div id="extracted-section" style="display:none;margin-top:12px">
-              <label class="form-label">EXTRACTED TEXT (EDIT IF NEEDED)</label>
-              <textarea id="extracted-textarea" class="form-textarea" name="extracted_news" rows="4" placeholder="Extracted text will appear here..."></textarea>
-              <div class="extract-meta" id="extract-meta"></div>
-              <div class="red-flags-box" id="red-flags-box" style="display:none"></div>
-            </div>
+      <div class="panel" id="panel-image" style="display:none">
+        <label class="form-label">SCREENSHOT OR IMAGE</label>
+        <div class="drop-zone" id="img-drop-zone"
+             onclick="document.getElementById('img-file-input').click()"
+             ondragover="event.preventDefault(); this.classList.add('dragover')"
+             ondragleave="this.classList.remove('dragover')"
+             ondrop="handleImageDrop(event)">
+          <div class="dz-icon">📸</div>
+          <div class="dz-title">Drop screenshot here or click to browse</div>
+          <div class="dz-sub">WhatsApp, Twitter, Facebook screenshots · PNG, JPG, WEBP · Max 10MB</div>
+          <div class="dz-platforms">
+            <span>💬 WhatsApp</span>
+            <span>📘 Facebook</span>
+            <span>🐦 Twitter</span>
+            <span>✈️ Telegram</span>
           </div>
         </div>
-        <button type="submit" class="btn-primary" style="width:100%;margin-top:18px;padding:14px;" id="submit-btn">Verify This</button>
-      </form>
+        <input type="file" id="img-file-input" accept="image/*" style="display:none" onchange="handleImageSelect(this)">
+        <div id="img-preview-section" style="display:none;margin-top:14px">
+          <div class="img-preview-row">
+            <img id="img-preview-thumb" style="width:100px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--card-border)">
+            <div class="img-file-info">
+              <div id="img-file-name" class="img-fname"></div>
+              <div id="img-file-size" class="img-fsize"></div>
+              <button type="button" class="img-remove-btn" onclick="removeImage()">Remove ✕</button>
+            </div>
+          </div>
+          <button type="button" class="extract-btn" id="extract-btn" onclick="extractImageText()">
+            🔍 Extract Text from Image
+          </button>
+          <div id="extracted-section" style="display:none;margin-top:12px">
+            <label class="form-label">EXTRACTED TEXT (EDIT IF NEEDED)</label>
+            <textarea id="extracted-textarea" class="form-textarea" name="extracted_news" rows="4" placeholder="Extracted text will appear here..."></textarea>
+            <div class="extract-meta" id="extract-meta"></div>
+            <div class="red-flags-box" id="red-flags-box" style="display:none"></div>
+          </div>
+        </div>
+      </div>
 
-      {% if error %}
-      <div class="error-box">{{ error }}</div>
+      <button type="submit" class="btn-primary" style="width:100%;margin-top:18px;padding:14px;" id="verifyBtn">Verify This</button>
+    </form>
+
+    {% if error %}
+    <div class="error-box">{{ error }}</div>
+    {% endif %}
+
+    {% if prediction %}
+    {% if is_fake %}{% set res_class = 'fake' %}
+    {% elif prediction == 'Likely Real' %}{% set res_class = 'unsure' %}
+    {% elif 'Unverified' in prediction or 'Cannot' in prediction or 'Disputed' in prediction %}{% set res_class = 'unsure' %}
+    {% else %}{% set res_class = 'real' %}{% endif %}
+
+    <div class="result {{ res_class }}" id="result-card">
+      <div class="res-header">
+        <div class="res-icon">{% if res_class == 'fake' %}&#10007;{% elif res_class == 'real' %}&#10003;{% else %}?{% endif %}</div>
+        <div>
+          <h2 class="res-title">{{ prediction }}</h2>
+          <div class="res-subtitle">{{ confidence }}% confidence</div>
+        </div>
+      </div>
+
+      <div class="res-bars-container">
+        <div class="res-bar-row">
+          <span>Fake</span>
+          <div class="res-track"><div class="res-fill fake-fill" style="width:calc({{ fake_prob|default(0) }} * 1%)"></div></div>
+          <div class="res-pct" style="color:#c0392b;">{{ fake_prob|default(0) }}%</div>
+        </div>
+        <div class="res-bar-row">
+          <span>Real</span>
+          <div class="res-track"><div class="res-fill real-fill" style="width:calc({{ real_prob|default(0) }} * 1%)"></div></div>
+          <div class="res-pct" style="color:#1e8449;">{{ real_prob|default(0) }}%</div>
+        </div>
+      </div>
+
+      <div class="res-meta">
+        <span class="res-tag">{{ verification_method }}</span>
+        <span class="res-tag">{{ detected_language }}</span>
+        <span class="res-tag">{{ word_count }} words</span>
+        {% if was_translated %}<span class="res-tag">Translated</span>{% endif %}
+      </div>
+
+      {% if credible_sources and credible_sources|length > 0 %}
+      <div class="res-section">
+        <div class="res-section-title">VERIFIED BY {{ credible_sources|length }} CREDIBLE SOURCES</div>
+        {% for src in credible_sources[:5] %}
+        <div class="res-source-card">
+          <div class="res-src-top">
+            <div class="res-src-dot"></div>
+            <div class="res-src-domain">{{ src.domain or src.title or src.url }}</div>
+          </div>
+          <div class="res-src-title">{{ src.title }}</div>
+          <a href="{{ src.url }}" class="res-src-url" target="_blank">{{ src.url[:80] + '...' if src.url|length > 80 else src.url }}</a>
+        </div>
+        {% endfor %}
+      </div>
       {% endif %}
 
-      {% if prediction %}
-      {% if is_fake %}{% set res_class = 'fake' %}
-      {% elif prediction == 'Likely Real' %}{% set res_class = 'unsure' %}
-      {% elif 'Unverified' in prediction or 'Cannot' in prediction or 'Disputed' in prediction %}{% set res_class = 'unsure' %}
-      {% else %}{% set res_class = 'real' %}{% endif %}
-
-      <div class="result {{ res_class }}">
-        <div class="result-top">
-          <div class="verdict-icon">{% if res_class == 'fake' %}&#10007;{% elif res_class == 'real' %}&#10003;{% else %}?{% endif %}</div>
-          <div>
-            <div class="verdict-label">{{ prediction }}</div>
-            <div class="verdict-confidence">{{ confidence }}% confidence</div>
+      {% if ai_reason %}
+      <div class="res-section">
+        <div class="res-section-title">AI ANALYSIS</div>
+        <div class="res-ai-card">
+          {{ ai_reason }}
+          {% if ai_details %}
+          <div class="res-checks">
+            {% for detail in ai_details %}
+            <span>{{ detail }}</span>
+            {% endfor %}
           </div>
+          {% endif %}
         </div>
-        <div class="bars">
-          <div class="bar-row">
-            <span class="bar-name">Fake</span>
-            <div class="bar-track">
-              <div class="bar-fill fake" data-width="{{ fake_prob|default(0) }}"></div>
-            </div>
-            <span class="bar-pct" style="color:var(--red);">{{ fake_prob|default(0) }}%</span>
-          </div>
-          <div class="bar-row">
-            <span class="bar-name">Real</span>
-            <div class="bar-track">
-              <div class="bar-fill real" data-width="{{ real_prob|default(0) }}"></div>
-            </div>
-            <span class="bar-pct" style="color:var(--green);">{{ real_prob|default(0) }}%</span>
-          </div>
-        </div>
-        <div class="meta-row">
-          <span class="meta-tag">{{ verification_method }}</span>
-          <span class="meta-tag">{{ detected_language }}</span>
-          <span class="meta-tag">{{ word_count }} words</span>
-          {% if was_translated %}<span class="meta-tag">Translated</span>{% endif %}
-        </div>
-        {% if credible_sources %}
-        <hr class="divider"><div class="section-h">Verified by {{ credible_count }} credible source{{ 's' if credible_count != 1 }}</div>
-        <div class="source-list">{% for src in credible_sources %}
-          <div class="source-card"><div class="source-marker"></div><div class="source-body"><div class="source-domain">{{ src.domain }}</div><div class="source-title">{{ src.title }}</div><a class="source-url" href="{{ src.url }}" target="_blank" rel="noopener">{{ src.url[:80] }}{% if src.url|length > 80 %}...{% endif %}</a></div></div>
-        {% endfor %}</div>
-        {% elif 'Web Search' in verification_method and not credible_sources %}
-        <hr class="divider"><div class="no-sources">No credible sources found reporting this claim.<small>If this is true news, try pasting the full article or its URL instead.</small></div>
-        {% endif %}
-        {% if ai_reason %}<hr class="divider"><div class="section-h">AI Analysis</div><div class="ai-reason-box"><p>{{ ai_reason }}</p>{% if ai_details %}<div class="detail-chips">{% for d in ai_details %}<span class="detail-chip">{{ d }}</span>{% endfor %}</div>{% endif %}</div>{% endif %}
-        {% if was_translated and translated_preview %}<hr class="divider"><div class="section-h">Translated to English</div><div class="translation-box"><p>{{ translated_preview }}</p></div>{% endif %}
-        {% if article %}<hr class="divider"><div class="section-h">Scraped Article</div><div class="article-title">{{ article.title }}</div>{% if article.publish_date and article.publish_date != 'None' %}<div class="article-date">{{ article.publish_date }}</div>{% endif %}
-        {% elif input_text %}<hr class="divider"><div class="section-h">Analysed Text</div><p class="preview-text">{{ input_text }}</p>{% endif %}
-
-        <!-- FCM Deep Analysis Panel (populated async via /api/fact-check) -->
-        <div id="fcm-panel" style="display:none;margin-top:4px"></div>
       </div>
       {% endif %}
-    </div>
 
-
-    <!-- Live News Scraping Section -->
-    <hr class="section-divider">
-    <div class="news-section" id="live-news-section">
-      <h2 class="section-heading" style="margin-bottom:20px">&#128240; Live Global News</h2>
-      <div id="news-container" class="news-container">
-        <!-- News items will be populated here via JavaScript -->
-        <p class="loading-news">Fetching live news...</p>
+      <div class="res-text-sec">
+        <div class="res-section-title">ANALYSED TEXT</div>
+        <div class="res-raw">{{ input_text }}</div>
       </div>
     </div>
+    {% endif %}
+  </div>
 
-    <!-- Trending Misinformation -->
-    <hr class="section-divider">
-    <div class="trending-section" id="trending-section">
-      <!-- Heading Row -->
-      <div class="ts-heading-row">
-        <h2 class="section-heading" style="margin-bottom:0">&#128293; Trending Misinformation</h2>
-        <button class="btn-secondary" onclick="TS.refresh()" id="trending-refresh" title="Refresh trending">&#8634; Refresh</button>
+
+  <!-- Voice Indicator (for cancel/lock zones) -->
+  <div class="voice-indicator" id="voice-indicator"></div>
+
+  <!-- FCM Deep Analysis Panel (shown after result) -->
+  <div id="fcm-panel" style="display:none;max-width:680px;margin:0 auto 24px;"></div>
+
+  {% if related_news and related_news|length > 0 %}
+  <!-- Related Regional News Section -->
+  <div class="related-news-section animate-in">
+    <div class="related-news-header">
+      <div class="related-news-title">&#128240; Related News from {{ location_label }}</div>
+      <span class="related-news-loc">&#128205; {{ location_label }}</span>
+    </div>
+    {% for item in related_news %}
+    <div class="related-news-card">
+      <a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.title }}</a>
+      <div class="related-news-meta">
+        <span>&#127760; {{ item.source }}</span>
+        {% if item.date %}<span>&#128336; {{ item.date[:10] }}</span>{% endif %}
       </div>
+      {% if item.snippet %}
+      <div class="related-news-snippet">{{ item.snippet }}</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
 
-      <!-- Search Bar -->
-      <div class="ts-search-wrap" style="display: flex; gap: 10px;">
-        <input type="text" class="form-input ts-search-input" id="ts-search" placeholder='Search misinformation... e.g. "vaccine"' autocomplete="off" style="flex: 1;">
-        <input type="text" class="form-input ts-search-input" id="ts-location" placeholder='Location (e.g. India)' autocomplete="off" style="width: 200px;">
-        <button class="ts-search-icon" onclick="TS.searchSubmit()" title="Search">&#128269;</button>
+  <!-- Live Global News Section -->
+
+  <div class="trending-section" style="margin-top:64px;">
+    <div class="ts-heading-row ts-header-flex">
+      <div>
+        <div class="ts-main-title">📰 India Live News Feed</div>
+        <div class="ts-sub-title">Real-time headlines from trusted Indian news networks (ABP, NDTV, Zee)</div>
       </div>
-
-      <!-- Search Active Tag -->
-      <div class="ts-search-tag" id="ts-search-tag" style="display:none">
-        <span id="ts-search-tag-text"></span>
-        <button class="ts-tag-close" onclick="TS.clearSearch()">&#10005;</button>
-      </div>
-
-      <!-- Category Filters -->
-      <div class="ts-filter-row" id="ts-filter-row">
-        <button class="ts-filter-btn active" data-cat="All" onclick="TS.setCategory('All',this)">All</button>
-        <button class="ts-filter-btn" data-cat="Health" onclick="TS.setCategory('Health',this)">Health</button>
-        <button class="ts-filter-btn" data-cat="Politics" onclick="TS.setCategory('Politics',this)">Politics</button>
-        <button class="ts-filter-btn" data-cat="Technology" onclick="TS.setCategory('Technology',this)">Technology</button>
-        <button class="ts-filter-btn" data-cat="Science" onclick="TS.setCategory('Science',this)">Science</button>
-        <button class="ts-filter-btn" data-cat="Finance" onclick="TS.setCategory('Finance',this)">Finance</button>
-        <button class="ts-filter-btn" data-cat="Sports" onclick="TS.setCategory('Sports',this)">Sports</button>
-      </div>
-
-      <!-- Custom Category -->
-      <div class="ts-custom-row">
-        <input type="text" class="form-input ts-custom-input" id="ts-custom-input" placeholder="Enter custom category..." minlength="2" maxlength="20">
-        <button class="btn-secondary ts-custom-add" onclick="TS.addCustom()">+ Add</button>
-      </div>
-      <div class="ts-custom-error" id="ts-custom-error" style="display:none"></div>
-
-      <!-- Cards Grid -->
-      <div class="trending-grid" id="trending-grid"></div>
-
-      <!-- Empty State -->
-      <div class="ts-empty" id="ts-empty" style="display:none">
-        <span class="ts-empty-icon">&#128269;</span>
-        <span id="ts-empty-text">No results found — try a different search or click Refresh.</span>
+    </div>
+    <div id="news-container" class="ts-cards-grid" style="margin-top:32px;">
+      <div style="color:var(--text-secondary);font-size:14px;padding:40px 0;text-align:center;grid-column:1/-1;">
+        ⏳ Fetching latest global broadcast headlines...
       </div>
     </div>
   </div>
+
+
+
+  <!-- Real-Time Misinformation Tracker Section -->
+  <div id="trending-section" class="trending-section" style="margin-top:48px;">
+    
+    <!-- 1. Header Section -->
+    <div class="ts-heading-row ts-header-flex">
+      <div>
+        <div class="ts-main-title">🔥 Real-Time Misinformation Tracker <span class="live-indicator"><span class="live-dot"></span> LIVE</span></div>
+        <div class="ts-sub-title">Live verified fake news from trusted fact-checking sources</div>
+      </div>
+      <div class="ts-refresh-wrap">
+        <span id="ts-last-updated" class="ts-last-updated-text">Just now</span>
+        <button onclick="TS.refresh()" class="ts-filter-btn live-refresh-btn">🔄 Refresh (Live)</button>
+      </div>
+    </div>
+
+    <!-- 2. Search & 3. Location Filters -->
+    <div class="ts-filters-container">
+      
+      <!-- Modern Search Bar -->
+      <div class="ts-search-wrap modern-search ts-search-flex">
+        <span class="ts-search-icon-abs">🔍</span>
+        <input class="form-input ts-search-input-styled" type="text" id="ts-search" placeholder="Search fake news (e.g., exam leak, bank scam, gas, war...)" onkeypress="if(event.key==='Enter') TS.searchSubmit()">
+        <button class="btn-primary ts-search-btn" onclick="TS.searchSubmit()">Search</button>
+      </div>
+
+      <!-- Location Selection -->
+      <div class="ts-dropdown-row">
+        <select class="form-input ts-select-input" id="ts-country" onchange="TS.onCountryChange()" style="width:100%;">
+          <option value="">🌎 Worldwide (All Countries)</option>
+          <option value="India">🇮🇳 India</option>
+          <option value="USA">🇺🇸 USA</option>
+          <option value="UK">🇬🇧 UK</option>
+          <option value="Canada">🇨🇦 Canada</option>
+          <option value="Global">🌐 Global fact-checkers</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Active search tag -->
+    <div id="ts-search-tag" class="ts-search-tag ts-search-tag-styled" style="display:none;">
+      <span id="ts-search-tag-text"></span>
+      <button class="ts-tag-close ts-tag-close-styled" onclick="TS.clearSearch()">✕</button>
+    </div>
+
+    <!-- 4. Category / Filter Section -->
+    <div class="ts-filter-groups ts-filter-flex">
+      <div class="ts-filter-group">
+        <div class="ts-filter-label ts-topic-label">Topic Filter</div>
+        <div class="ts-filter-row ts-filter-row-wrap" id="ts-topic-row">
+          <button class="ts-filter-btn active" data-cat="All" onclick="TS.setCategory('All',this)">📄 All</button>
+          <button class="ts-filter-btn" data-cat="Trending" onclick="TS.setCategory('Trending',this)">🔥 Trending</button>
+          <button class="ts-filter-btn" data-cat="Politics" onclick="TS.setCategory('Politics',this)">🏛 Politics</button>
+          <button class="ts-filter-btn" data-cat="Health" onclick="TS.setCategory('Health',this)">🏥 Health</button>
+          <button class="ts-filter-btn" data-cat="Technology" onclick="TS.setCategory('Technology',this)">💻 Tech</button>
+          <button class="ts-filter-btn" data-cat="Viral" onclick="TS.setCategory('Viral',this)">📲 Viral</button>
+        </div>
+      </div>
+      <div class="ts-filter-group">
+        <div class="ts-filter-label ts-topic-label">Platform</div>
+        <div class="ts-filter-row ts-filter-row-wrap" id="ts-platform-row">
+          <button class="ts-filter-btn active" data-plat="All" onclick="TS.setPlatform('All',this)">🌐 All</button>
+          <button class="ts-filter-btn" data-plat="WhatsApp" onclick="TS.setPlatform('WhatsApp',this)">💬 WhatsApp</button>
+          <button class="ts-filter-btn" data-plat="Twitter/X" onclick="TS.setPlatform('Twitter/X',this)">𝕏 Twitter/X</button>
+          <button class="ts-filter-btn" data-plat="YouTube" onclick="TS.setPlatform('YouTube',this)">📺 YouTube</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="trending-grid ts-cards-grid" id="trending-grid"></div>
+
+    <!-- Empty State -->
+    <div class="ts-empty ts-empty-styled" id="ts-empty" style="display:none;">
+      <div class="ts-empty-icon ts-empty-icon-lg">🔍</div>
+      <div id="ts-empty-text" class="ts-empty-text-styled">No fake news found for this search. Showing trending misinformation instead.</div>
+      <button class="btn-primary ts-empty-btn" onclick="TS.clearSearch()">Reset Search</button>
+    </div>
+  </div>
+
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/index.js') }}"></script>
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script src="{{ url_for('static', filename='js/live-feed.js') }}"></script>
 
+<!-- ══════════════════════════════════════════════════════
+     WHATSAPP-STYLE VOICE INPUT SYSTEM
+     ══════════════════════════════════════════════════════ -->
+<script>
+// Check browser support
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const hasSpeechRecognition = !!SpeechRecognition;
+
+if (!hasSpeechRecognition) {
+  document.getElementById('chat-messages-warning').style.display = 'block';
+}
+
+// Mic state manager
+class MicManager {
+  constructor(micBtnId, inputFieldId, statusId, isChat = false) {
+    this.micBtn = document.getElementById(micBtnId);
+    this.input = document.getElementById(inputFieldId);
+    this.status = document.getElementById(statusId);
+    this.isChat = isChat;
+
+    this.recording = false;
+    this.locked = false;
+    this.cancelled = false;
+    this.recognition = null;
+    this.startX = 0;
+    this.startY = 0;
+    this.currentX = 0;
+    this.currentY = 0;
+    this.transcript = '';
+
+    if (!hasSpeechRecognition) {
+      this.micBtn.disabled = true;
+      return;
+    }
+
+    this.setupRecognition();
+    this.attachEventListeners();
+  }
+
+  setupRecognition() {
+    this.recognition = new SpeechRecognition();
+    this.recognition.continuous = true;
+    this.recognition.interimResults = true;
+    this.recognition.lang = this.getLanguage();
+
+    this.recognition.onstart = () => this.onRecognitionStart();
+    this.recognition.onresult = (e) => this.onRecognitionResult(e);
+    this.recognition.onerror = (e) => this.onRecognitionError(e);
+    this.recognition.onend = () => this.onRecognitionEnd();
+  }
+
+  getLanguage() {
+    const activeTab = document.querySelector('.lang-tag.active');
+    if (!activeTab) return 'en-IN';
+
+    const lang = activeTab.dataset.lang;
+    const langMap = {
+      'en': 'en-IN',
+      'hi': 'hi-IN',
+      'gu': 'gu-IN'
+    };
+    return langMap[lang] || 'en-IN';
+  }
+
+  attachEventListeners() {
+    // Desktop (mouse)
+    this.micBtn.addEventListener('mousedown', (e) => this.handleStart(e.clientX, e.clientY));
+    document.addEventListener('mouseup', () => this.handleEnd());
+    document.addEventListener('mousemove', (e) => this.handleMove(e.clientX, e.clientY));
+
+    // Mobile (touch)
+    this.micBtn.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      this.handleStart(touch.clientX, touch.clientY);
+    });
+    document.addEventListener('touchend', () => this.handleEnd());
+    document.addEventListener('touchmove', (e) => {
+      const touch = e.touches[0];
+      this.handleMove(touch.clientX, touch.clientY);
+    }, { passive: true });
+  }
+
+  handleStart(x, y) {
+    if (!hasSpeechRecognition || this.recording) return;
+
+    this.startX = x;
+    this.startY = y;
+    this.currentX = x;
+    this.currentY = y;
+    this.transcript = '';
+    this.cancelled = false;
+    this.recording = true;
+
+    this.micBtn.classList.add('recording');
+    this.setStatus('Listening... Hold to record');
+
+    this.recognition.lang = this.getLanguage();
+    this.recognition.start();
+  }
+
+  handleMove(x, y) {
+    if (!this.recording || this.locked) return;
+
+    this.currentX = x;
+    this.currentY = y;
+
+    const deltaX = this.startX - x; // Positive = moved left
+    const deltaY = this.startY - y; // Positive = moved up
+
+    const indicator = document.getElementById('voice-indicator');
+
+    if (deltaX > 80) {
+      // Cancel zone (drag left)
+      this.cancelled = true;
+      indicator.textContent = '🗑️ Release to Cancel';
+      indicator.classList.add('show', 'cancel-zone');
+      indicator.classList.remove('lock-zone');
+    } else if (deltaY > 80) {
+      // Lock zone (drag up)
+      indicator.textContent = '🔒 Release to Lock';
+      indicator.classList.add('show', 'lock-zone');
+      indicator.classList.remove('cancel-zone');
+    } else {
+      // Normal zone
+      indicator.classList.remove('show', 'cancel-zone', 'lock-zone');
+      this.cancelled = false;
+    }
+  }
+
+  handleEnd() {
+    if (!this.recording) return;
+
+    this.recording = false;
+    this.micBtn.classList.remove('recording');
+
+    const indicator = document.getElementById('voice-indicator');
+    indicator.classList.remove('show', 'cancel-zone', 'lock-zone');
+
+    if (this.cancelled) {
+      this.setStatus('❌ Cancelled');
+      this.recognition.stop();
+      this.cancelled = false;
+      setTimeout(() => {
+        this.micBtn.classList.remove('cancelled');
+        this.setStatus('');
+      }, 1500);
+    } else if (this.locked) {
+      this.micBtn.classList.add('locked');
+      this.setStatus('🔒 Locked — Tap stop to finish');
+      // Continue recording (don't stop)
+    } else {
+      // Normal release - stop recording
+      this.recognition.stop();
+      this.setStatus('');
+    }
+  }
+
+  onRecognitionStart() {
+    this.setStatus('🎤 Listening... Hold to record');
+  }
+
+  onRecognitionResult(e) {
+    let interimTranscript = '';
+
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const transcript = e.results[i][0].transcript;
+
+      if (e.results[i].isFinal) {
+        this.transcript += transcript + ' ';
+      } else {
+        interimTranscript += transcript;
+      }
+    }
+
+    this.setStatus(`📝 ${interimTranscript || this.transcript}`);
+
+    // Check if we should lock on up swipe
+    const deltaY = this.startY - this.currentY;
+    if (deltaY > 80 && !this.locked && this.recording) {
+      this.locked = true;
+      this.micBtn.classList.add('locked');
+    }
+  }
+
+  onRecognitionError(e) {
+    if (e.error === 'not-allowed') {
+      this.setStatus('❌ Microphone access denied. Allow in browser settings.');
+    } else if (e.error === 'no-speech') {
+      this.setStatus('🔇 No speech detected. Try again.');
+    } else {
+      this.setStatus(`⚠️ Error: ${e.error}`);
+    }
+  }
+
+  onRecognitionEnd() {
+    if (this.transcript.trim()) {
+      this.input.value += (this.input.value ? ' ' : '') + this.transcript.trim();
+      this.setStatus('✅ Done');
+      setTimeout(() => {
+        this.micBtn.classList.remove('cancelled', 'locked');
+        this.setStatus('');
+        this.locked = false;
+      }, 1500);
+    } else {
+      if (!this.cancelled) {
+        this.setStatus('🔇 Nothing heard. Try again.');
+        setTimeout(() => {
+          this.setStatus('');
+        }, 1500);
+      }
+    }
+  }
+
+  setStatus(text) {
+    if (this.status) {
+      this.status.textContent = text;
+      this.status.classList.toggle('recording', this.recording);
+      this.status.classList.toggle('locked', this.locked);
+    }
+  }
+}
+
+// Initialize mic managers
+const mainMic = new MicManager('main-mic-btn', 'news-input', 'main-voice-status', false);
+</script>
+
+<div id="fcm-data" data-prediction="{{ prediction|default('') }}" data-text="{{ input_text|default('') }}" data-url="{{ (article.url if article else '')|default('') }}" style="display:none;"></div>
 <script>
   // Fire FCM analysis automatically if a prediction result is already showing
   document.addEventListener('DOMContentLoaded', function() {
-    {% if prediction and input_text %}
-    if (typeof runFCMAnalysis === 'function') {
-      runFCMAnalysis({{ input_text | tojson }}, false);
+    var fcmData = document.getElementById('fcm-data');
+    if (fcmData && fcmData.getAttribute('data-prediction')) {
+      if (typeof runFCMAnalysis === 'function') {
+        var txt = fcmData.getAttribute('data-text');
+        var url = fcmData.getAttribute('data-url');
+        if (txt) {
+          runFCMAnalysis(txt, false);
+        } else if (url) {
+          runFCMAnalysis(url, false);
+        }
+      }
     }
-    {% elif prediction and article %}
-    if (typeof runFCMAnalysis === 'function') {
-      runFCMAnalysis({{ article.url | tojson if article.url else '' | tojson }}, false);
-    }
-    {% endif %}
   });
 </script>
 {% endblock %}
-

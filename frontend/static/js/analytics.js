@@ -4,8 +4,13 @@
 const state = {
   activeFilter: 'overall',
   activeCountry: null,
-  activeRegion: 'worldwide'
+  activeRegion: 'worldwide',
+  lastSyncTime: null
 };
+
+// Reference to AnalyticsState from analytics-state.js
+// This will be available after analytics-state.js is loaded
+const getSelectedCountry = () => window.AnalyticsState?.selectedCountry || 'Worldwide';
 
 /* ============================================================
    DATA SETS
@@ -380,40 +385,64 @@ function selectCountry(name) {
   // Show badge
   document.getElementById('badge-country-name').textContent = name;
   document.getElementById('country-badge').classList.remove('hidden');
-  updateAllCharts();
-  triggerFeedRefresh();
+  
+  // Update through AnalyticsState if available
+  if (window.AnalyticsState) {
+    AnalyticsState.handleCountryChange(name);
+  } else {
+    updateAllCharts();
+    triggerFeedRefresh();
+  }
 }
 
 function clearCountry() {
   state.activeCountry = null;
   document.getElementById('country-badge').classList.add('hidden');
-  updateAllCharts();
-  triggerFeedRefresh();
+  
+  // Reset to Worldwide through AnalyticsState if available
+  if (window.AnalyticsState) {
+    AnalyticsState.handleCountryChange('Worldwide');
+  } else {
+    updateAllCharts();
+    triggerFeedRefresh();
+  }
 }
 
 document.getElementById('clear-country-btn').addEventListener('click', clearCountry);
 
 /* ============================================================
-   FILTER PILLS
+   FILTER PILLS - Integrated with AnalyticsState
    ============================================================ */
 document.querySelectorAll('.pill[data-filter]').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.pill[data-filter]').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     state.activeFilter = btn.dataset.filter;
-    updateAllCharts();
-    triggerFeedRefresh();
+    
+    // If AnalyticsState is available, update through state management
+    if (window.AnalyticsState) {
+      AnalyticsState.handleCategoryChange(btn.dataset.filter);
+    } else {
+      updateAllCharts();
+      triggerFeedRefresh();
+    }
   });
 });
 
 /* ============================================================
-   REGION SELECTOR & LIVE DATA
+   REGION SELECTOR & LIVE DATA - Integrated with AnalyticsState
    ============================================================ */
 document.getElementById('region-select').addEventListener('change', function() {
   state.activeRegion = this.value;
   state.activeCountry = null;
   document.getElementById('country-badge').classList.add('hidden');
-  fetchLiveData(this.value);
+  
+  // Trigger refresh through AnalyticsState if available, otherwise direct fetch
+  if (window.AnalyticsState) {
+    AnalyticsState.refreshAnalytics();
+  } else {
+    fetchLiveData(this.value);
+  }
 });
 
 function hideLoader(data) {
@@ -423,34 +452,34 @@ function hideLoader(data) {
   });
 }
 
-// 5. FETCH FUNCTION
+// 5. FETCH FUNCTION - Uses API service with backend country filtering
 function fetchLiveData(region, isAutoRefresh) {
   if (!isAutoRefresh) showLoader();
   
-  const url = `/get_live_analytics?region=${encodeURIComponent(region)}&t=${Date.now()}`;
+  // Get selected country from state
+  const country = getSelectedCountry();
   
-  fetch(url)
-    .then(res => res.json())
+  // Fetch analytics data from backend via API service
+  API.fetchAnalytics(country)
     .then(data => {
       updateCharts(data);
+      state.lastSyncTime = new Date().toLocaleTimeString();
       hideLoader(data);
     })
     .catch(err => {
-      console.error("Live fetch error:", err);
+      console.error("[analytics.js] Live fetch error:", err);
       document.querySelectorAll('.chart-footer').forEach(el => {
         el.textContent = 'Connection lost. Retrying...';
       });
     });
 }
 
-// 4. AUTO LIVE REFRESH - Every 10 seconds
+// 4. AUTO LIVE REFRESH - Integrated with AnalyticsState auto-refresh
 let analyticsRefreshTimer = null;
 function startAnalyticsAutoRefresh() {
-  if (analyticsRefreshTimer) clearInterval(analyticsRefreshTimer);
-  analyticsRefreshTimer = setInterval(() => {
-    const region = document.getElementById('region-select').value;
-    fetchLiveData(region, true);
-  }, 10000);
+  // Auto-refresh is now managed by AnalyticsState.js
+  // This function kept for backward compatibility
+  console.log('[analytics.js] Auto-refresh is managed by AnalyticsState module');
 }
 
 // 6. UPDATE EXISTING CHARTS ONLY

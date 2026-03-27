@@ -80,13 +80,25 @@ if (mainForm) {
       }
     }
     clearClientError();
-    var btn = document.getElementById('submit-btn');
+    // Update button text to show loading state
+    var btn = document.getElementById('verifyBtn');
     if (btn) {
-      btn.textContent = 'Verifying...';
-      btn.disabled = true
+      btn.textContent = 'Verifying…';
+      btn.disabled = true;
     }
   });
 }
+
+// Auto-scroll to result card if present after page load
+document.addEventListener('DOMContentLoaded', function() {
+  var rc = document.getElementById('result-card');
+  if (rc) {
+    setTimeout(function() {
+      rc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 200);
+  }
+});
+
 
 /* ════════════════════════════════════════
    Trending Misinformation State Machine
@@ -95,8 +107,8 @@ var TS = (function() {
   var state = {
     allCards: [],
     activeCategory: 'All',
-    searchTerm: '',
-    customCategories: []
+    activePlatform: 'All',
+    searchTerm: ''
   };
 
   var els = {};
@@ -106,229 +118,272 @@ var TS = (function() {
     els.empty = document.getElementById('ts-empty');
     els.emptyText = document.getElementById('ts-empty-text');
     els.searchInput = document.getElementById('ts-search');
-    els.locationInput = document.getElementById('ts-location');
     els.searchTag = document.getElementById('ts-search-tag');
     els.searchTagText = document.getElementById('ts-search-tag-text');
-    els.filterRow = document.getElementById('ts-filter-row');
-    els.customInput = document.getElementById('ts-custom-input');
-    els.customError = document.getElementById('ts-custom-error');
+    
+    // Selects
+    els.country = document.getElementById('ts-country');
 
     if (els.searchInput) {
-      els.searchInput.addEventListener('input', function() {
-        liveFilter();
-      });
-      els.searchInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          searchSubmit();
-        }
-      });
+      els.searchInput.addEventListener('input', liveFilter);
     }
+    
+    if (els.grid) fetchData(true);
+  }
 
-    if (els.customInput) {
-      els.customInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          addCustom();
-        }
-      });
-    }
-
-    if (els.grid) {
-      fetchData('', '');
-    }
+  function onCountryChange() {
+    searchSubmit();
   }
 
   function showSkeleton() {
     if (!els.grid) return;
     var s = '';
     for (var i = 0; i < 4; i++) {
-      s += '<div class="trending-card ts-skeleton">' +
-        '<div class="ts-shimmer" style="height:16px;width:' + (60 + Math.random() * 30) + '%;border-radius:4px"></div>' +
-        '<div style="height:8px"></div>' +
-        '<div class="ts-shimmer" style="height:12px;width:90%;border-radius:4px"></div>' +
-        '<div style="height:12px"></div>' +
-        '<div style="display:flex;gap:6px">' +
-        '<div class="ts-shimmer" style="height:22px;width:70px;border-radius:12px"></div>' +
-        '<div class="ts-shimmer" style="height:22px;width:60px;border-radius:12px"></div>' +
-        '<div class="ts-shimmer" style="height:22px;width:80px;border-radius:12px"></div>' +
-        '</div>' +
-        '<div style="height:12px"></div>' +
-        '<div class="ts-shimmer" style="height:30px;width:120px;border-radius:6px"></div>' +
-        '</div>';
+      s += '<div class="trending-card ts-skeleton"><div class="ts-shimmer ts-skeleton-title"></div><div class="ts-shimmer ts-skeleton-block"></div></div>';
     }
     els.grid.innerHTML = s;
     if (els.empty) els.empty.style.display = 'none';
   }
 
-  function fetchData(category, location) {
-    showSkeleton();
-    var url = '/api/trending';
-    var params = [];
-    if (category) params.push('category=' + encodeURIComponent(category));
-    if (location) params.push('location=' + encodeURIComponent(location));
-    if (params.length > 0) url += '?' + params.join('&');
+  function updateStats(items) {
+    var st = document.getElementById('stat-total');
+    if (st) st.textContent = items.length;
     
-    fetch(url).then(function(r) {
-      return r.json();
-    }).then(function(items) {
-      state.allCards = items || [];
+    var localCount = 0;
+    var whatsappCount = 0;
+    
+    items.forEach(function(it) {
+      if (it.platform && it.platform.toLowerCase() === 'whatsapp') whatsappCount++;
+      if (it.state || it.district) localCount++;
+    });
+    
+    var sr = document.getElementById('stat-region');
+    if (sr) sr.textContent = localCount;
+
+    var sw = document.getElementById('stat-whatsapp');
+    if (sw) sw.textContent = items.length ? Math.round((whatsappCount / items.length) * 100) + '%' : '0%';
+    
+    var lu = document.getElementById('ts-last-updated');
+    if (lu) lu.textContent = 'Updated just now';
+  }
+
+  function fetchData(refresh=false) {
+    showSkeleton();
+    var term = state.searchTerm;
+    var cat = state.activeCategory !== 'All' ? state.activeCategory : '';
+    
+    var url = '/fake-trending?';
+    var params = [];
+    
+    // Send either term or category as topic
+    var finalTopic = term || cat;
+    if (finalTopic) params.push('topic=' + encodeURIComponent(finalTopic));
+    
+    if (els.country && els.country.value) params.push('country=' + encodeURIComponent(els.country.value));
+    
+    if (refresh) params.push('refresh=true');
+    url += params.join('&');
+    
+    fetch(url).then(function(r) { return r.json(); }).then(function(items) {
+      startUpdateTimer();
+      var finalItems = items || [];
+      updateStats(finalItems);
+      state.allCards = finalItems;
       renderCards();
     }).catch(function() {
       state.allCards = [];
+      updateStats([]);
       renderCards();
     });
   }
 
   function getFiltered() {
     var items = state.allCards;
-    var cat = state.activeCategory;
-    var term = state.searchTerm.toLowerCase().trim();
-    return items.filter(function(c) {
-      var catMatch = (cat === 'All') || (c.category === cat);
-      var termMatch = !term || c.headline.toLowerCase().indexOf(term) !== -1;
-      return catMatch && termMatch;
-    });
+    
+    // Perform local platform filter
+    if (state.activePlatform !== 'All') {
+      var target = state.activePlatform.toLowerCase();
+      if (target === 'twitter/x') target = 'twitter';
+      
+      var platItems = items.filter(function(it) {
+        var p = (it.platform || '').toLowerCase();
+        if (target === 'twitter') return p.includes('twitter') || p.includes('x');
+        return p.includes(target);
+      });
+      
+      // If user selected a specific platform but we have ZERO matches,
+      // it's better to show them everything than a dead screen, 
+      // but we'll mark them as "Global/Web" if needed.
+      if (platItems.length > 0) items = platItems;
+    }
+    
+    // local search term filter 
+    if (state.searchTerm) {
+      var term = state.searchTerm.toLowerCase();
+      items = items.filter(function(it) {
+        return (it.title || '').toLowerCase().includes(term);
+      });
+    }
+    
+    return items;
+  }
+
+  let updateInterval;
+  function startUpdateTimer() {
+    if (updateInterval) clearInterval(updateInterval);
+    const start = new Date();
+    const el = document.getElementById('ts-last-updated');
+    if (!el) return;
+    updateInterval = setInterval(() => {
+      const diff = Math.floor((new Date() - start) / 1000);
+      if (diff < 60) el.textContent = diff + ' sec ago';
+      else el.textContent = Math.floor(diff / 60) + ' min ago';
+    }, 5000);
   }
 
   function renderCards() {
     if (!els.grid) return;
     var filtered = getFiltered();
+    
     if (filtered.length === 0) {
       els.grid.innerHTML = '';
-      if (els.empty) {
-        els.empty.style.display = 'flex';
-        var msg;
-        if (state.activeCategory !== 'All' && !state.searchTerm) {
-          msg = '\u26A0\uFE0F No fake news available for "' + state.activeCategory + '" right now. Try another category or click Refresh.';
-        } else if (state.searchTerm) {
-          msg = '\u26A0\uFE0F No fake news found for "' + state.searchTerm + '". Try a different keyword.';
-        } else {
-          msg = '\u26A0\uFE0F No fake news available right now — click Refresh to try again.';
-        }
-        if (els.emptyText) els.emptyText.textContent = msg;
-      }
+      if (els.empty) els.empty.style.display = 'block';
       return;
     }
+    
     if (els.empty) els.empty.style.display = 'none';
     var html = '';
+    
     filtered.forEach(function(item, i) {
-      var escaped = item.headline.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      var sourceUrl = item.link || '#';
+      var fake_score = parseInt(item.trend_score || item.fake_score) || 70;
+      var verdict = item.verdict || 'Fake';
+      var platform = item.platform || 'Web';
+      var locationStr = (item.district ? item.district + ', ' : '') + (item.state || item.country || '');
+      var titleEscaped = (item.title || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      
+      var verdictIcon = verdict === 'Fake' ? '🔴' : (verdict === 'Misleading' ? '🟡' : '🟢');
+      var fakeColorClass = 'pill-red';
+      if (verdict === 'Misleading') fakeColorClass = 'pill-yellow';
+      else if (verdict === 'True') fakeColorClass = 'pill-green';
+      
+      // Platform Icon logic
+      var pIcon = '🌐';
+      if (platform.toLowerCase().includes('whatsapp')) pIcon = '💬';
+      else if (platform.toLowerCase().includes('twitter') || platform.toLowerCase().includes('x')) pIcon = '𝕏';
+      else if (platform.toLowerCase().includes('youtube')) pIcon = '📺';
+
       html += '<div class="trending-card animate-in delay-' + (Math.min(i + 1, 4)) + '">' +
-        '<div class="t-headline">"' + item.headline + '"</div>' +
-        '<div class="t-meta">' +
-        '<span class="pill pill-muted">' + item.platform + '</span>' +
-        '<span class="pill pill-muted">' + item.category + '</span>' +
-        '<span class="pill pill-red">Fake — ' + item.fake_pct + '%</span>' +
+        '<div class="card-badge-top"><span class="pill ' + fakeColorClass + '">' + verdictIcon + ' ' + verdict + ' ~ ' + fake_score + '%</span></div>' +
+        '<div class="t-headline">"' + item.title + '"</div>' +
+        
+        '<div class="ts-list-meta">' +
+        (locationStr && locationStr.toLowerCase() !== 'unknown' ? '📍 <b>Location:</b> ' + locationStr + '<br>' : '') +
+        '✔️ <b>Source:</b> ' + (item.source || 'Fact Check') + '<br>' +
+        '🕒 <b>Date:</b> ' + (item.date || 'Just now') + '<br>' +
+        '📱 <b>Platform:</b> ' + pIcon + ' ' + platform +
         '</div>' +
-        '<button class="check-claim-btn" onclick="checkClaim(\'' + escaped + '\')">Check This Claim</button>' +
+        
+        '<div class="ts-ai-insight">' +
+        '🚨 This claim is spreading via ' + platform + '. AI suggests immediate verification.' +
+        '</div>' +
+
+        '<div class="ts-card-action-wrap">' +
+          '<button class="verify-claim-btn" style="width:100%;" onclick="TS.verifyNow(\'' + titleEscaped + '\')">Check This Now →</button>' +
+        '</div>' +
         '</div>';
     });
     els.grid.innerHTML = html;
   }
 
+  function verifyNow(text) {
+    const input = document.getElementById('news-input');
+    const btn = document.getElementById('verifyBtn');
+    const tabBtn = document.getElementById('tab-text');
+    
+    if (!input || !btn || !tabBtn) return;
+    
+    // Switch to text tab first
+    if (typeof switchTab === 'function') {
+      switchTab('text', tabBtn);
+    }
+    
+    input.value = text;
+    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // Highlight effect on the input
+    input.style.boxShadow = '0 0 0 4px rgba(30, 27, 75, 0.2)';
+    setTimeout(() => { input.style.boxShadow = ''; }, 2000);
+    
+    // Auto-trigger disabled per user note: "after user click on verify"
+    // We let them click the main verify button manually for confirmation.
+  }
+
   function liveFilter() {
     if (els.searchInput) {
-      state.searchTerm = els.searchInput.value;
+      state.searchTerm = els.searchInput.value.trim();
       renderCards();
     }
   }
 
   function searchSubmit() {
-    if (!els.searchInput && !els.locationInput) return;
     var term = els.searchInput ? els.searchInput.value.trim() : '';
-    var loc = els.locationInput ? els.locationInput.value.trim() : '';
-    
-    if (!term && !loc) return;
-    
     state.searchTerm = term;
-    state.activeCategory = 'All';
-    activateFilterBtn('All');
     
-    if (els.searchTag) {
-      els.searchTag.style.display = 'inline-flex';
-      var tagText = [];
-      if (term) tagText.push('"' + term + '"');
-      if (loc) tagText.push('in "' + loc + '"');
-      if (els.searchTagText) els.searchTagText.textContent = 'Showing results for ' + tagText.join(' ');
+    var tags = [];
+    if (term) tags.push('"' + term + '"');
+    
+    var c = els.country ? els.country.value : '';
+    if (c) tags.push('in ' + c);
+    
+    if (tags.length > 0 && els.searchTag) {
+      els.searchTag.style.display = 'flex';
+      els.searchTagText.textContent = 'Showing results for ' + tags.join(' ');
+    } else if (els.searchTag) {
+      els.searchTag.style.display = 'none';
     }
-    fetchData(term, loc);
+    
+    fetchData();
   }
 
   function clearSearch() {
     state.searchTerm = '';
     state.activeCategory = 'All';
+    state.activePlatform = 'All';
     if (els.searchInput) els.searchInput.value = '';
-    if (els.locationInput) els.locationInput.value = '';
+    if (els.country) els.country.value = '';
+    onCountryChange(); // resets others
     if (els.searchTag) els.searchTag.style.display = 'none';
-    activateFilterBtn('All');
-    fetchData();
+    
+    document.querySelectorAll('.ts-filter-btn').forEach(function(b) { b.classList.remove('active'); });
+    
+    var tAll = document.querySelector('#ts-topic-row .ts-filter-btn[data-cat="All"]');
+    if (tAll) tAll.classList.add('active');
+    
+    var pAll = document.querySelector('#ts-platform-row .ts-filter-btn[data-plat="All"]');
+    if (pAll) pAll.classList.add('active');
+    
+    fetchData(true);
   }
 
   function setCategory(cat, btn) {
     state.activeCategory = cat;
-    state.searchTerm = ''; // clear local search when switching category
-    if (els.searchInput) els.searchInput.value = '';
-    if (els.locationInput) els.locationInput.value = ''; // Clear location input when switching categories
-    if (els.searchTag) els.searchTag.style.display = 'none'; // Hide search tag
-    activateFilterBtn(cat);
-    var loc = els.locationInput ? els.locationInput.value.trim() : ''; // Get current location value
-    fetchData(cat === 'All' ? '' : cat, loc); // Pass category and location to fetchData
+    document.querySelectorAll('#ts-topic-row .ts-filter-btn').forEach(function(b) {
+      b.classList.toggle('active', b === btn);
+    });
+    fetchData();
   }
 
-  function activateFilterBtn(cat) {
-    if (els.filterRow) {
-      els.filterRow.querySelectorAll('.ts-filter-btn').forEach(function(b) {
-        b.classList.toggle('active', b.getAttribute('data-cat') === cat);
-      });
-    }
-  }
-
-  function addCustom() {
-    if (!els.customInput || !els.customError || !els.filterRow) return;
-    var val = els.customInput.value.trim();
-    els.customError.style.display = 'none';
-    if (val.length < 2) {
-      els.customError.textContent = 'Category must be at least 2 characters.';
-      els.customError.style.display = 'block';
-      return;
-    }
-    if (val.length > 20) {
-      els.customError.textContent = 'Category must be 20 characters or less.';
-      els.customError.style.display = 'block';
-      return;
-    }
-    var exists = els.filterRow.querySelector('[data-cat="' + val + '"]');
-    if (exists) {
-      state.activeCategory = val;
-      activateFilterBtn(val);
-      els.customInput.value = '';
-      renderCards();
-      return;
-    }
-    var btn = document.createElement('button');
-    btn.className = 'ts-filter-btn ts-filter-custom';
-    btn.setAttribute('data-cat', val);
-    btn.textContent = val;
-    btn.onclick = function() {
-      setCategory(val, btn);
-    };
-    els.filterRow.appendChild(btn);
-    state.customCategories.push(val);
-    state.activeCategory = val;
-    activateFilterBtn(val);
-    els.customInput.value = '';
-    fetchData(val);
+  function setPlatform(plat, btn) {
+    state.activePlatform = plat;
+    document.querySelectorAll('#ts-platform-row .ts-filter-btn').forEach(function(b) {
+      b.classList.toggle('active', b === btn);
+    });
+    renderCards();
   }
 
   function refresh() {
-    state.searchTerm = '';
-    state.activeCategory = 'All';
-    if (els.searchInput) els.searchInput.value = '';
-    if (els.searchTag) els.searchTag.style.display = 'none';
-    if (els.customError) els.customError.style.display = 'none';
-    activateFilterBtn('All');
-    fetchData();
+    fetchData(true);
   }
 
   return {
@@ -337,7 +392,9 @@ var TS = (function() {
     searchSubmit: searchSubmit,
     clearSearch: clearSearch,
     setCategory: setCategory,
-    addCustom: addCustom
+    setPlatform: setPlatform,
+    onCountryChange: onCountryChange,
+    verifyNow: verifyNow
   };
 })();
 
