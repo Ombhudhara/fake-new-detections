@@ -778,6 +778,15 @@ def predict_text(raw_text: str, language_hint: str = None) -> dict:  # type: ign
 #  FLASK ROUTES
 # ══════════════════════════════════════════════════════════
 
+@app.route("/health")
+def health():
+    return jsonify({
+        "status": "ok",
+        "message": "Fake News Detection API is running"
+    }), 200
+
+
+
 @app.route("/")
 def home():
     return render_template("index.html", active_page="home")
