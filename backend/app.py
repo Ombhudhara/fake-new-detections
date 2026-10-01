@@ -57,6 +57,7 @@ load_dotenv()
 
 app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/static')
 CORS(app)
+app.config["CHATBOT_API_URL"] = os.getenv("CHATBOT_API_URL", "")
 
 # Resolve paths relative to this file so the app works regardless of the current working directory.
 from pathlib import Path

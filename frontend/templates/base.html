@@ -85,6 +85,7 @@
   </footer>
 
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script>window.CHATBOT_API_URL = {{ config.get('CHATBOT_API_URL', '')|tojson }};</script>
   <script src="{{ url_for('static', filename='js/chatbot-widget.js') }}"></script>
   {% block scripts %}{% endblock %}
 </body>

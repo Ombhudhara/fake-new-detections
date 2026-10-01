@@ -27,7 +27,9 @@ except ImportError:
     _HTTPX_AVAILABLE = False
 
 # Flask backend base URL (must be running for inline FCM analysis)
-_FLASK_BASE = os.getenv("FLASK_BASE_URL", "http://127.0.0.1:5000")
+_FLASK_BASE = os.getenv("FLASK_BASE_URL", "http://127.0.0.1:5000").rstrip("/")
+if not _FLASK_BASE.startswith(("http://", "https://")):
+    _FLASK_BASE = f"https://{_FLASK_BASE}"
 
 # Configure logging to help debugging
 logging.basicConfig(level=logging.INFO)

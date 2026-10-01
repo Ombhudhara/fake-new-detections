@@ -1,11 +1,11 @@
 /**
  * VerifyBot Floating Chat Widget
- * Connects the Flask frontend to the FastAPI chatbot at localhost:8000
+ * Connects the Flask frontend to the configured FastAPI chatbot service
  */
 (function () {
   'use strict';
 
-  const CHATBOT_API = 'http://127.0.0.1:8000';
+  const CHATBOT_API = (window.CHATBOT_API_URL || 'http://127.0.0.1:8000').replace(/\/+$/, '');
   let sessionId = 'vb-' + Math.random().toString(36).substr(2, 9);
   let isOpen = false;
   let isTyping = false;
@@ -430,7 +430,7 @@
     </div>
 
     <!-- Offline Banner -->
-    <div id="vb-offline-banner">⚠️ Chatbot server offline. Start it with: <code>python fake_news_chatbot/api.py</code></div>
+    <div id="vb-offline-banner">⚠️ VerifyBot is unavailable. Check that its Render service is running and CHATBOT_API_URL is set.</div>
 
     <!-- Messages -->
     <div id="vb-messages"></div>
@@ -772,7 +772,7 @@
   // ── API Calls ────────────────────────────────────────────────────────
   async function checkServerOnline() {
     try {
-      const r = await fetch(CHATBOT_API + '/', { signal: AbortSignal.timeout(2500) });
+      const r = await fetch(CHATBOT_API + '/', { signal: AbortSignal.timeout(60000) });
       offlineBanner.classList.toggle('show', !r.ok);
       return r.ok;
     } catch {
@@ -819,7 +819,7 @@
     } catch (err) {
       hideTyping();
       offlineBanner.classList.add('show');
-      addBotMessage('⚠️ Cannot reach VerifyBot server. Please make sure the chatbot API is running:\n\n`cd fake_news_chatbot && python api.py`');
+      addBotMessage('⚠️ Cannot reach VerifyBot. Check that the chatbot Render service is running and that CHATBOT_API_URL points to its public URL.');
     } finally {
       sendBtn.disabled = false;
       input.focus();
