@@ -1,3 +1,12 @@
+if __name__ == "__main__":
+    import runpy
+    import sys
+    from pathlib import Path
+
+    project_root = Path(__file__).resolve().parents[1]
+    sys.path.insert(0, str(project_root))
+    runpy.run_path(str(project_root / "run.py"), run_name="__main__")
+
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import pickle
@@ -7,7 +16,7 @@ from newspaper import Article
 from deep_translator import GoogleTranslator
 from langdetect import detect, LangDetectException
 from ddgs import DDGS
-from groq import Groq
+from openai import OpenAI
 import json
 import os
 import sqlite3
@@ -66,9 +75,12 @@ BASE_DIR = Path(__file__).resolve().parent
 model      = pickle.load(open(BASE_DIR / "model" / "model.pkl", "rb"))
 vectorizer = pickle.load(open(BASE_DIR / "model" / "vectorizer.pkl", "rb"))
 
-# ── Groq AI Client ───────────────────────────────────────
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-groq_client = Groq(api_key=GROQ_API_KEY)
+# ── OpenRouter AI Client ─────────────────────────────────
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+openrouter_client = OpenAI(
+    api_key=OPENROUTER_API_KEY,
+    base_url="https://openrouter.ai/api/v1",
+)
 
 # ── Language display names ────────────────────────────────
 LANGUAGE_NAMES = {
@@ -315,8 +327,8 @@ Instructions:
 Respond in this EXACT JSON format only, no other text:
 {{"verdict": "REAL" or "FAKE" or "UNVERIFIED", "confidence": 50-99, "reason": "short explanation of what matches or contradicts", "details_checked": ["list of specific details you verified"]}}"""
 
-        response = groq_client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+        response = openrouter_client.chat.completions.create(
+            model="meta-llama/llama-3.3-70b-instruct",
             messages=[
                 {"role": "system", "content": "You are a precise fact-checker. Always respond with valid JSON only."},
                 {"role": "user", "content": prompt}
@@ -1321,8 +1333,8 @@ If country is USA: use American context, dollars.
 Etc."""
 
         # Use Groq (Llama 3 70B)
-        completion = groq_client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+        completion = openrouter_client.chat.completions.create(
+            model="meta-llama/llama-3.3-70b-instruct",
             messages=[
                 {
                     "role": "system",
@@ -1453,9 +1465,12 @@ def check_credibility():
             country = 'Unknown'
             summary = 'Found in internal database.'
         else:
-            client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+            client = OpenAI(
+                api_key=os.environ.get("OPENROUTER_API_KEY"),
+                base_url="https://openrouter.ai/api/v1",
+            )
             completion = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model="meta-llama/llama-3.3-70b-instruct",
                 messages=[{
                     "role": "system",
                     "content": "You are a news source credibility analyzer. Return ONLY valid JSON. No markdown, no explanation."
@@ -1578,9 +1593,12 @@ def extract_image_text():
         except:
             lang = 'en'
 
-        client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+        client = OpenAI(
+            api_key=os.environ.get("OPENROUTER_API_KEY"),
+            base_url="https://openrouter.ai/api/v1",
+        )
         df_check = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="meta-llama/llama-3.3-70b-instruct",
             messages=[{
                 "role": "system", "content": "Analyze text extracted from an image for fake news signals. Return JSON only."
             },{

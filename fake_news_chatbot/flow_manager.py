@@ -16,15 +16,13 @@ class SessionState:
 FLOW_RESPONSES = {
     "welcome": {
         "message": (
-            "Hi! I'm VerifyBot 👋 — your AI guide and mini fact-checker for The Fake News Detector!\n\n"
-            "I can help you:\n"
-            "🔍 CHECK NEWS — Paste any news here in chat and I'll tell you if it looks fake or real!\n"
-            "🌐 FIND REAL NEWS — I'll point you to the right verified sources\n"
-            "📊 UNDERSTAND ANALYTICS — Decode the dashboard data\n"
-            "📝 REPORT FAKE NEWS — Guide you through reporting suspicious content\n"
-            "📚 LEARN — Understand how to spot misinformation yourself\n\n"
-            "💡 NEW: Just paste any WhatsApp forward, headline, or news claim directly here — I'll analyze it instantly!\n\n"
-            "What would you like to do today? 😊"
+            "Hi! I'm VerifyBot 👋 — your AI guide for The Fake News Detector and a general-purpose assistant.\n\n"
+            "I can help you with:\n"
+            "🔍 Fact-checking news and suspicious claims\n"
+            "🌐 Explaining the website, features, and pages\n"
+            "📚 Answering general questions about learning, technology, and everyday topics\n"
+            "🧠 Holding natural follow-up conversations and helping you think through ideas\n\n"
+            "You can ask me about the website or any general topic — I’ll respond naturally and keep context."
         ),
         "quick_replies": ["Check a News Claim", "Verify an Article", "Report Fake News", "Learn to Spot Fake News", "Latest News Trends"]
     },

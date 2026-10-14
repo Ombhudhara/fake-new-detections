@@ -45,9 +45,13 @@ async def lifespan(app: FastAPI):
     Modern substitute for @app.on_event("startup")
     """
     global rag_chain
-    print("[INFO] Initializing RAG pipeline (this takes a few seconds)...")
-    rag_chain = get_rag_chain()
-    print("[SUCCESS] RAG pipeline initialized and ready.")
+    logger.info("Initializing RAG pipeline (this can take a few minutes on first startup)...")
+    try:
+        rag_chain = get_rag_chain()
+    except Exception:
+        logger.exception("RAG pipeline initialization failed")
+        raise
+    logger.info("RAG pipeline initialized and ready.")
     yield
     # Shutdown logic if needed
     print("Shutting down API...")

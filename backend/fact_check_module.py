@@ -18,15 +18,18 @@ import json
 import re
 from typing import Optional, Dict, Any, List
 
-from groq import Groq
+from openai import OpenAI
 from langdetect import detect, LangDetectException
 from deep_translator import GoogleTranslator
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# ── Groq client ───────────────────────────────────────────
-_groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+# ── OpenRouter client ─────────────────────────────────────
+_openrouter_client = OpenAI(
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    base_url="https://openrouter.ai/api/v1",
+)
 
 # ─────────────────────────────────────────────────────────
 #  SOURCE CREDIBILITY TIERS  (Section J — Live Scraping Source Directory)
@@ -385,8 +388,8 @@ def _groq_analyze(
         user_msg += f"\n\nML ENGINE CONTEXT:\n{ml_summary}"
 
     try:
-        resp = _groq_client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+        resp = _openrouter_client.chat.completions.create(
+            model="meta-llama/llama-3.3-70b-instruct",
             messages=[
                 {"role": "system", "content": _GROQ_SYSTEM},
                 {"role": "user",   "content": user_msg},

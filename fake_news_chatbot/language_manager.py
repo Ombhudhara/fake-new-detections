@@ -3,11 +3,16 @@ import groq
 import os
 from typing import Dict, Optional
 from dotenv import load_dotenv
+from openai import OpenAI
 
 load_dotenv()
 
-# Configure Groq client
-client = groq.Groq(api_key=os.getenv("GROQ_API_KEY"))
+# Configure the OpenRouter-compatible OpenAI client.
+api_key = os.getenv("OPENROUTER_API_KEY")
+client = OpenAI(
+    api_key=api_key,
+    base_url="https://openrouter.ai/api/v1",
+) if api_key else None
 
 LANGUAGE_NAMES = {
     "en": "English", "hi": "Hindi", "gu": "Gujarati",
@@ -65,9 +70,12 @@ def translate_to_language(text: str, target_lang_code: str) -> str:
 
     language_name = get_language_name(target_lang_code)
 
+    if client is None:
+        return text
+
     try:
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="meta-llama/llama-3.3-70b-instruct",
             messages=[
                 {"role": "system", "content": f"Translate the following text to {language_name}. Keep the same tone, formatting, and line breaks. Only return the translated text, nothing else."},
                 {"role": "user", "content": text}

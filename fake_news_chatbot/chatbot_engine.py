@@ -40,14 +40,17 @@ def build_response(session: SessionState, message: str, quick_replies: Optional[
     }
 
 def transition_to_free_qa(session: SessionState) -> Dict[str, Any]:
-    """Switch user to RAG-powered Q&A mode."""
+    """Switch user to general-purpose Q&A mode while preserving website knowledge."""
     session.is_free_qa = True
     session.current_path = None
     session.current_step = 0
-    
-    msg = "I've unlocked the Free Q&A Mode for you! You can now ask me any questions about fake news, verification techniques, or recent fact-checks."
-    replies = ["How to check a source?", "Verify an article", "Main Menu"]
-    
+
+    msg = (
+        "I’ve switched you into a general conversation mode. You can ask me about the website, "
+        "programming, learning, technology, or everyday questions, and I’ll respond naturally with context."
+    )
+    replies = ["Ask about the website", "Explain a topic", "Main Menu"]
+
     return build_response(session, msg, replies, use_rag=True)
 
 def route_message(session_id: str, user_message: str) -> Dict[str, Any]:
@@ -72,7 +75,22 @@ def route_message(session_id: str, user_message: str) -> Dict[str, Any]:
     session.chat_history.append({"role": "user", "content": user_message})
 
     # 4. Handle Routing
-    
+
+    is_general_query = (
+        "?" in user_message
+        or any(keyword in msg for keyword in [
+            "what is", "what are", "how does", "how do i", "why is", "why do",
+            "can you explain", "explain", "tell me about", "who is", "when is",
+            "where is", "compare", "difference between", "python", "programming",
+            "technology", "education", "learn", "career", "health", "science",
+            "math", "history", "language", "ai", "machine learning", "chatgpt",
+            "help me understand", "i want to learn"
+        ])
+        or user_message.strip() and len(user_message.split()) > 4 and not any(
+            keyword in msg for keyword in ["verify", "fact check", "check a news", "report", "fake news", "dashboard", "analytics", "learn to spot"]
+        )
+    )
+
     # Global Keywords
     if "main menu" in msg or "start over" in msg or ("re-detect" in msg and "language" in msg):
         session.current_path = None
@@ -82,7 +100,7 @@ def route_message(session_id: str, user_message: str) -> Dict[str, Any]:
         session.chat_history.append({"role": "assistant", "content": res["message"]})
         return res
 
-    if "free q&a" in msg or "ask a question" in msg:
+    if "free q&a" in msg or "ask a question" in msg or is_general_query:
         return transition_to_free_qa(session)
 
     # Path Initialization if no path set

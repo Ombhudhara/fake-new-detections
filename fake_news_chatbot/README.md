@@ -54,7 +54,7 @@ fake_news_chatbot/
    ```
 
 2. **Configure environment variables:**
-   Edit the `.env` file and set your `GROQ_API_KEY`.
+   Edit the `.env` file and set `OPENROUTER_API_KEY` to your OpenRouter API key.
 
 3. **Ingest Initial Data (Optional - Seed Articles):**
    ```bash
