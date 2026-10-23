@@ -34,11 +34,11 @@
 
   const defaultApi = isLocalhost
     ? 'http://127.0.0.1:5000'
-    : 'https://fake-news-detection-api.onrender.com';
+    : 'https://ombhudhara-fakenews-api.onrender.com';
 
   const defaultChatbot = isLocalhost
     ? 'http://127.0.0.1:8000'
-    : 'https://fake-news-detection-api.onrender.com';
+    : 'https://ombhudhara-fakenews-api.onrender.com';
 
   const API_BASE_URL = (
     window.API_BASE_URL ||
