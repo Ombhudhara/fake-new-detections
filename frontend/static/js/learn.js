@@ -19,7 +19,7 @@
     if (!card) return;
 
     try {
-      const response = await fetch('/api/quiz');
+      const response = await fetch((window.API_BASE_URL || '') + '/api/quiz');
       if (!response.ok) throw new Error('Failed to load quiz');
       QUIZ_DATA = await response.json();
       quizRender();
@@ -115,7 +115,7 @@
     /* Save to backend */
     let globalStats = null;
     try {
-      const res = await fetch('/api/quiz/save-score', {
+      const res = await fetch((window.API_BASE_URL || '') + '/api/quiz/save-score', {
         method: 'POST',
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ score: quizScore, total: QUIZ_DATA.length, time_taken: timeTaken })
@@ -179,7 +179,7 @@
     result.innerHTML     = '⏳ Checking...';
 
     try {
-      const res = await fetch('/api/check-credibility', {
+      const res = await fetch((window.API_BASE_URL || '') + '/api/check-credibility', {
         method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ domain: val })
       });
       const d = await res.json();
@@ -198,7 +198,7 @@
 
   async function loadLiveStats() {
     try {
-      const res = await fetch('/api/model-stats');
+      const res = await fetch((window.API_BASE_URL || '') + '/api/model-stats');
       const d   = await res.json();
 
       const accEl = document.getElementById('cta-accuracy');

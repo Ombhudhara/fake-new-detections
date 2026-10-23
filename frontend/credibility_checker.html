@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Credibility Checker — The Fake News Detector</title>
+  <meta name="description" content="Check the credibility score of any news domain or website instantly." />
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari&family=Noto+Sans+Arabic&family=Noto+Nastaliq+Urdu&family=Noto+Sans+Bengali&family=Noto+Sans+Tamil&family=Noto+Sans+Telugu&family=Noto+Sans+Gujarati&family=Noto+Sans+SC&family=Noto+Sans+JP&family=Noto+Sans+KR&family=Noto+Sans+Hebrew&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/main.css">
+  <meta name="current-page" content="/">
+  <link rel="stylesheet" href="/static/css/credibility_checker.css">
+</head>
+<body>
+  <nav class="navbar" id="main-nav">
+    <a href="/index.html" class="navbar-brand"><img src="/static/images/logo.webp" alt="Logo" class="brand-logo"> The Fake News Detector</a>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button class="hamburger" onclick="document.getElementById('nav-links').classList.toggle('open')">&#9776;</button>
+      <ul class="navbar-links" id="nav-links">
+        <li><a href="/index.html" class="">Home</a></li>
+        <li><a href="/dashboard.html" class="">Dashboard</a></li>
+        <li><a href="/analytics.html" class="">Analytics</a></li>
+        <li><a href="/learn.html" class="">Learn</a></li>
+        <li><a href="/report.html" class="">Report</a></li>
+      </ul>
+      <button class="dark-toggle" id="dark-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+        <span class="dt-label" id="dt-label">DAYMODE</span>
+        <span class="dt-knob">
+          <!-- Sun SVG -->
+          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <!-- Moon SVG -->
+          <svg class="moon-icon" viewBox="0 0 24 24" fill="#c8caff" stroke="#c8caff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            <circle cx="17" cy="5" r="1" fill="#c8caff" stroke="none"/>
+            <circle cx="19" cy="8" r="0.6" fill="#c8caff" stroke="none"/>
+            <circle cx="15" cy="3" r="0.6" fill="#c8caff" stroke="none"/>
+          </svg>
+        </span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="page-container">
+  <div class="credibility-page">
+    <h1 style="font-family:'Playfair Display',serif;font-size:36px;color:var(--navy);margin-bottom:10px;">Credibility Checker</h1>
+    <p style="color:var(--text-muted);font-size:16px;margin-bottom:30px;">Instantly check if a news source is trustworthy or known for spreading misinformation.</p>
+
+    <div class="credibility-widget" id="inline-cred-checker">
+      <div class="cw-label">🔍 Quick Credibility Check</div>
+      <div class="cw-input-row">
+        <input type="text" id="cw-input" class="cw-input" placeholder="e.g. ndtv.com or bbc.com" onkeydown="if(event.key==='Enter') checkCredibilityInline()">
+        <button class="cw-btn" onclick="checkCredibilityInline()">Check</button>
+      </div>
+      <div class="cw-result" id="cw-result" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="brand-title">The Fake News<br><span>Detector</span></div>
+        <div class="brand-desc">AI-powered verification supporting English, Hindi, Gujarati, Hinglish & Gujlish. Check any claim against live web sources.</div>
+      </div>
+      <div class="footer-col">
+        <h4>Navigate</h4>
+        <ul>
+          <li><a href="/index.html">Home</a></li>
+          <li><a href="/dashboard.html">Dashboard</a></li>
+          <li><a href="/analytics.html">Analytics</a></li>
+          <li><a href="/learn.html">Learn</a></li>
+          <li><a href="/report.html">Report</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Tech Stack</h4>
+        <div class="tech-badges">
+          <span class="tech-badge"><span class="dot"></span>Groq AI</span>
+          <span class="tech-badge"><span class="dot"></span>Flask</span>
+          <span class="tech-badge"><span class="dot"></span>scikit-learn</span>
+          <span class="tech-badge"><span class="dot"></span>DuckDuckGo</span>
+          <span class="tech-badge"><span class="dot"></span>Newspaper3k</span>
+          <span class="tech-badge"><span class="dot"></span>deep-translator</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">&copy; 2025 Fake News Detector &mdash; Open source project. Powered by Groq AI + Live Web Search.</div>
+  </footer>
+
+  <script src="/static/js/config.js"></script>
+  <script src="/static/js/main.js"></script>
+  <script>window.CHATBOT_API_URL = window.CHATBOT_API_URL || "";</script>
+  <script src="/static/js/chatbot-widget.js"></script>
+  <script src="/static/js/credibility_checker.js"></script>
+</body>
+</html>

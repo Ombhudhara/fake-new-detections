@@ -26,7 +26,7 @@ def get_rag_chain():
     Initializes and returns all RAG components (vectorstore + LLM).
     Returns a dict with 'vectorstore' and 'llm'.
     """
-    persist_directory = "./chroma_db"
+    persist_directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chroma_db")
 
     # Multilingual-capable embedding model
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")

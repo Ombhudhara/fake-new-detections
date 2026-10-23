@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Report Suspicious News — Fake News Detector</title>
+  <meta name="description" content="Report suspicious news links and help us fight misinformation. All reports are reviewed by our
+verification team." />
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari&family=Noto+Sans+Arabic&family=Noto+Nastaliq+Urdu&family=Noto+Sans+Bengali&family=Noto+Sans+Tamil&family=Noto+Sans+Telugu&family=Noto+Sans+Gujarati&family=Noto+Sans+SC&family=Noto+Sans+JP&family=Noto+Sans+KR&family=Noto+Sans+Hebrew&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/main.css">
+  <meta name="current-page" content="/">
+  <link
+  href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;700&family=Source+Serif+4:wght@400;600&display=swap"
+  rel="stylesheet">
+<link rel="stylesheet" href="/static/css/report.css">
+</head>
+<body>
+  <nav class="navbar" id="main-nav">
+    <a href="/index.html" class="navbar-brand"><img src="/static/images/logo.webp" alt="Logo" class="brand-logo"> The Fake News Detector</a>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button class="hamburger" onclick="document.getElementById('nav-links').classList.toggle('open')">&#9776;</button>
+      <ul class="navbar-links" id="nav-links">
+        <li><a href="/index.html" class="">Home</a></li>
+        <li><a href="/dashboard.html" class="">Dashboard</a></li>
+        <li><a href="/analytics.html" class="">Analytics</a></li>
+        <li><a href="/learn.html" class="">Learn</a></li>
+        <li><a href="/report.html" class="active">Report</a></li>
+      </ul>
+      <button class="dark-toggle" id="dark-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+        <span class="dt-label" id="dt-label">DAYMODE</span>
+        <span class="dt-knob">
+          <!-- Sun SVG -->
+          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <!-- Moon SVG -->
+          <svg class="moon-icon" viewBox="0 0 24 24" fill="#c8caff" stroke="#c8caff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            <circle cx="17" cy="5" r="1" fill="#c8caff" stroke="none"/>
+            <circle cx="19" cy="8" r="0.6" fill="#c8caff" stroke="none"/>
+            <circle cx="15" cy="3" r="0.6" fill="#c8caff" stroke="none"/>
+          </svg>
+        </span>
+      </button>
+    </div>
+  </nav>
+
+  <main class="report-layout-main">
+
+  <!-- ════════════════════════════════════════
+       HERO SECTION
+       ════════════════════════════════════════ -->
+  <header class="report-hero">
+    <div class="report-hero-eyebrow">
+      <span class="eyebrow-dot"></span>
+      Community Compliance
+    </div>
+    <h1 class="report-hero-title">Report Suspicious News</h1>
+    <p class="report-hero-subtitle">
+      Found a suspicious story? Submit it here. Our team review every report to verify facts and stop the spread of
+      misinformation.
+    </p>
+
+    <!-- Global Stats -->
+    <div class="report-stats-row">
+      <div class="report-stat">
+        <span class="rs-value">1,240</span>
+        <span class="rs-label">Reports this week</span>
+      </div>
+      <div class="rs-divider"></div>
+      <div class="report-stat">
+        <span class="rs-value">89%</span>
+        <span class="rs-label">Verified Fake</span>
+      </div>
+      <div class="rs-divider"></div>
+      <div class="report-stat">
+        <span class="rs-value">&lt;24h</span>
+        <span class="rs-label">Review Time</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="report-layout">
+
+    <!-- ════════════════════════════════════════
+         LEFT COLUMN: FORM CARD
+         ════════════════════════════════════════ -->
+    <div class="report-form-col">
+
+      <!-- SUCCESS STATE (hidden by default) -->
+      <div class="success-card" id="success-card" style="display:none">
+        <div class="success-badge">
+          <svg width="44" height="44" viewBox="0 0 40 40">
+            <circle cx="20" cy="20" r="18" fill="none" stroke="#27AE60" stroke-width="2.5" />
+            <path d="M11 20.5l6 6 12-14" fill="none" stroke="#27AE60" stroke-width="3" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </div>
+        <h2 class="success-heading">Report Submitted!</h2>
+        <p class="success-message">
+          Thanks for taking a stand against misinformation. Your report has been added to our queue and will be analyzed
+          by our editorial team within 24 hours.
+        </p>
+        <div class="success-pill-row">
+          <div class="success-token">REPORT-ID: <span id="success-rid">...</span></div>
+          <div class="success-eta-tag">⏱ Expected review in 18h</div>
+        </div>
+        <div class="success-actions">
+          <a href="/index.html" class="success-btn-main">← Back to Homepage</a>
+          <button class="success-btn-alt" onclick="window.location.reload()">Submit Another</button>
+        </div>
+      </div>
+
+      <!-- FORM CARD -->
+      <div class="report-form-card" id="report-form-card">
+        <!-- Step UI -->
+        <div class="form-steps">
+          <div class="form-step active" id="step-marker-1">
+            <span class="step-num">1</span>
+            <span class="step-label">Identify Source</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="form-step" id="step-marker-2">
+            <span class="step-num">2</span>
+            <span class="step-label">Provide Details</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="form-step" id="step-marker-3">
+            <span class="step-num">3</span>
+            <span class="step-label">Review</span>
+          </div>
+        </div>
+
+        <form id="report-form" method="POST" action="">
+
+          <!-- Platform Choice -->
+          <div class="form-group">
+            <label class="form-label">Where did you see this? <span class="req">*</span></label>
+            <p class="form-hint">Select the primary platform where this story is spreading.</p>
+            <div class="platform-selector">
+              <button type="button" class="platform-button active" data-val="WhatsApp" onclick="setPlatform(this)">
+                <span class="pb-icon">💬</span><span class="pb-label">WhatsApp</span>
+              </button>
+              <button type="button" class="platform-button" data-val="Facebook" onclick="setPlatform(this)">
+                <span class="pb-icon">📘</span><span class="pb-label">Facebook</span>
+              </button>
+              <button type="button" class="platform-button" data-val="Twitter" onclick="setPlatform(this)">
+                <span class="pb-icon">🐦</span><span class="pb-label">Twitter/X</span>
+              </button>
+              <button type="button" class="platform-button" data-val="Telegram" onclick="setPlatform(this)">
+                <span class="pb-icon">✈️</span><span class="pb-label">Telegram</span>
+              </button>
+              <button type="button" class="platform-button" data-val="Instagram" onclick="setPlatform(this)">
+                <span class="pb-icon">📸</span><span class="pb-label">Instagram</span>
+              </button>
+              <button type="button" class="platform-button" data-val="YouTube" onclick="setPlatform(this)">
+                <span class="pb-icon">▶️</span><span class="pb-label">YouTube</span>
+              </button>
+              <button type="button" class="platform-button" data-val="News Site" onclick="setPlatform(this)">
+                <span class="pb-icon">🗞️</span><span class="pb-label">News Site</span>
+              </button>
+              <button type="button" class="platform-button" data-val="Other" onclick="setPlatform(this)">
+                <span class="pb-icon">📱</span><span class="pb-label">Other</span>
+              </button>
+            </div>
+            <input type="hidden" name="platform" id="platform-input" value="WhatsApp">
+          </div>
+
+          <!-- URL Input -->
+          <div class="form-group">
+            <label class="form-label" for="url-input">Suspicious Link or Web URL <span class="req">*</span></label>
+            <p class="form-hint">Paste the direct link to the article, post, or video you want us to investigate.</p>
+            <div class="input-wrap">
+              <span class="input-prefix">🔗</span>
+              <input type="url" name="url" id="url-input" class="form-input with-prefix"
+                placeholder="https://news.example/story/123" required oninput="validateUrl(this)">
+              <span class="input-status" id="url-status"></span>
+            </div>
+            <div id="url-feedback" class="input-feedback"></div>
+          </div>
+
+          <!-- Category -->
+          <div class="form-group">
+            <label class="form-label">Story Category</label>
+            <p class="form-hint">What subject does this misinformation target?</p>
+            <select name="category" class="form-select">
+              <option value="">Select Category (Optional)</option>
+              <option value="Health">🏥 Health & Medical</option>
+              <option value="Politics">🏛 Politics & Elections</option>
+              <option value="Finance">💰 Money & Finance</option>
+              <option value="Science">💻 Technology & Science</option>
+              <option value="International">🌐 Global Affairs</option>
+              <option value="Crime">⚖️ Crime & Legal</option>
+              <option value="AI">🤖 AI or Deepfakes</option>
+              <option value="Other">📦 Other</option>
+            </select>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label class="form-label" for="desc-area">Your Observation</label>
+            <p class="form-hint">Describe why you think this story is false or misleading.</p>
+            <textarea name="description" id="desc-area" class="form-textarea"
+              placeholder="e.g. The headline contradicts the main article, the source looks like a clone of BBC, etc."
+              maxlength="1000" oninput="handleTextArea(this)"></textarea>
+            <div class="textarea-footer">
+              <span class="char-counter" id="char-counter">0 / 1000 chars</span>
+              <span class="char-tip">Detailed reports are processed 2x faster.</span>
+            </div>
+          </div>
+
+          <!-- Anon Switch -->
+          <div class="form-group anon-group">
+            <div class="switch-label-stack">
+              <div class="form-label" style="margin-bottom:0">Submit Anonymously</div>
+              <div class="form-hint" style="margin-bottom:0">We will never publish your name with this report.</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" name="anonymous" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <button type="submit" class="submit-button" id="submit-btn" disabled>
+            <span id="btn-text">Submit Report</span>
+            <span class="submit-arrow">→</span>
+          </button>
+
+          <p class="privacy-mention">
+            🛡️ Your privacy is our priority. Reports are encrypted and reviewed strictly for verification metadata.
+          </p>
+        </form>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════
+         RIGHT COLUMN: SIDEBAR
+         ════════════════════════════════════════ -->
+    <aside class="report-sidebar-col">
+      <!-- Tips -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-title">✅ Pro Reporting Tips</div>
+        <div class="tips-list">
+          <div class="tip-item">
+            <div class="tip-item-icon">🔗</div>
+            <div class="tip-item-text">Include the <strong>direct link</strong> rather than a screenshot if possible.
+            </div>
+          </div>
+          <div class="tip-item">
+            <div class="tip-item-icon">📝</div>
+            <div class="tip-item-text">Point out <strong>specific contradictions</strong> or logical flaws you noticed.
+            </div>
+          </div>
+          <div class="tip-item">
+            <div class="tip-item-icon">📱</div>
+            <div class="tip-item-text">Mention <strong>how many times</strong> you've seen this today in your circles.
+            </div>
+          </div>
+          <div class="tip-item">
+            <div class="tip-item-icon">🔍</div>
+            <div class="tip-item-text">If you found a <strong>source debunking this</strong>, please paste that link
+              too.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity -->
+      <div class="sidebar-card" style="margin-top:20px">
+        <div class="sidebar-card-title">📊 Live Reporting Volume</div>
+        <div class="activity-list">
+          <div class="activity-item">
+            <div class="activity-text-row">
+              <span class="activity-label">Health</span>
+              <span class="activity-count">64 reports</span>
+            </div>
+            <div class="activity-bar-bg">
+              <div class="activity-bar-fill" style="width:90%;background:#E8453C"></div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-text-row">
+              <span class="activity-label">Politics</span>
+              <span class="activity-count">42 reports</span>
+            </div>
+            <div class="activity-bar-bg">
+              <div class="activity-bar-fill" style="width:65%;background:#7F77DD"></div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-text-row">
+              <span class="activity-label">Finance</span>
+              <span class="activity-count">28 reports</span>
+            </div>
+            <div class="activity-bar-bg">
+              <div class="activity-bar-fill" style="width:40%;background:#F5A623"></div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-text-row">
+              <span class="activity-label">Other</span>
+              <span class="activity-count">19 reports</span>
+            </div>
+            <div class="activity-bar-bg">
+              <div class="activity-bar-fill" style="width:25%;background:#4A90D9"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Privacy Box -->
+      <div class="sidebar-trust-box">
+        <span class="trust-icon">🛡️</span>
+        <div>
+          <div class="trust-header">No Data Shared</div>
+          <div class="trust-desc">We use community data to improve our global detection algorithms without compromising
+            your personal identity.</div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="brand-title">The Fake News<br><span>Detector</span></div>
+        <div class="brand-desc">AI-powered verification supporting English, Hindi, Gujarati, Hinglish & Gujlish. Check any claim against live web sources.</div>
+      </div>
+      <div class="footer-col">
+        <h4>Navigate</h4>
+        <ul>
+          <li><a href="/index.html">Home</a></li>
+          <li><a href="/dashboard.html">Dashboard</a></li>
+          <li><a href="/analytics.html">Analytics</a></li>
+          <li><a href="/learn.html">Learn</a></li>
+          <li><a href="/report.html">Report</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Tech Stack</h4>
+        <div class="tech-badges">
+          <span class="tech-badge"><span class="dot"></span>Groq AI</span>
+          <span class="tech-badge"><span class="dot"></span>Flask</span>
+          <span class="tech-badge"><span class="dot"></span>scikit-learn</span>
+          <span class="tech-badge"><span class="dot"></span>DuckDuckGo</span>
+          <span class="tech-badge"><span class="dot"></span>Newspaper3k</span>
+          <span class="tech-badge"><span class="dot"></span>deep-translator</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">&copy; 2025 Fake News Detector &mdash; Open source project. Powered by Groq AI + Live Web Search.</div>
+  </footer>
+
+  <script src="/static/js/config.js"></script>
+  <script src="/static/js/main.js"></script>
+  <script>window.CHATBOT_API_URL = window.CHATBOT_API_URL || "";</script>
+  <script src="/static/js/chatbot-widget.js"></script>
+  <script id="report-config-data" type="application/json">
+  {"submitted": false, "reportId": ""}
+</script>
+<script src="/static/js/report.js"></script>
+</body>
+</html>

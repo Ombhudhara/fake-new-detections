@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "cleanUrls": true,
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/dashboard", "dest": "/dashboard.html" },
+    { "src": "/analytics", "dest": "/analytics.html" },
+    { "src": "/learn", "dest": "/learn.html" },
+    { "src": "/report", "dest": "/report.html" },
+    { "src": "/credibility-checker", "dest": "/credibility_checker.html" },
+    { "src": "/(.*)", "dest": "/$1" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    }
+  ]
+}

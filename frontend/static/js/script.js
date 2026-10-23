@@ -7,28 +7,30 @@ const LiveNewsEngine = {
 
     init: function() {
         console.log("LiveNewsEngine: News Engine Initialized");
-        this.fetchNews();
-        
-        // Ensure state selector visibility on load if India is selected
-        const stateSelect = document.getElementById("ts-state");
         const countrySelect = document.getElementById("ts-country");
+        const stateSelect = document.getElementById("ts-state");
+        this.currentCountry = (countrySelect ? countrySelect.value : "India") || "India";
+        this.currentState = (stateSelect ? stateSelect.value : "All") || "All";
+
+        // Ensure state selector visibility on load if India is selected
         if (countrySelect && countrySelect.value === "India") {
-            stateSelect.style.display = "block";
+            if (stateSelect) stateSelect.style.display = "block";
         }
+        this.fetchNews();
     },
 
     onLocationChange: function() {
         const countrySelect = document.getElementById("ts-country");
         const stateSelect = document.getElementById("ts-state");
 
-        this.currentCountry = countrySelect.value;
-        this.currentState = stateSelect.value;
+        this.currentCountry = countrySelect ? countrySelect.value : "India";
+        this.currentState = stateSelect ? stateSelect.value : "All";
 
         // Visual Logic: Only show state dropdown for India
         if (this.currentCountry === "India") {
-            stateSelect.style.display = "block";
+            if (stateSelect) stateSelect.style.display = "block";
         } else {
-            stateSelect.style.display = "none";
+            if (stateSelect) stateSelect.style.display = "none";
             this.currentState = "All"; // Reset state when switching countries
         }
 
@@ -41,6 +43,11 @@ const LiveNewsEngine = {
         const loadMoreContainer = document.getElementById("news-load-more-container");
         if (!newsContainer) return;
 
+        if (this._retryTimer) {
+            clearTimeout(this._retryTimer);
+            this._retryTimer = null;
+        }
+
         // Loading State
         newsContainer.innerHTML = `
             <div class="news-loading" style="grid-column: 1/-1; text-align:center; padding: 40px;">
@@ -50,11 +57,15 @@ const LiveNewsEngine = {
         `;
         if (loadMoreContainer) loadMoreContainer.style.display = "none";
 
-        let url = `/get_news?country=${encodeURIComponent(this.currentCountry)}&state=${encodeURIComponent(this.currentState)}`;
+        const baseUrl = (window.API_BASE_URL || '').replace(/\/+$/, '');
+        let url = `${baseUrl}/get_news?country=${encodeURIComponent(this.currentCountry || 'India')}&state=${encodeURIComponent(this.currentState || 'All')}`;
         if (query) url += `&q=${encodeURIComponent(query)}`;
         
         fetch(url)
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.json();
+            })
             .then(data => {
                 if (data.status === "error") {
                     newsContainer.innerHTML = `<div class="news-error" style="grid-column: 1/-1;">⚠️ Could not load news: ${data.error}</div>`;
@@ -70,13 +81,24 @@ const LiveNewsEngine = {
 
                 // Update last updated text
                 const timeText = document.getElementById("ts-last-updated");
-                if (timeText) timeText.innerText = "Updated 10 sec ago";
+                if (timeText) timeText.innerText = "Updated just now";
 
                 this.renderBatch(0, 6);
             })
             .catch(err => {
-                console.error("News Fetch Error:", err);
-                newsContainer.innerHTML = `<div class="news-error" style="grid-column: 1/-1;">⚠️ Connection error. Please check your internet.</div>`;
+                console.warn("[LiveNewsEngine] Fetch note:", err.message || err);
+                newsContainer.innerHTML = `<div class="news-error" style="grid-column: 1/-1; text-align:center; padding:20px;">
+                    ⚠️ Backend is connecting... 
+                    <button type="button" onclick="LiveNewsEngine.fetchNews()" style="margin-left:10px;padding:6px 14px;cursor:pointer;border-radius:4px;border:1px solid #cbd5e1;background:#fff;font-size:13px;">Retry Now</button>
+                </div>`;
+
+                // Auto-retry once backend comes up, checking every 8 seconds, max 5 attempts
+                this._retryCount = (this._retryCount || 0) + 1;
+                if (this._retryCount <= 5) {
+                    this._retryTimer = setTimeout(() => {
+                        this.fetchNews(query);
+                    }, 8000);
+                }
             });
     },
 

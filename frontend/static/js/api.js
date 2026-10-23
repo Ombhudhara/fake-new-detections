@@ -50,7 +50,7 @@ const API = {
     if (cached) return cached;
 
     try {
-      const url = `/api/dashboard?country=${encodeURIComponent(country)}`;
+      const url = `${window.API_BASE_URL || ''}/api/dashboard?country=${encodeURIComponent(country)}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
@@ -71,7 +71,7 @@ const API = {
     if (cached) return cached;
 
     try {
-      const url = `/api/live-stats?country=${encodeURIComponent(country)}`;
+      const url = `${window.API_BASE_URL || ''}/api/live-stats?country=${encodeURIComponent(country)}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
@@ -92,7 +92,7 @@ const API = {
     if (cached) return cached;
 
     try {
-      const url = `/api/get_live_analytics?region=${encodeURIComponent(country)}`;
+      const url = `${window.API_BASE_URL || ''}/api/get_live_analytics?region=${encodeURIComponent(country)}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
@@ -113,7 +113,7 @@ const API = {
     if (cached) return cached;
 
     try {
-      const url = `/api/live-feed`;
+      const url = `${window.API_BASE_URL || ''}/api/live-feed`;
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -143,7 +143,7 @@ const API = {
     if (cached) return cached;
 
     try {
-      const url = `/api/trending?location=${encodeURIComponent(country)}&category=${encodeURIComponent(category)}`;
+      const url = `${window.API_BASE_URL || ''}/api/trending?location=${encodeURIComponent(country)}&category=${encodeURIComponent(category)}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();

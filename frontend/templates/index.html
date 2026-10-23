@@ -1,11 +1,18 @@
-{% extends "base.html" %}
-{% block title %}Fake News Detector — Verify Any Claim{% endblock %}
-{% block meta_desc %}Detect fake news in English, Hindi, Gujarati, Hinglish and Gujlish using AI and live web verification.{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fake News Detector — Verify Any Claim</title>
+  <meta name="description" content="Detect fake news in English, Hindi, Gujarati, Hinglish and Gujlish using AI and live web verification." />
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari&family=Noto+Sans+Arabic&family=Noto+Nastaliq+Urdu&family=Noto+Sans+Bengali&family=Noto+Sans+Tamil&family=Noto+Sans+Telugu&family=Noto+Sans+Gujarati&family=Noto+Sans+SC&family=Noto+Sans+JP&family=Noto+Sans+KR&family=Noto+Sans+Hebrew&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/main.css">
+  <meta name="current-page" content="/">
+  <link rel="stylesheet" href="/static/css/index.css">
+<link rel="stylesheet" href="/static/css/style.css">
+<link rel="stylesheet" href="/static/css/dashboard.css">
 <style>
   /* ══════════════════════════════════════════════════════
      MIC BUTTON & VOICE INPUT STYLES
@@ -308,10 +315,47 @@
      ══════════════════════════════════════════════════════ */
 
 </style>
-{% endblock %}
+</head>
+<body>
+  <nav class="navbar" id="main-nav">
+    <a href="/index.html" class="navbar-brand"><img src="/static/images/logo.webp" alt="Logo" class="brand-logo"> The Fake News Detector</a>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button class="hamburger" onclick="document.getElementById('nav-links').classList.toggle('open')">&#9776;</button>
+      <ul class="navbar-links" id="nav-links">
+        <li><a href="/index.html" class="active">Home</a></li>
+        <li><a href="/dashboard.html" class="">Dashboard</a></li>
+        <li><a href="/analytics.html" class="">Analytics</a></li>
+        <li><a href="/learn.html" class="">Learn</a></li>
+        <li><a href="/report.html" class="">Report</a></li>
+      </ul>
+      <button class="dark-toggle" id="dark-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+        <span class="dt-label" id="dt-label">DAYMODE</span>
+        <span class="dt-knob">
+          <!-- Sun SVG -->
+          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <!-- Moon SVG -->
+          <svg class="moon-icon" viewBox="0 0 24 24" fill="#c8caff" stroke="#c8caff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            <circle cx="17" cy="5" r="1" fill="#c8caff" stroke="none"/>
+            <circle cx="19" cy="8" r="0.6" fill="#c8caff" stroke="none"/>
+            <circle cx="15" cy="3" r="0.6" fill="#c8caff" stroke="none"/>
+          </svg>
+        </span>
+      </button>
+    </div>
+  </nav>
 
-{% block body %}
-<div class="page-container">
+  <div class="page-container">
   <!-- Stats Bar -->
   <div class="stats-bar animate-in">
     <div class="stat-card" style="border-left-color:var(--red);">
@@ -358,12 +402,12 @@
       <button class="tab" onclick="switchTab('url',this)" id="tab-url">Scrape from URL</button>
       <button class="tab" onclick="switchTab('image',this)" id="tab-image">📷 Upload Image</button>
     </div>
-    <form action="/predict" method="post" id="main-form">
+    <form onsubmit="return handleVerify(event)" id="main-form">
       <div class="panel active" id="panel-text">
         <label class="form-label">News Text or Short Claim</label>
         <div class="voice-input-wrapper">
           <textarea class="form-textarea" name="news" id="news-input"
-            placeholder="🎤 Hold the mic to speak — or paste text here...&#10;&#10;• India won T20 World Cup 2024&#10;• भारत ने 2024 टी20 विश्व कप जीता">{{ input_text or '' }}</textarea>
+            placeholder="🎤 Hold the mic to speak — or paste text here...&#10;&#10;• India won T20 World Cup 2024&#10;• भारत ने 2024 टी20 विश्व कप जीता"></textarea>
           <button type="button" id="main-mic-btn" class="mic-btn" title="Hold to record voice">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="9" y="2" width="6" height="12" rx="3"/>
@@ -424,83 +468,49 @@
       <button type="submit" class="btn-primary" style="width:100%;margin-top:18px;padding:14px;" id="verifyBtn">Verify This</button>
     </form>
 
-    {% if error %}
-    <div class="error-box">{{ error }}</div>
-    {% endif %}
+    <div class="error-box" id="error-box" style="display:none;"></div>
 
-    {% if prediction %}
-    {% if is_fake %}{% set res_class = 'fake' %}
-    {% elif prediction == 'Likely Real' %}{% set res_class = 'unsure' %}
-    {% elif 'Unverified' in prediction or 'Cannot' in prediction or 'Disputed' in prediction %}{% set res_class = 'unsure' %}
-    {% else %}{% set res_class = 'real' %}{% endif %}
+    <div id="result-container"></div>
+  </div>
 
-    <div class="result {{ res_class }}" id="result-card">
-      <div class="res-header">
-        <div class="res-icon">{% if res_class == 'fake' %}&#10007;{% elif res_class == 'real' %}&#10003;{% else %}?{% endif %}</div>
-        <div>
-          <h2 class="res-title">{{ prediction }}</h2>
-          <div class="res-subtitle">{{ confidence }}% confidence</div>
-        </div>
-      </div>
-
-      <div class="res-bars-container">
-        <div class="res-bar-row">
-          <span>Fake</span>
-          <div class="res-track"><div class="res-fill fake-fill" style="width:{{ fake_prob|default(0) }}%"></div></div>
-          <div class="res-pct" style="color:#c0392b;">{{ fake_prob|default(0) }}%</div>
-        </div>
-        <div class="res-bar-row">
-          <span>Real</span>
-          <div class="res-track"><div class="res-fill real-fill" style="width:{{ real_prob|default(0) }}%"></div></div>
-          <div class="res-pct" style="color:#1e8449;">{{ real_prob|default(0) }}%</div>
-        </div>
-      </div>
-
-      <div class="res-meta">
-        <span class="res-tag">{{ verification_method }}</span>
-        <span class="res-tag">{{ detected_language }}</span>
-        <span class="res-tag">{{ word_count }} words</span>
-        {% if was_translated %}<span class="res-tag">Translated</span>{% endif %}
-      </div>
-
-      {% if credible_sources and credible_sources|length > 0 %}
+      
       <div class="res-section">
-        <div class="res-section-title">VERIFIED BY {{ credible_sources|length }} CREDIBLE SOURCES</div>
-        {% for src in credible_sources[:5] %}
+        <div class="res-section-title">VERIFIED BY  CREDIBLE SOURCES</div>
+        
         <div class="res-source-card">
           <div class="res-src-top">
             <div class="res-src-dot"></div>
-            <div class="res-src-domain">{{ src.domain or src.title or src.url }}</div>
+            <div class="res-src-domain"></div>
           </div>
-          <div class="res-src-title">{{ src.title }}</div>
-          <a href="{{ src.url }}" class="res-src-url" target="_blank">{{ src.url[:80] + '...' if src.url|length > 80 else src.url }}</a>
+          <div class="res-src-title"></div>
+          <a href="" class="res-src-url" target="_blank"></a>
         </div>
-        {% endfor %}
+        
       </div>
-      {% endif %}
+      
 
-      {% if ai_reason %}
+      
       <div class="res-section">
         <div class="res-section-title">AI ANALYSIS</div>
         <div class="res-ai-card">
-          {{ ai_reason }}
-          {% if ai_details %}
+          
+          
           <div class="res-checks">
-            {% for detail in ai_details %}
-            <span>{{ detail }}</span>
-            {% endfor %}
+            
+            <span></span>
+            
           </div>
-          {% endif %}
+          
         </div>
       </div>
-      {% endif %}
+      
 
       <div class="res-text-sec">
         <div class="res-section-title">ANALYSED TEXT</div>
-        <div class="res-raw">{{ input_text }}</div>
+        <div class="res-raw"></div>
       </div>
     </div>
-    {% endif %}
+    
   </div>
 
 
@@ -510,27 +520,15 @@
   <!-- FCM Deep Analysis Panel (shown after result) -->
   <div id="fcm-panel" style="display:none;max-width:680px;margin:0 auto 24px;"></div>
 
-  {% if related_news and related_news|length > 0 %}
-  <!-- Related Regional News Section -->
-  <div class="related-news-section animate-in">
-    <div class="related-news-header">
-      <div class="related-news-title">&#128240; Related News from {{ location_label }}</div>
-      <span class="related-news-loc">&#128205; {{ location_label }}</span>
-    </div>
-    {% for item in related_news %}
-    <div class="related-news-card">
-      <a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.title }}</a>
-      <div class="related-news-meta">
-        <span>&#127760; {{ item.source }}</span>
-        {% if item.date %}<span>&#128336; {{ item.date[:10] }}</span>{% endif %}
+  <div id="related-news-container"></div>
       </div>
-      {% if item.snippet %}
-      <div class="related-news-snippet">{{ item.snippet }}</div>
-      {% endif %}
+      
+      <div class="related-news-snippet"></div>
+      
     </div>
-    {% endfor %}
+    
   </div>
-  {% endif %}
+  
 
   <!-- Live Global News Section -->
 
@@ -661,12 +659,45 @@
   </div>
 
 </div>
-{% endblock %}
 
-{% block scripts %}
-<script src="{{ url_for('static', filename='js/index.js') }}"></script>
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
-<script src="{{ url_for('static', filename='js/live-feed.js') }}"></script>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="brand-title">The Fake News<br><span>Detector</span></div>
+        <div class="brand-desc">AI-powered verification supporting English, Hindi, Gujarati, Hinglish & Gujlish. Check any claim against live web sources.</div>
+      </div>
+      <div class="footer-col">
+        <h4>Navigate</h4>
+        <ul>
+          <li><a href="/index.html">Home</a></li>
+          <li><a href="/dashboard.html">Dashboard</a></li>
+          <li><a href="/analytics.html">Analytics</a></li>
+          <li><a href="/learn.html">Learn</a></li>
+          <li><a href="/report.html">Report</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Tech Stack</h4>
+        <div class="tech-badges">
+          <span class="tech-badge"><span class="dot"></span>Groq AI</span>
+          <span class="tech-badge"><span class="dot"></span>Flask</span>
+          <span class="tech-badge"><span class="dot"></span>scikit-learn</span>
+          <span class="tech-badge"><span class="dot"></span>DuckDuckGo</span>
+          <span class="tech-badge"><span class="dot"></span>Newspaper3k</span>
+          <span class="tech-badge"><span class="dot"></span>deep-translator</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">&copy; 2025 Fake News Detector &mdash; Open source project. Powered by Groq AI + Live Web Search.</div>
+  </footer>
+
+  <script src="/static/js/config.js"></script>
+  <script src="/static/js/main.js"></script>
+  <script>window.CHATBOT_API_URL = window.CHATBOT_API_URL || "";</script>
+  <script src="/static/js/chatbot-widget.js"></script>
+  <script src="/static/js/index.js"></script>
+<script src="/static/js/script.js"></script>
+<script src="/static/js/live-feed.js"></script>
 
 <!-- ══════════════════════════════════════════════════════
      WHATSAPP-STYLE VOICE INPUT SYSTEM
@@ -894,7 +925,7 @@ class MicManager {
 const mainMic = new MicManager('main-mic-btn', 'news-input', 'main-voice-status', false);
 </script>
 
-<div id="fcm-data" data-prediction="{{ prediction|default('') }}" data-text="{{ input_text|default('') }}" data-url="{{ (article.url if article else '')|default('') }}" style="display:none;"></div>
+<div id="fcm-data" data-prediction="" data-text="" data-url="" style="display:none;"></div>
 <script>
   // Fire FCM analysis automatically if a prediction result is already showing
   document.addEventListener('DOMContentLoaded', function() {
@@ -912,4 +943,5 @@ const mainMic = new MicManager('main-mic-btn', 'news-input', 'main-voice-status'
     }
   });
 </script>
-{% endblock %}
+</body>
+</html>

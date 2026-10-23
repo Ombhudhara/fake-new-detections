@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: fake-news-detection-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt && pip install -r backend/Requirements.txt && pip install -r fake_news_chatbot/requirements.txt
+    startCommand: python run.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: PORT
+        value: 5000
+      - key: CHATBOT_PORT
+        value: 8000
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GOOGLE_FACTCHECK_API_KEY
+        sync: false

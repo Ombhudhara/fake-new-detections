@@ -57,12 +57,71 @@
     }
   }
 
-  /* Loading State */
-  document.getElementById('report-form').addEventListener('submit', (e) => {
-    const btn = document.getElementById('submit-btn');
-    btn.classList.add('loading');
-    btn.querySelector('#btn-text').textContent = 'Submitting...';
-  });
+  /* Form Submission via API (works with standalone frontend or Flask) */
+  const reportForm = document.getElementById('report-form');
+  if (reportForm) {
+    reportForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      if (btn) {
+        btn.classList.add('loading');
+        const btnText = btn.querySelector('#btn-text');
+        if (btnText) btnText.textContent = 'Submitting...';
+      }
+
+      const platformInput = document.getElementById('platform-input');
+      const urlInput = document.getElementById('url-input');
+      const categoryInput = document.getElementById('category-select');
+      const descInput = document.getElementById('desc-input');
+      const anonInput = document.getElementById('anon-check');
+
+      const payload = {
+        platform: platformInput ? platformInput.value : 'WhatsApp',
+        url: urlInput ? urlInput.value.trim() : '',
+        category: categoryInput ? categoryInput.value : '',
+        description: descInput ? descInput.value.trim() : '',
+        anonymous: anonInput ? anonInput.checked : false
+      };
+
+      const apiBase = (window.API_BASE_URL || 'http://127.0.0.1:5000').replace(/\/+$/, '');
+
+      try {
+        const res = await fetch(`${apiBase}/report`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          throw new Error(`Server returned HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        if (data.success || data.report_id) {
+          document.getElementById('report-form-card').style.display = 'none';
+          document.getElementById('success-card').style.display = 'block';
+          if (data.report_id) {
+            document.getElementById('success-rid').textContent = data.report_id;
+          }
+          document.getElementById('success-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          alert(data.error || 'Failed to submit report. Please try again.');
+        }
+      } catch (err) {
+        console.error('Report submission error:', err);
+        alert(`Cannot submit report: The backend API server is unreachable at ${apiBase}.\nPlease ensure the backend is running.`);
+      } finally {
+        if (btn) {
+          btn.classList.remove('loading');
+          const btnText = btn.querySelector('#btn-text');
+          if (btnText) btnText.textContent = 'Submit Report';
+        }
+      }
+    });
+  }
 
   /* Handle Flask Success State — reads from JSON data island */
   (function() {

@@ -1,15 +1,25 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "backend/app.py",
-      "use": "@vercel/python"
-    }
-  ],
+  "cleanUrls": true,
   "routes": [
+    { "src": "/static/(.*)", "dest": "/frontend/static/$1" },
+    { "src": "/dashboard(.html)?", "dest": "/frontend/dashboard.html" },
+    { "src": "/analytics(.html)?", "dest": "/frontend/analytics.html" },
+    { "src": "/learn(.html)?", "dest": "/frontend/learn.html" },
+    { "src": "/report(.html)?", "dest": "/frontend/report.html" },
+    { "src": "/credibility-checker(.html)?", "dest": "/frontend/credibility_checker.html" },
+    { "src": "/credibility_checker.html", "dest": "/frontend/credibility_checker.html" },
+    { "src": "/index(.html)?", "dest": "/frontend/index.html" },
+    { "src": "/", "dest": "/frontend/index.html" },
+    { "src": "/(.*)", "dest": "/frontend/$1" }
+  ],
+  "headers": [
     {
-      "src": "/(.*)",
-      "dest": "backend/app.py"
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
     }
   ]
 }

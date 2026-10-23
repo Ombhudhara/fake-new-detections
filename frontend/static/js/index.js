@@ -57,36 +57,127 @@ function checkClaim(text) {
   }
 }
 
-var mainForm = document.getElementById('main-form');
-if (mainForm) {
-  mainForm.addEventListener('submit', function(evt) {
-    var activeMode = document.querySelector('.how-box[data-mode].active');
-    var mode = activeMode ? activeMode.getAttribute('data-mode') : 'short';
-    var textInput = document.getElementById('news-input');
-    var text = textInput ? textInput.value.trim() : '';
-    var ap = document.querySelector('.panel.active');
+// handleVerify: client-side form submission via API (for static frontend deployment)
+function handleVerify(evt) {
+  evt.preventDefault();
 
-    if (ap && ap.id === 'panel-text') {
-      var wc = text ? text.split(/\s+/).filter(Boolean).length : 0;
-      if (mode === 'short' && wc > 60) {
-        evt.preventDefault();
-        setClientError('This is longer than 60 words. Switch to "Full Articles".');
-        return
-      }
-      if (mode === 'full' && wc > 0 && wc <= 60) {
-        evt.preventDefault();
-        setClientError('This is shorter than 60 words. Switch to "Short Claims".');
-        return
-      }
+  var activeMode = document.querySelector('.how-box[data-mode].active');
+  var mode = activeMode ? activeMode.getAttribute('data-mode') : 'short';
+  var textInput = document.getElementById('news-input');
+  var urlInput = document.getElementById('url-input');
+  var text = textInput ? textInput.value.trim() : '';
+  var url = urlInput ? urlInput.value.trim() : '';
+  var ap = document.querySelector('.panel.active');
+  var lang = document.getElementById('selected_language');
+  var selectedLang = lang ? lang.value : 'en';
+
+  if (ap && ap.id === 'panel-text') {
+    var wc = text ? text.split(/\s+/).filter(Boolean).length : 0;
+    if (mode === 'short' && wc > 60) {
+      setClientError('This is longer than 60 words. Switch to "Full Articles".');
+      return false;
     }
-    clearClientError();
-    // Update button text to show loading state
-    var btn = document.getElementById('verifyBtn');
-    if (btn) {
-      btn.textContent = 'Verifying…';
-      btn.disabled = true;
+    if (mode === 'full' && wc > 0 && wc <= 60) {
+      setClientError('This is shorter than 60 words. Switch to "Short Claims".');
+      return false;
     }
+  }
+
+  if (!text && !url) {
+    setClientError('Please enter news text or a valid URL.');
+    return false;
+  }
+
+  clearClientError();
+  var btn = document.getElementById('verifyBtn');
+  if (btn) { btn.textContent = 'Verifying…'; btn.disabled = true; }
+
+  var body = {};
+  if (ap && ap.id === 'panel-url' && url) {
+    body = { url: url };
+  } else {
+    body = { text: text };
+  }
+
+  fetch((window.API_BASE_URL || '') + '/predict-api', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(res) {
+    if (res.error) {
+      setClientError(res.error);
+      if (btn) { btn.textContent = 'Verify This'; btn.disabled = false; }
+      return;
+    }
+    renderResult(res, text || url);
+    if (btn) { btn.textContent = 'Verify This'; btn.disabled = false; }
+  })
+  .catch(function(err) {
+    setClientError('Connection error. Please try again.');
+    console.error('Verify error:', err);
+    if (btn) { btn.textContent = 'Verify This'; btn.disabled = false; }
   });
+
+  return false;
+}
+
+// Render the verification result card dynamically
+function renderResult(res, inputText) {
+  var container = document.getElementById('result-container');
+  if (!container) {
+    // fallback: create container after verify card
+    var vc = document.querySelector('.verify-card');
+    if (vc) {
+      container = document.createElement('div');
+      container.id = 'result-container';
+      vc.parentNode.insertBefore(container, vc.nextSibling);
+    } else return;
+  }
+
+  var isFake = res.is_fake;
+  var resClass = isFake ? 'fake' : 'real';
+  if (res.label && (res.label.includes('Unverified') || res.label.includes('Likely'))) resClass = 'unsure';
+  var icon = resClass === 'fake' ? '✗' : resClass === 'real' ? '✓' : '?';
+
+  var sourcesHTML = '';
+  if (res.credible_sources && res.credible_sources.length > 0) {
+    sourcesHTML = '<div class="res-section"><div class="res-section-title">VERIFIED BY ' + res.credible_sources.length + ' CREDIBLE SOURCES</div>';
+    res.credible_sources.slice(0, 5).forEach(function(src) {
+      var srcUrl = src.url || '#';
+      var displayUrl = srcUrl.length > 80 ? srcUrl.substring(0, 80) + '...' : srcUrl;
+      sourcesHTML += '<div class="res-source-card"><div class="res-src-top"><div class="res-src-dot"></div><div class="res-src-domain">' + (src.domain || src.title || srcUrl) + '</div></div><div class="res-src-title">' + (src.title || '') + '</div><a href="' + srcUrl + '" class="res-src-url" target="_blank">' + displayUrl + '</a></div>';
+    });
+    sourcesHTML += '</div>';
+  }
+
+  var aiHTML = '';
+  if (res.ai_reason) {
+    aiHTML = '<div class="res-section"><div class="res-section-title">AI ANALYSIS</div><div class="res-ai-card">' + res.ai_reason;
+    if (res.ai_details && res.ai_details.length > 0) {
+      aiHTML += '<div class="res-checks">';
+      res.ai_details.forEach(function(d) { aiHTML += '<span>' + d + '</span>'; });
+      aiHTML += '</div>';
+    }
+    aiHTML += '</div></div>';
+  }
+
+  var translatedTag = res.was_translated ? '<span class="res-tag">Translated</span>' : '';
+  var displayText = inputText.length > 500 ? inputText.substring(0, 500) + '...' : inputText;
+
+  container.innerHTML = '<div class="result ' + resClass + '" id="result-card">' +
+    '<div class="res-header"><div class="res-icon">' + icon + '</div><div><h2 class="res-title">' + (res.label || 'Unknown') + '</h2><div class="res-subtitle">' + (res.confidence || 0) + '% confidence</div></div></div>' +
+    '<div class="res-bars-container"><div class="res-bar-row"><span>Fake</span><div class="res-track"><div class="res-fill fake-fill" style="width:' + (res.fake_prob || 0) + '%"></div></div><div class="res-pct" style="color:#c0392b;">' + (res.fake_prob || 0) + '%</div></div>' +
+    '<div class="res-bar-row"><span>Real</span><div class="res-track"><div class="res-fill real-fill" style="width:' + (res.real_prob || 0) + '%"></div></div><div class="res-pct" style="color:#1e8449;">' + (res.real_prob || 0) + '%</div></div></div>' +
+    '<div class="res-meta"><span class="res-tag">' + (res.verification_method || '') + '</span><span class="res-tag">' + (res.detected_language || '') + '</span><span class="res-tag">' + (res.word_count || 0) + ' words</span>' + translatedTag + '</div>' +
+    sourcesHTML + aiHTML +
+    '<div class="res-text-sec"><div class="res-section-title">ANALYSED TEXT</div><div class="res-raw">' + displayText + '</div></div></div>';
+
+  setTimeout(function() {
+    var rc = document.getElementById('result-card');
+    if (rc) rc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 200);
 }
 
 // Auto-scroll to result card if present after page load
@@ -158,7 +249,8 @@ var MisinfoTracker = (function() {
     showSkeleton();
     var term = state.searchTerm;
     var cat = state.activeCategory !== 'All' ? state.activeCategory : '';
-    var url = '/fake-trending?';
+    var baseUrl = (window.API_BASE_URL || '').replace(/\/+$/, '');
+    var url = baseUrl + '/fake-trending?';
     var params = [];
     var finalTopic = term || cat;
     if (finalTopic) params.push('topic=' + encodeURIComponent(finalTopic));
@@ -166,12 +258,16 @@ var MisinfoTracker = (function() {
     if (refresh) params.push('refresh=true');
     url += params.join('&');
     
-    fetch(url).then(r => r.json()).then(items => {
+    fetch(url).then(r => {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(items => {
       startUpdateTimer();
       state.allCards = items || [];
       updateStats(state.allCards);
       renderCards(true);
-    }).catch(() => {
+    }).catch(err => {
+      console.warn('[index.js] Trending fetch note:', err.message || err);
       state.allCards = [];
       updateStats([]);
       renderCards(true);
@@ -355,7 +451,7 @@ MisinfoTracker.init();
     panel.innerHTML = fcmSkeleton();
 
     try {
-      const res = await fetch('/api/fact-check', {
+      const res = await fetch((window.API_BASE_URL || '') + '/api/fact-check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: text.trim(), is_ocr: is_ocr || false })
@@ -536,7 +632,7 @@ MisinfoTracker.init();
     formData.append('image', selectedImageFile);
 
     try {
-      const res = await fetch('/api/extract-image-text', { method: 'POST', body: formData });
+      const res = await fetch((window.API_BASE_URL || '') + '/api/extract-image-text', { method: 'POST', body: formData });
       const d = await res.json();
 
       if (d.success) {

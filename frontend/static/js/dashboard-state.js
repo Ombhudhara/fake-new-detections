@@ -115,7 +115,7 @@ const DashboardState = {
    */
   fetchSnapshot: async function() {
     try {
-      const url = `/api/live-stats?country=${encodeURIComponent(this.selectedCountry)}`;
+      const url = `${window.API_BASE_URL || ''}/api/live-stats?country=${encodeURIComponent(this.selectedCountry)}`;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
 
@@ -135,7 +135,7 @@ const DashboardState = {
    */
   fetchLatestMetrics: async function() {
     try {
-      const url = `/api/live-stats?country=${encodeURIComponent(this.selectedCountry)}`;
+      const url = `${window.API_BASE_URL || ''}/api/live-stats?country=${encodeURIComponent(this.selectedCountry)}`;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
 

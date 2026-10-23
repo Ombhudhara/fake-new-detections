@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Learn Media Literacy — Fake News Detector</title>
+  <meta name="description" content="Master the art of spotting misinformation with our comprehensive guide, interactive quiz, and expert resources." />
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari&family=Noto+Sans+Arabic&family=Noto+Nastaliq+Urdu&family=Noto+Sans+Bengali&family=Noto+Sans+Tamil&family=Noto+Sans+Telugu&family=Noto+Sans+Gujarati&family=Noto+Sans+SC&family=Noto+Sans+JP&family=Noto+Sans+KR&family=Noto+Sans+Hebrew&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/main.css">
+  <meta name="current-page" content="/">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/learn.css">
+</head>
+<body>
+  <nav class="navbar" id="main-nav">
+    <a href="/index.html" class="navbar-brand"><img src="/static/images/logo.webp" alt="Logo" class="brand-logo"> The Fake News Detector</a>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button class="hamburger" onclick="document.getElementById('nav-links').classList.toggle('open')">&#9776;</button>
+      <ul class="navbar-links" id="nav-links">
+        <li><a href="/index.html" class="">Home</a></li>
+        <li><a href="/dashboard.html" class="">Dashboard</a></li>
+        <li><a href="/analytics.html" class="">Analytics</a></li>
+        <li><a href="/learn.html" class="active">Learn</a></li>
+        <li><a href="/report.html" class="">Report</a></li>
+      </ul>
+      <button class="dark-toggle" id="dark-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+        <span class="dt-label" id="dt-label">DAYMODE</span>
+        <span class="dt-knob">
+          <!-- Sun SVG -->
+          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <!-- Moon SVG -->
+          <svg class="moon-icon" viewBox="0 0 24 24" fill="#c8caff" stroke="#c8caff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            <circle cx="17" cy="5" r="1" fill="#c8caff" stroke="none"/>
+            <circle cx="19" cy="8" r="0.6" fill="#c8caff" stroke="none"/>
+            <circle cx="15" cy="3" r="0.6" fill="#c8caff" stroke="none"/>
+          </svg>
+        </span>
+      </button>
+    </div>
+  </nav>
+
+  <main class="learn-page-main">
+
+  <!-- ════════════════════════════════════════
+       SECTION 1: HERO
+       ════════════════════════════════════════ -->
+  <section class="learn-hero">
+    <div class="learn-eyebrow">
+      <span class="eyebrow-dot"></span>
+      Media Literacy Guide
+    </div>
+    <h1 class="learn-hero-title">
+      How to Spot<br>
+      <span class="title-accent">Fake News</span>
+    </h1>
+    <p class="learn-hero-subtitle">
+      Misinformation spreads faster than truth. 
+      Use these techniques to identify and combat 
+      fake news before sharing.
+    </p>
+
+    <div class="learn-stats-row">
+      <div class="learn-stat-pill">
+        <span class="stat-number">6</span>
+        <span class="stat-label">Detection Tips</span>
+      </div>
+      <div class="learn-stat-pill">
+        <span class="stat-number">6</span>
+        <span class="stat-label">Misinformation Types</span>
+      </div>
+      <div class="learn-stat-pill">
+        <span class="stat-number">6+</span>
+        <span class="stat-label">Fact-Check Resources</span>
+      </div>
+    </div>
+
+    <div class="read-progress-wrap">
+      <div class="read-progress-label">Reading progress</div>
+      <div class="read-progress-track">
+        <div class="read-progress-fill" id="read-progress-fill"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       SECTION 2: 6 TIPS GRID
+       ════════════════════════════════════════ -->
+  <section class="learn-section" id="tips-section">
+    <div class="learn-section-header">
+      <h2 class="learn-section-title">6 Ways to Detect Fake News</h2>
+      <p class="learn-section-subtitle">Apply these checks before sharing anything to ensure accuracy and prevent the spread of misinformation.</p>
+    </div>
+
+    <div class="tips-grid">
+      <!-- Tip 01 -->
+      <div class="tip-card">
+        <div class="tip-card-inner">
+          <div class="tip-header">
+            <div class="tip-icon-wrap" style="background:rgba(232,69,60,0.08)">🔍</div>
+            <span class="tip-number">01</span>
+          </div>
+          <h3 class="tip-title">Check the Source</h3>
+          <p class="tip-body">
+            Is it a known, credible outlet? Look for about pages, editorial policies, and author bylines. If you haven't heard of the source, use our 
+            <a href="/credibility-checker" class="tip-link">credibility checker</a>.
+          </p>
+          <div class="credibility-widget" id="inline-cred-checker">
+            <div class="cw-label">🔍 Quick Credibility Check</div>
+            <div class="cw-input-row">
+              <input type="text" id="cw-input" class="cw-input" placeholder="e.g. ndtv.com or bbc.com" onkeydown="if(event.key==='Enter') checkCredibilityInline()">
+              <button class="cw-btn" onclick="checkCredibilityInline()">Check</button>
+            </div>
+            <div class="cw-result" id="cw-result" style="display:none"></div>
+          </div>
+          <div class="tip-footer"><span class="tip-tag">Source Verification</span></div>
+        </div>
+      </div>
+
+      <!-- Tip 02 -->
+      <div class="tip-card">
+        <div class="tip-card-inner">
+          <div class="tip-header">
+            <div class="tip-icon-wrap" style="background:rgba(55,138,221,0.08)">📋</div>
+            <span class="tip-number">02</span>
+          </div>
+          <h3 class="tip-title">Verify with 2+ Sources</h3>
+          <p class="tip-body">
+            Real news is reported by multiple outlets. If only one obscure site covers a story, be highly skeptical. Cross-check with Reuters, AP, or BBC.
+          </p>
+          <div class="tip-footer"><span class="tip-tag">Cross-Referencing</span></div>
+        </div>
+      </div>
+
+      <!-- Tip 03 -->
+      <div class="tip-card">
+        <div class="tip-card-inner">
+          <div class="tip-header">
+            <div class="tip-icon-wrap" style="background:rgba(239,159,39,0.1)">⚠️</div>
+            <span class="tip-number">03</span>
+          </div>
+          <h3 class="tip-title">Watch for Sensational Headlines</h3>
+          <p class="tip-body">
+            Real journalism rarely uses ALL CAPS, excessive exclamation marks, or emotionally manipulative language. Headlines designed to shock are red flags.
+          </p>
+          <div class="tip-footer"><span class="tip-tag">Headline Analysis</span></div>
+        </div>
+      </div>
+
+      <!-- Tip 04 -->
+      <div class="tip-card">
+        <div class="tip-card-inner">
+          <div class="tip-header">
+            <div class="tip-icon-wrap" style="background:rgba(39,174,96,0.08)">📅</div>
+            <span class="tip-number">04</span>
+          </div>
+          <h3 class="tip-title">Check the Date</h3>
+          <p class="tip-body">
+            Old news often recirculates as new, especially on WhatsApp. Always verify the original publication date before sharing or reacting.
+          </p>
+          <div class="tip-footer"><span class="tip-tag">Date Verification</span></div>
+        </div>
+      </div>
+
+      <!-- Tip 05 -->
+      <div class="tip-card">
+        <div class="tip-card-inner">
+          <div class="tip-header">
+            <div class="tip-icon-wrap" style="background:rgba(127,119,221,0.08)">🖼️</div>
+            <span class="tip-number">05</span>
+          </div>
+          <h3 class="tip-title">Reverse Image Search</h3>
+          <p class="tip-body">
+            Photos and videos can be taken out of context. Use Google's reverse image search or TinEye to verify where an image originally appeared.
+            <br>
+            <a href='/' class='tip-link'>Or upload a screenshot to our detector →</a>
+          </p>
+          <div class="tip-footer"><span class="tip-tag">Image Verification</span></div>
+        </div>
+      </div>
+
+      <!-- Tip 06 -->
+      <div class="tip-card">
+        <div class="tip-card-inner">
+          <div class="tip-header">
+            <div class="tip-icon-wrap" style="background:rgba(216,90,48,0.08)">🤔</div>
+            <span class="tip-number">06</span>
+          </div>
+          <h3 class="tip-title">Check Your Own Bias</h3>
+          <p class="tip-body">
+            We tend to believe news that supports our existing views. Before sharing, ask yourself: "Would I question this if it came from the other side?"
+          </p>
+          <div class="tip-footer"><span class="tip-tag">Critical Thinking</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       SECTION 3: TYPES OF MISINFORMATION
+       ════════════════════════════════════════ -->
+  <section class="learn-section">
+    <div class="learn-section-header">
+      <h2 class="learn-section-title">Types of Misinformation</h2>
+      <p class="learn-section-subtitle">Not all fake news is the same. Understanding these different categories helps you identify hidden agendas and manipulative patterns.</p>
+    </div>
+
+    <div class="misinfo-grid">
+      <!-- Item 1 -->
+      <div class="misinfo-card" style="--accent:#E8453C;--accent-bg:rgba(232,69,60,0.07)">
+        <div class="misinfo-icon">🚫</div>
+        <div class="misinfo-content">
+          <h4 class="misinfo-title">Fabricated Content</h4>
+          <p class="misinfo-desc">Completely false stories invented for clicks, profit, or malicious purposes.</p>
+        </div>
+        <div class="misinfo-severity">
+          <span class="severity-dot" style="background:#E8453C"></span>
+          <span class="severity-label">High Risk</span>
+        </div>
+      </div>
+
+      <!-- Item 2 -->
+      <div class="misinfo-card" style="--accent:#F5A623;--accent-bg:rgba(245,166,35,0.07)">
+        <div class="misinfo-icon">✂️</div>
+        <div class="misinfo-content">
+          <h4 class="misinfo-title">Manipulated Content</h4>
+          <p class="misinfo-desc">Real stories or imagery distorted with misleading context or edited elements.</p>
+        </div>
+        <div class="misinfo-severity">
+          <span class="severity-dot" style="background:#F5A623"></span>
+          <span class="severity-label">High Risk</span>
+        </div>
+      </div>
+
+      <!-- Item 3 -->
+      <div class="misinfo-card" style="--accent:#4A90D9;--accent-bg:rgba(74,144,217,0.07)">
+        <div class="misinfo-icon">🎭</div>
+        <div class="misinfo-content">
+          <h4 class="misinfo-title">Satire / Parody</h4>
+          <p class="misinfo-desc">Humorous content that gets shared as fact when the comedy context is removed.</p>
+        </div>
+        <div class="misinfo-severity">
+          <span class="severity-dot" style="background:#4A90D9"></span>
+          <span class="severity-label">Medium Risk</span>
+        </div>
+      </div>
+
+      <!-- Item 4 -->
+      <div class="misinfo-card" style="--accent:#7F77DD;--accent-bg:rgba(127,119,221,0.07)">
+        <div class="misinfo-icon">📰</div>
+        <div class="misinfo-content">
+          <h4 class="misinfo-title">Misleading Headlines</h4>
+          <p class="misinfo-desc">Clickbait titles that don't match or accurately represent the actual article content.</p>
+        </div>
+        <div class="misinfo-severity">
+          <span class="severity-dot" style="background:#7F77DD"></span>
+          <span class="severity-label">High Risk</span>
+        </div>
+      </div>
+
+      <!-- Item 5 -->
+      <div class="misinfo-card" style="--accent:#27AE60;--accent-bg:rgba(39,174,96,0.07)">
+        <div class="misinfo-icon">📸</div>
+        <div class="misinfo-content">
+          <h4 class="misinfo-title">False Context</h4>
+          <p class="misinfo-desc">Real photos, videos, or quotes used in the wrong context to support a false claim.</p>
+        </div>
+        <div class="misinfo-severity">
+          <span class="severity-dot" style="background:#27AE60"></span>
+          <span class="severity-label">Medium Risk</span>
+        </div>
+      </div>
+
+      <!-- Item 6 -->
+      <div class="misinfo-card" style="--accent:#D85A30;--accent-bg:rgba(216,90,48,0.07)">
+        <div class="misinfo-icon">🕵️</div>
+        <div class="misinfo-content">
+          <h4 class="misinfo-title">Imposter Content</h4>
+          <p class="misinfo-desc">Websites or social accounts that mimic real news outlets to gain unearned credibility.</p>
+        </div>
+        <div class="misinfo-severity">
+          <span class="severity-dot" style="background:#D85A30"></span>
+          <span class="severity-label">Critical</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       SECTION 4: FACT-CHECKING RESOURCES
+       ════════════════════════════════════════ -->
+  <section class="learn-section">
+    <div class="learn-section-header">
+      <h2 class="learn-section-title">Fact-Checking Resources</h2>
+      <p class="learn-section-subtitle">These organizations verify claims and debunk misinformation professionally. Bookmark these for personal verification.</p>
+    </div>
+
+    <div class="resources-grid">
+      <!-- Snopes -->
+      <a href="https://snopes.com" target="_blank" class="resource-card">
+        <div class="resource-header">
+          <div class="resource-initial" style="background:#E8453C">S</div>
+          <div class="resource-globe">↗</div>
+        </div>
+        <div class="resource-name">Snopes</div>
+        <div class="resource-url">snopes.com</div>
+        <div class="resource-desc">World's oldest and largest independent fact-checking site covering viral claims.</div>
+        <div class="resource-tag">Global</div>
+      </a>
+
+      <!-- AltNews -->
+      <a href="https://altnews.in" target="_blank" class="resource-card">
+        <div class="resource-header">
+          <div class="resource-initial" style="background:#FF6B35">A</div>
+          <div class="resource-globe">↗</div>
+        </div>
+        <div class="resource-name">AltNews</div>
+        <div class="resource-url">altnews.in</div>
+        <div class="resource-desc">Leading India-focused fact-checking organisation debunking social media fake news.</div>
+        <div class="resource-tag">India</div>
+      </a>
+
+      <!-- BOOM -->
+      <a href="https://boomlive.in" target="_blank" class="resource-card">
+        <div class="resource-header">
+          <div class="resource-initial" style="background:#4A90D9">B</div>
+          <div class="resource-globe">↗</div>
+        </div>
+        <div class="resource-name">BOOM Live</div>
+        <div class="resource-url">boomlive.in</div>
+        <div class="resource-desc">Independent Indian digital journalism initiative debunking misinformation daily.</div>
+        <div class="resource-tag">India</div>
+      </a>
+
+      <!-- PolitiFact -->
+      <a href="https://politifact.com" target="_blank" class="resource-card">
+        <div class="resource-header">
+          <div class="resource-initial" style="background:#27AE60">P</div>
+          <div class="resource-globe">↗</div>
+        </div>
+        <div class="resource-name">PolitiFact</div>
+        <div class="resource-url">politifact.com</div>
+        <div class="resource-desc">US-based political fact-checking with the famous "Truth-O-Meter" and transparency.</div>
+        <div class="resource-tag">USA</div>
+      </a>
+
+      <!-- Full Fact -->
+      <a href="https://fullfact.org" target="_blank" class="resource-card">
+        <div class="resource-header">
+          <div class="resource-initial" style="background:#7F77DD">F</div>
+          <div class="resource-globe">↗</div>
+        </div>
+        <div class="resource-name">Full Fact</div>
+        <div class="resource-url">fullfact.org</div>
+        <div class="resource-desc">The UK's independent fact-checking charity focusing on government and major reporting.</div>
+        <div class="resource-tag">UK</div>
+      </a>
+
+      <!-- AFP -->
+      <a href="https://factcheck.afp.com" target="_blank" class="resource-card">
+        <div class="resource-header">
+          <div class="resource-initial" style="background:#D85A30">AFP</div>
+          <div class="resource-globe">↗</div>
+        </div>
+        <div class="resource-name">AFP Fact Check</div>
+        <div class="resource-url">factcheck.afp.com</div>
+        <div class="resource-desc">Global multilingual fact-checking team from Agence France-Presse (AFP).</div>
+        <div class="resource-tag">Global</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       SECTION 5: INTERACTIVE QUIZ
+       ════════════════════════════════════════ -->
+  <section class="learn-section">
+    <div class="learn-section-header">
+      <h2 class="learn-section-title">Test Your Skills</h2>
+      <p class="learn-section-subtitle">Can you spot fake news in the wild? Take this quick quiz to find out if you're a media literacy expert.</p>
+    </div>
+
+    <div class="quiz-card" id="quiz-card">
+      <div class="quiz-top">
+        <span class="quiz-counter" id="quiz-counter">Question 1 of 5</span>
+        <div class="quiz-progress-track">
+          <div class="quiz-progress-fill" id="quiz-progress-fill" style="width:20%"></div>
+        </div>
+        <span class="quiz-score-display" id="quiz-score-display">Score: 0</span>
+      </div>
+      <div class="quiz-question" id="quiz-question">Loading question...</div>
+      <div class="quiz-options" id="quiz-options"></div>
+      <div class="quiz-feedback" id="quiz-feedback"></div>
+      <button class="quiz-next-btn" id="quiz-next-btn" style="display:none" onclick="quizNext()">Next Question →</button>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       SECTION 6: CTA BANNER
+       ════════════════════════════════════════ -->
+  <section class="learn-section">
+    <div class="learn-cta-banner" id="bottom-cta">
+      <div class="cta-banner-content">
+        <div class="cta-banner-eyebrow">Ready to fact-check?</div>
+        <h2 class="cta-banner-title">Verify Any Claim in Seconds</h2>
+        <p class="cta-banner-body">
+          Paste any claim, headline, or article link and our AI will fact-check it against live web sources, checking credibility and context in real-time.
+        </p>
+        <div class="cta-banner-actions">
+          <a href="/index.html" class="cta-btn-primary">🔍 Try the Detector</a>
+          <a href="/dashboard.html" class="cta-btn-secondary">📊 View Dashboard</a>
+        </div>
+      </div>
+      <div class="cta-banner-visual">
+        <div class="cta-stat-stack">
+          <div class="cta-stat-item">
+            <div class="cta-stat-num" id="cta-accuracy">--</div>
+            <div class="cta-stat-lbl">Detection Accuracy</div>
+          </div>
+          <div class="cta-stat-item">
+            <div class="cta-stat-num" id="cta-languages">--</div>
+            <div class="cta-stat-lbl">Languages Supported</div>
+          </div>
+          <div class="cta-stat-item">
+            <div class="cta-stat-num" id="cta-predictions">--</div>
+            <div class="cta-stat-lbl">Claims Verified</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="brand-title">The Fake News<br><span>Detector</span></div>
+        <div class="brand-desc">AI-powered verification supporting English, Hindi, Gujarati, Hinglish & Gujlish. Check any claim against live web sources.</div>
+      </div>
+      <div class="footer-col">
+        <h4>Navigate</h4>
+        <ul>
+          <li><a href="/index.html">Home</a></li>
+          <li><a href="/dashboard.html">Dashboard</a></li>
+          <li><a href="/analytics.html">Analytics</a></li>
+          <li><a href="/learn.html">Learn</a></li>
+          <li><a href="/report.html">Report</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Tech Stack</h4>
+        <div class="tech-badges">
+          <span class="tech-badge"><span class="dot"></span>Groq AI</span>
+          <span class="tech-badge"><span class="dot"></span>Flask</span>
+          <span class="tech-badge"><span class="dot"></span>scikit-learn</span>
+          <span class="tech-badge"><span class="dot"></span>DuckDuckGo</span>
+          <span class="tech-badge"><span class="dot"></span>Newspaper3k</span>
+          <span class="tech-badge"><span class="dot"></span>deep-translator</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">&copy; 2025 Fake News Detector &mdash; Open source project. Powered by Groq AI + Live Web Search.</div>
+  </footer>
+
+  <script src="/static/js/config.js"></script>
+  <script src="/static/js/main.js"></script>
+  <script>window.CHATBOT_API_URL = window.CHATBOT_API_URL || "";</script>
+  <script src="/static/js/chatbot-widget.js"></script>
+  <script src="/static/js/learn.js"></script>
+</body>
+</html>

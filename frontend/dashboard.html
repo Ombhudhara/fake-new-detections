@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analytics Dashboard — Fake News Detector</title>
+  <meta name="description" content="Real-time fake news analytics: category breakdown, country heatmap, platform analysis, and weekly trends." />
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari&family=Noto+Sans+Arabic&family=Noto+Nastaliq+Urdu&family=Noto+Sans+Bengali&family=Noto+Sans+Tamil&family=Noto+Sans+Telugu&family=Noto+Sans+Gujarati&family=Noto+Sans+SC&family=Noto+Sans+JP&family=Noto+Sans+KR&family=Noto+Sans+Hebrew&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/main.css">
+  <meta name="current-page" content="/">
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+  <nav class="navbar" id="main-nav">
+    <a href="/index.html" class="navbar-brand"><img src="/static/images/logo.webp" alt="Logo" class="brand-logo"> The Fake News Detector</a>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button class="hamburger" onclick="document.getElementById('nav-links').classList.toggle('open')">&#9776;</button>
+      <ul class="navbar-links" id="nav-links">
+        <li><a href="/index.html" class="">Home</a></li>
+        <li><a href="/dashboard.html" class="active">Dashboard</a></li>
+        <li><a href="/analytics.html" class="">Analytics</a></li>
+        <li><a href="/learn.html" class="">Learn</a></li>
+        <li><a href="/report.html" class="">Report</a></li>
+      </ul>
+      <button class="dark-toggle" id="dark-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+        <span class="dt-label" id="dt-label">DAYMODE</span>
+        <span class="dt-knob">
+          <!-- Sun SVG -->
+          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <!-- Moon SVG -->
+          <svg class="moon-icon" viewBox="0 0 24 24" fill="#c8caff" stroke="#c8caff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            <circle cx="17" cy="5" r="1" fill="#c8caff" stroke="none"/>
+            <circle cx="19" cy="8" r="0.6" fill="#c8caff" stroke="none"/>
+            <circle cx="15" cy="3" r="0.6" fill="#c8caff" stroke="none"/>
+          </svg>
+        </span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- CDN scripts injected before content -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<div class="dash-page">
+
+  <!-- ── Analytics Header ── -->
+  <div class="dash-header animate-in">
+    <div class="dash-title">
+      <h1>Fake News Analytics</h1>
+      <p>Category breakdown &middot; Country heatmap &middot; Platform analysis</p>
+    </div>
+    <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+      <!-- Auto-Refresh Toggle -->
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">Auto-Refresh:</label>
+        <input type="checkbox" id="auto-refresh-toggle" style="cursor: pointer; width: 18px; height: 18px;">
+      </div>
+
+      <!-- Last Sync Timer -->
+      <div id="last-sync-timer" style="font-size: 11px; color: var(--text-secondary); font-style: italic;">Never synced</div>
+
+      <!-- Refresh Badge -->
+      <div class="live-badge"><span class="live-pulse"></span>LIVE DATA</div>
+    </div>
+  </div>
+
+  <!-- ── Stat Cards ── -->
+  <div class="stats-row">
+    <div class="stat-card stat-red animate-in">
+      <div class="stat-num" id="s1">0</div>
+      <div class="stat-lbl">Fake detected today</div>
+    </div>
+    <div class="stat-card stat-amber animate-in delay-1">
+      <div class="stat-num" id="s2">0%</div>
+      <div class="stat-lbl">Avg fake confidence</div>
+    </div>
+    <div class="stat-card stat-blue animate-in delay-2">
+      <div class="stat-num" id="s3">0</div>
+      <div class="stat-lbl">Countries affected</div>
+    </div>
+    <div class="stat-card stat-teal animate-in delay-3">
+      <div class="stat-num" id="s4">0</div>
+      <div class="stat-lbl">Total fact-checked</div>
+    </div>
+  </div>
+
+  <hr class="dash-divider">
+
+  <!-- ── Category Analysis ── -->
+  <div class="dash-section-title animate-in">&#128202; Category Breakdown</div>
+  <div class="two-col animate-in delay-1">
+    <!-- Bar Chart -->
+    <div class="dash-card">
+      <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:18px">Claims by Category</div>
+      <div id="cat-bars"></div>
+    </div>
+    <!-- Donut Chart -->
+    <div class="dash-card">
+      <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:12px">Category Distribution</div>
+      <div class="chart-wrap"><canvas id="donut-chart"></canvas></div>
+      <div class="donut-legend" id="donut-legend"></div>
+    </div>
+  </div>
+
+  <hr class="dash-divider">
+
+  <!-- ── World Heatmap ── -->
+  <div class="map-section animate-in">
+    <div class="dash-section-title">&#127758; Global Misinformation Heatmap</div>
+    <div class="map-card">
+      <div class="map-filters" id="map-filters">
+        <button class="map-filter-btn active" data-filter="all">All</button>
+        <button class="map-filter-btn" data-filter="health">Health</button>
+        <button class="map-filter-btn" data-filter="politics">Politics</button>
+        <button class="map-filter-btn" data-filter="finance">Finance</button>
+        <button class="map-filter-btn" data-filter="tech">Technology</button>
+      </div>
+      <div id="map-container">
+        <svg id="world-map-svg"></svg>
+        <div class="map-tooltip" id="map-tooltip"></div>
+      </div>
+      <div class="map-legend">
+        <div>
+          <div class="map-legend-bar"></div>
+          <div class="map-legend-labels"><span>Low</span><span>High</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="dash-divider">
+
+  <!-- ── Platform + Weekly Trend ── -->
+  <div class="dash-section-title animate-in">&#128241; Platform & Weekly Trend</div>
+  <div class="two-col animate-in delay-1">
+    <!-- Platform Bars -->
+    <div class="dash-card">
+      <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:18px">Top Spreading Platforms</div>
+      <div id="platform-bars"></div>
+    </div>
+    <!-- Weekly Trend -->
+    <div class="dash-card">
+      <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:12px">Weekly Trend (Mon–Sun)</div>
+      <div class="chart-wrap" style="height:250px"><canvas id="trend-chart"></canvas></div>
+      <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap">
+        <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-secondary)"><span style="width:24px;height:3px;background:#E24B4A;border-radius:2px;display:inline-block"></span>Health</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-secondary)"><span style="width:24px;height:3px;background:#7F77DD;border-radius:2px;display:inline-block"></span>Politics</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-secondary)"><span style="width:24px;height:3px;background:#EF9F27;border-radius:2px;display:inline-block"></span>Finance</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="dash-divider">
+
+  <!-- ── Radar Charts Section ── -->
+  <div class="dash-section-title animate-in">&#127775; Misinformation Threat Radar</div>
+  <div class="three-col animate-in delay-1">
+
+    <!-- Radar 1: This Month vs Last Month -->
+    <div class="dash-card">
+      <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:10px">Threat Profile: Month-over-Month</div>
+      <div class="chart-wrap" style="height:240px"><canvas id="radar-mom"></canvas></div>
+      <div class="radar-legend">
+        <div class="radar-legend-row"><span class="radar-legend-dot" style="background:#E24B4A"></span>This Month</div>
+        <div class="radar-legend-row"><span class="radar-legend-dot" style="background:#378ADD"></span>Last Month</div>
+      </div>
+    </div>
+
+    <!-- Radar 2: WhatsApp vs Social Media -->
+    <div class="dash-card">
+      <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:10px">Platform Risk: WhatsApp vs Social</div>
+      <div class="chart-wrap" style="height:240px"><canvas id="radar-platform"></canvas></div>
+      <div class="radar-legend">
+        <div class="radar-legend-row"><span class="radar-legend-dot" style="background:#25D366"></span>WhatsApp</div>
+        <div class="radar-legend-row"><span class="radar-legend-dot" style="background:#1877F2"></span>Social Media</div>
+      </div>
+    </div>
+
+    <!-- Radar 3: Category Vulnerability -->
+    <div class="dash-card">
+      <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:10px">Category Vulnerability Index</div>
+      <div class="chart-wrap" style="height:240px"><canvas id="radar-cat"></canvas></div>
+      <div class="radar-legend">
+        <div class="radar-legend-row"><span class="radar-legend-dot" style="background:#7F77DD"></span>Vulnerability Score (0–100)</div>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="dash-divider">
+
+  <!-- ── Source Credibility ── -->
+  <div class="cred-section animate-in">
+    <div class="dash-section-title">&#128270; Source Credibility Checker</div>
+    <div class="cred-row">
+      <input type="text" class="form-input" id="cred-domain-input" placeholder="Enter a news domain, e.g. bbc.com, ndtv.com">
+      <button class="btn-primary" onclick="checkCredibility()">Check Source</button>
+    </div>
+    <div class="cred-result" id="cred-result-card">
+      <div class="cred-domain" id="cred-domain-name"></div>
+      <div class="cred-score" id="cred-score-value"></div>
+      <div class="cred-status" id="cred-status-label"></div>
+      <div class="cred-description" id="cred-desc"></div>
+    </div>
+  </div>
+
+  <!-- ── Live Fact-Checked ── -->
+  <div class="animate-in delay-1">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div class="dash-section-title" style="margin-bottom:0">&#9888;&#65039; Latest Fact-Checked <span class="live-dot"></span><span class="live-label">Live</span></div>
+      <button class="btn-secondary" onclick="loadFactChecked()">&#8634; Shuffle</button>
+    </div>
+    <div class="fc-list" id="fc-list">
+      <div class="skeleton-row"></div><div class="skeleton-row"></div>
+      <div class="skeleton-row"></div><div class="skeleton-row"></div>
+    </div>
+  </div>
+
+</div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="brand-title">The Fake News<br><span>Detector</span></div>
+        <div class="brand-desc">AI-powered verification supporting English, Hindi, Gujarati, Hinglish & Gujlish. Check any claim against live web sources.</div>
+      </div>
+      <div class="footer-col">
+        <h4>Navigate</h4>
+        <ul>
+          <li><a href="/index.html">Home</a></li>
+          <li><a href="/dashboard.html">Dashboard</a></li>
+          <li><a href="/analytics.html">Analytics</a></li>
+          <li><a href="/learn.html">Learn</a></li>
+          <li><a href="/report.html">Report</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Tech Stack</h4>
+        <div class="tech-badges">
+          <span class="tech-badge"><span class="dot"></span>Groq AI</span>
+          <span class="tech-badge"><span class="dot"></span>Flask</span>
+          <span class="tech-badge"><span class="dot"></span>scikit-learn</span>
+          <span class="tech-badge"><span class="dot"></span>DuckDuckGo</span>
+          <span class="tech-badge"><span class="dot"></span>Newspaper3k</span>
+          <span class="tech-badge"><span class="dot"></span>deep-translator</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">&copy; 2025 Fake News Detector &mdash; Open source project. Powered by Groq AI + Live Web Search.</div>
+  </footer>
+
+  <script src="/static/js/config.js"></script>
+  <script src="/static/js/main.js"></script>
+  <script>window.CHATBOT_API_URL = window.CHATBOT_API_URL || "";</script>
+  <script src="/static/js/chatbot-widget.js"></script>
+  <script src="/static/js/api.js"></script>
+<script src="/static/js/dashboard-state.js"></script>
+<script src="/static/js/dashboard.js"></script>
+</body>
+</html>

@@ -340,7 +340,7 @@ async function loadLiveStats() {
   };
 
   try {
-    var res = await fetch('/api/live-stats');
+    var res = await fetch((window.API_BASE_URL || '') + '/api/live-stats');
     if (!res.ok) throw new Error('HTTP status ' + res.status);
     var data = await res.json();
 
@@ -969,7 +969,7 @@ function loadFactChecked() {
   var list = document.getElementById('fc-list');
   if (!list) return;
   list.innerHTML = '<div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row"></div>';
-  fetch('/api/latest-factchecked').then(function(r) {
+  fetch((window.API_BASE_URL || '') + '/api/latest-factchecked').then(function(r) {
     return r.json()
   }).then(function(data) {
     if (!data || !data.length) {

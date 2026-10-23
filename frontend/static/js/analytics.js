@@ -870,7 +870,7 @@ async function loadFeed(append) {
   }
   
   try {
-    const response = await fetch('/api/live-feed', {
+    const response = await fetch((window.API_BASE_URL || '') + '/api/live-feed', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1403,7 +1403,8 @@ async function fetchLiveFeed(isAutoRefresh = false, page = 1) {
   }
   
   try {
-    const resp = await fetch(`/api/live-feed?country=${country}&platform=${platform}&category=${category}&page=${page}`);
+    const baseUrl = (window.API_BASE_URL || '').replace(/\/+$/, '');
+    const resp = await fetch(`${baseUrl}/api/live-feed?country=${country}&platform=${platform}&category=${category}&page=${page}`);
     if (!resp.ok) throw new Error('Feed fetch failed');
     
     const data = await resp.json();

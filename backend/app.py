@@ -1,11 +1,10 @@
-if __name__ == "__main__":
-    import runpy
-    import sys
-    from pathlib import Path
+import sys
+import os
+from pathlib import Path
 
-    project_root = Path(__file__).resolve().parents[1]
-    sys.path.insert(0, str(project_root))
-    runpy.run_path(str(project_root / "run.py"), run_name="__main__")
+BASE_DIR = Path(__file__).resolve().parent
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
 
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
@@ -36,7 +35,7 @@ from news_scraper import get_integrated_news
 BASE_DIR = Path(__file__).resolve().parent
 
 def init_quiz_db():
-    conn = sqlite3.connect('quiz_scores.db')
+    conn = sqlite3.connect(str(BASE_DIR / 'quiz_scores.db'))
     conn.execute('''
         CREATE TABLE IF NOT EXISTS quiz_scores (
             id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,25 +61,27 @@ def init_quiz_db():
 
 init_quiz_db()
 
-load_dotenv()
+# Load .env from backend directory and repository root
+load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR.parent / ".env")
 
 app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/static')
-CORS(app)
-app.config["CHATBOT_API_URL"] = os.getenv("CHATBOT_API_URL", "")
-
-# Resolve paths relative to this file so the app works regardless of the current working directory.
-from pathlib import Path
-BASE_DIR = Path(__file__).resolve().parent
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+app.config["CHATBOT_API_URL"] = os.getenv("CHATBOT_API_URL", "http://127.0.0.1:8000")
 
 model      = pickle.load(open(BASE_DIR / "model" / "model.pkl", "rb"))
 vectorizer = pickle.load(open(BASE_DIR / "model" / "vectorizer.pkl", "rb"))
 
 # ── OpenRouter AI Client ─────────────────────────────────
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-openrouter_client = OpenAI(
-    api_key=OPENROUTER_API_KEY,
-    base_url="https://openrouter.ai/api/v1",
-)
+if OPENROUTER_API_KEY:
+    openrouter_client = OpenAI(
+        api_key=OPENROUTER_API_KEY,
+        base_url="https://openrouter.ai/api/v1",
+    )
+else:
+    openrouter_client = None
+    print("[WARN] OPENROUTER_API_KEY not configured. AI-assisted fact check will use fallback heuristics.")
 
 # ── Language display names ────────────────────────────────
 LANGUAGE_NAMES = {
@@ -793,10 +794,92 @@ def predict_text(raw_text: str, language_hint: str = None) -> dict:  # type: ign
 
 @app.route("/health")
 def health():
+    chatbot_url = os.getenv("CHATBOT_API_URL", "http://127.0.0.1:8000").rstrip("/")
+    chatbot_online = False
+    try:
+        r = requests.get(f"{chatbot_url}/", timeout=1.5)
+        chatbot_online = (r.status_code == 200)
+    except Exception:
+        chatbot_online = False
+
     return jsonify({
         "status": "ok",
-        "message": "Fake News Detection API is running"
+        "message": "Fake News Detection API is running",
+        "services": {
+            "backend": "online",
+            "model_loaded": model is not None,
+            "chatbot": "online" if chatbot_online else "offline",
+            "chatbot_url": chatbot_url
+        }
     }), 200
+
+
+# ══════════════════════════════════════════════════════════
+#  CHATBOT PROXY & ADAPTER ROUTES
+# ══════════════════════════════════════════════════════════
+
+@app.route("/chat", methods=["POST", "OPTIONS"])
+def proxy_chat():
+    """Forward chatbot requests to FastAPI chatbot service with graceful fallback."""
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"}), 200
+
+    chatbot_url = os.getenv("CHATBOT_API_URL", "http://127.0.0.1:8000").rstrip("/")
+    payload = request.get_json(force=True, silent=True) or {}
+    try:
+        res = requests.post(f"{chatbot_url}/chat", json=payload, timeout=30)
+        return (res.content, res.status_code, [("Content-Type", "application/json")])
+    except requests.exceptions.RequestException as e:
+        session_id = payload.get("session_id", "vb-fallback")
+        return jsonify({
+            "session_id": session_id,
+            "message": "VerifyBot is currently starting up or offline. Please check that the chatbot service is running at " + chatbot_url,
+            "quick_replies": [],
+            "use_rag": False,
+            "error": str(e)
+        }), 503
+
+
+@app.route("/set-language", methods=["POST", "OPTIONS"])
+def proxy_set_language():
+    """Forward language override requests to FastAPI chatbot service."""
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"}), 200
+
+    chatbot_url = os.getenv("CHATBOT_API_URL", "http://127.0.0.1:8000").rstrip("/")
+    payload = request.get_json(force=True, silent=True) or {}
+    try:
+        res = requests.post(f"{chatbot_url}/set-language", json=payload, timeout=10)
+        return (res.content, res.status_code, [("Content-Type", "application/json")])
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": f"Chatbot unreachable: {e}"}), 503
+
+
+@app.route("/languages", methods=["GET", "OPTIONS"])
+def proxy_languages():
+    """Returns supported languages from chatbot or fallback dictionary."""
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"}), 200
+
+    chatbot_url = os.getenv("CHATBOT_API_URL", "http://127.0.0.1:8000").rstrip("/")
+    try:
+        res = requests.get(f"{chatbot_url}/languages", timeout=5)
+        return (res.content, res.status_code, [("Content-Type", "application/json")])
+    except requests.exceptions.RequestException:
+        return jsonify(LANGUAGE_NAMES), 200
+
+
+@app.route("/api/chatbot/status", methods=["GET"])
+def chatbot_status():
+    """Health status check specifically for the chatbot integration."""
+    chatbot_url = os.getenv("CHATBOT_API_URL", "http://127.0.0.1:8000").rstrip("/")
+    try:
+        res = requests.get(f"{chatbot_url}/", timeout=2)
+        if res.status_code == 200:
+            return jsonify({"status": "online", "url": chatbot_url}), 200
+    except Exception:
+        pass
+    return jsonify({"status": "offline", "url": chatbot_url}), 503
 
 
 
@@ -821,12 +904,13 @@ def report():
     import string
     
     if request.method == "POST":
-        # Extract form data
-        url         = request.form.get("url", "")
-        category    = request.form.get("category", "")
-        description = request.form.get("description", "")
-        platform    = request.form.get("platform", "WhatsApp")
-        is_anon     = "True" if request.form.get("anonymous") else "False"
+        # Extract form or JSON data
+        data = request.get_json(silent=True) or {}
+        url         = data.get("url") or request.form.get("url", "")
+        category    = data.get("category") or request.form.get("category", "")
+        description = data.get("description") or request.form.get("description", "")
+        platform    = data.get("platform") or request.form.get("platform", "WhatsApp")
+        is_anon     = "True" if (data.get("anonymous") or request.form.get("anonymous")) else "False"
         timestamp   = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # Save to CSV (Excel compatible)
@@ -845,6 +929,9 @@ def report():
 
         # Generate a random report ID
         report_id = "RPT-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
+
+        if request.is_json or request.headers.get("Accept") == "application/json":
+            return jsonify({"success": True, "report_id": report_id, "status": "submitted"})
 
         return render_template("report.html", 
                                active_page="report",
@@ -1641,7 +1728,7 @@ def save_quiz_score():
         ip_hash = hashlib.md5(ip.encode()).hexdigest()[:8]
         session_id = hashlib.md5(f"{ip}{datetime.now().date()}".encode()).hexdigest()[:12]
 
-        conn = sqlite3.connect('quiz_scores.db')
+        conn = sqlite3.connect(str(BASE_DIR / 'quiz_scores.db'))
         conn.execute('''
             INSERT INTO quiz_scores (session_id, score, total, percentage, time_taken, timestamp, ip_hash)
             VALUES (?,?,?,?,?,?,?)
@@ -1687,7 +1774,7 @@ def save_quiz_score():
 @app.route('/api/quiz/leaderboard')
 def quiz_leaderboard():
     try:
-        conn = sqlite3.connect('quiz_scores.db')
+        conn = sqlite3.connect(str(BASE_DIR / 'quiz_scores.db'))
         rows = conn.execute('''
             SELECT percentage, score, total, timestamp, time_taken
             FROM quiz_scores

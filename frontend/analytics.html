@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analytics — Global Misinformation Dashboard</title>
+  <meta name="description" content="Explore the global misinformation heatmap, category breakdowns, and deep threat analysis powered by live AI data." />
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari&family=Noto+Sans+Arabic&family=Noto+Nastaliq+Urdu&family=Noto+Sans+Bengali&family=Noto+Sans+Tamil&family=Noto+Sans+Telugu&family=Noto+Sans+Gujarati&family=Noto+Sans+SC&family=Noto+Sans+JP&family=Noto+Sans+KR&family=Noto+Sans+Hebrew&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/main.css">
+  <meta name="current-page" content="/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/analytics.css">
+</head>
+<body>
+  <nav class="navbar" id="main-nav">
+    <a href="/index.html" class="navbar-brand"><img src="/static/images/logo.webp" alt="Logo" class="brand-logo"> The Fake News Detector</a>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button class="hamburger" onclick="document.getElementById('nav-links').classList.toggle('open')">&#9776;</button>
+      <ul class="navbar-links" id="nav-links">
+        <li><a href="/index.html" class="">Home</a></li>
+        <li><a href="/dashboard.html" class="">Dashboard</a></li>
+        <li><a href="/analytics.html" class="active">Analytics</a></li>
+        <li><a href="/learn.html" class="">Learn</a></li>
+        <li><a href="/report.html" class="">Report</a></li>
+      </ul>
+      <button class="dark-toggle" id="dark-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+        <span class="dt-label" id="dt-label">DAYMODE</span>
+        <span class="dt-knob">
+          <!-- Sun SVG -->
+          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <!-- Moon SVG -->
+          <svg class="moon-icon" viewBox="0 0 24 24" fill="#c8caff" stroke="#c8caff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            <circle cx="17" cy="5" r="1" fill="#c8caff" stroke="none"/>
+            <circle cx="19" cy="8" r="0.6" fill="#c8caff" stroke="none"/>
+            <circle cx="15" cy="3" r="0.6" fill="#c8caff" stroke="none"/>
+          </svg>
+        </span>
+      </button>
+    </div>
+  </nav>
+
+  <main class="analytics-page" id="analytics-page">
+  <div class="analytics-inner">
+
+    <!-- ══════════════════════════════════════════════════════
+         LIVE MISINFORMATION FEED
+    ══════════════════════════════════════════════════════ -->
+    <section class="live-feed-card" id="live-feed-section">
+
+      <!-- Feed Header -->
+      <div class="feed-header">
+        <div class="feed-title-row">
+          <div class="live-dot-wrap">
+            <span class="live-dot"></span>
+          </div>
+          <span class="feed-title">LIVE MISINFORMATION FEED</span>
+        </div>
+        <div class="feed-header-right">
+          <span class="last-synced" id="last-synced-time">
+            Last synced: 0 seconds ago
+          </span>
+          <span class="refresh-countdown" id="feed-countdown">
+            Refreshes in 45s
+          </span>
+          <button class="btn-refresh" id="feed-refresh-btn"
+                  onclick="triggerFeedRefresh()">
+            ↺ Refresh Now
+          </button>
+        </div>
+      </div>
+
+      <!-- FEED FILTER BAR -->
+      <div class="feed-filter-bar" id="feed-filter-bar">
+
+        <!-- Country dropdown -->
+        <div class="feed-filter-group">
+          <label class="feed-filter-label">Country</label>
+          <select id="feed-country-select"
+                  class="feed-filter-select"
+                  onchange="onFeedCountryChange(this.value)">
+            <option value="worldwide">🌍 Worldwide</option>
+            <optgroup label="━━ ASIA-PACIFIC ━━">
+              <option value="Afghanistan">🇦🇫 Afghanistan</option>
+              <option value="Australia">🇦🇺 Australia</option>
+              <option value="Bangladesh">🇧🇩 Bangladesh</option>
+              <option value="Bhutan">🇧🇹 Bhutan</option>
+              <option value="Brunei">🇧🇳 Brunei</option>
+              <option value="Cambodia">🇰🇭 Cambodia</option>
+              <option value="China">🇨🇳 China</option>
+              <option value="East Timor">🇹🇱 East Timor</option>
+              <option value="Fiji">🇫🇯 Fiji</option>
+              <option value="India">🇮🇳 India</option>
+              <option value="Indonesia">🇮🇩 Indonesia</option>
+              <option value="Japan">🇯🇵 Japan</option>
+              <option value="Kazakhstan">🇰🇿 Kazakhstan</option>
+              <option value="Korea North">🇰🇵 Korea North</option>
+              <option value="Korea South">🇰🇷 Korea South</option>
+              <option value="Laos">🇱🇦 Laos</option>
+              <option value="Malaysia">🇲🇾 Malaysia</option>
+              <option value="Maldives">🇲🇻 Maldives</option>
+              <option value="Mongolia">🇲🇳 Mongolia</option>
+              <option value="Myanmar">🇲🇲 Myanmar</option>
+              <option value="Nepal">🇳🇵 Nepal</option>
+              <option value="New Zealand">🇳🇿 New Zealand</option>
+              <option value="Pakistan">🇵🇰 Pakistan</option>
+              <option value="Papua New Guinea">🇵🇬 Papua New Guinea</option>
+              <option value="Philippines">🇵🇭 Philippines</option>
+              <option value="Singapore">🇸🇬 Singapore</option>
+              <option value="Solomon Islands">🇸🇧 Solomon Islands</option>
+              <option value="Sri Lanka">🇱🇰 Sri Lanka</option>
+              <option value="Thailand">🇹🇭 Thailand</option>
+              <option value="Vietnam">🇻🇳 Vietnam</option>
+            </optgroup>
+            <optgroup label="━━ EUROPE ━━">
+              <option value="Albania">🇦🇱 Albania</option>
+              <option value="Andorra">🇦🇩 Andorra</option>
+              <option value="Austria">🇦🇹 Austria</option>
+              <option value="Belarus">🇧🇾 Belarus</option>
+              <option value="Belgium">🇧🇪 Belgium</option>
+              <option value="Bosnia">🇧🇦 Bosnia</option>
+              <option value="Bulgaria">🇧🇬 Bulgaria</option>
+              <option value="Croatia">🇭🇷 Croatia</option>
+              <option value="Cyprus">🇨🇾 Cyprus</option>
+              <option value="Czech Republic">🇨🇿 Czech Republic</option>
+              <option value="Denmark">🇩🇰 Denmark</option>
+              <option value="Estonia">🇪🇪 Estonia</option>
+              <option value="Finland">🇫🇮 Finland</option>
+              <option value="France">🇫🇷 France</option>
+              <option value="Germany">🇩🇪 Germany</option>
+              <option value="Greece">🇬🇷 Greece</option>
+              <option value="Hungary">🇭🇺 Hungary</option>
+              <option value="Iceland">🇮🇸 Iceland</option>
+              <option value="Ireland">🇮🇪 Ireland</option>
+              <option value="Italy">🇮🇹 Italy</option>
+              <option value="Kosovo">🇽🇰 Kosovo</option>
+              <option value="Latvia">🇱🇻 Latvia</option>
+              <option value="Liechtenstein">🇱🇮 Liechtenstein</option>
+              <option value="Lithuania">🇱🇹 Lithuania</option>
+              <option value="Luxembourg">🇱🇺 Luxembourg</option>
+              <option value="Malta">🇲🇹 Malta</option>
+              <option value="Moldova">🇲🇩 Moldova</option>
+              <option value="Monaco">🇲🇨 Monaco</option>
+              <option value="Montenegro">🇲🇪 Montenegro</option>
+              <option value="Netherlands">🇳🇱 Netherlands</option>
+              <option value="North Macedonia">🇲🇰 North Macedonia</option>
+              <option value="Norway">🇳🇴 Norway</option>
+              <option value="Poland">🇵🇱 Poland</option>
+              <option value="Portugal">🇵🇹 Portugal</option>
+              <option value="Romania">🇷🇴 Romania</option>
+              <option value="Russia">🇷🇺 Russia</option>
+              <option value="San Marino">🇸🇲 San Marino</option>
+              <option value="Serbia">🇷🇸 Serbia</option>
+              <option value="Slovakia">🇸🇰 Slovakia</option>
+              <option value="Slovenia">🇸🇮 Slovenia</option>
+              <option value="Spain">🇪🇸 Spain</option>
+              <option value="Sweden">🇸🇪 Sweden</option>
+              <option value="Switzerland">🇨🇭 Switzerland</option>
+              <option value="Ukraine">🇺🇦 Ukraine</option>
+              <option value="United Kingdom">🇬🇧 United Kingdom</option>
+            </optgroup>
+            <optgroup label="━━ AFRICA ━━">
+              <option value="Algeria">🇩🇿 Algeria</option>
+              <option value="Angola">🇦🇴 Angola</option>
+              <option value="Benin">🇧🇯 Benin</option>
+              <option value="Botswana">🇧🇼 Botswana</option>
+              <option value="Burkina Faso">🇧🇫 Burkina Faso</option>
+              <option value="Burundi">🇧🇮 Burundi</option>
+              <option value="Cameroon">🇨🇲 Cameroon</option>
+              <option value="Cape Verde">🇨🇻 Cape Verde</option>
+              <option value="Central African Republic">🇨🇫 Central African</option>
+              <option value="Chad">🇹🇩 Chad</option>
+              <option value="Comoros">🇰🇲 Comoros</option>
+              <option value="Congo">🇨🇬 Congo</option>
+              <option value="Congo Democratic Republic">🇨🇩 DR Congo</option>
+              <option value="Cote d'Ivoire">🇨🇮 Cote d'Ivoire</option>
+              <option value="Djibouti">🇩🇯 Djibouti</option>
+              <option value="Egypt">🇪🇬 Egypt</option>
+              <option value="Equatorial Guinea">🇬🇶 Equatorial Guinea</option>
+              <option value="Eritrea">🇪🇷 Eritrea</option>
+              <option value="Ethiopia">🇪🇹 Ethiopia</option>
+              <option value="Gabon">🇬🇦 Gabon</option>
+              <option value="Gambia">🇬🇲 Gambia</option>
+              <option value="Ghana">🇬🇭 Ghana</option>
+              <option value="Guinea">🇬🇳 Guinea</option>
+              <option value="Guinea-Bissau">🇬🇼 Guinea-Bissau</option>
+              <option value="Kenya">🇰🇪 Kenya</option>
+              <option value="Lesotho">🇱🇸 Lesotho</option>
+              <option value="Liberia">🇱🇷 Liberia</option>
+              <option value="Libya">🇱🇾 Libya</option>
+              <option value="Madagascar">🇲🇬 Madagascar</option>
+              <option value="Malawi">🇲🇼 Malawi</option>
+              <option value="Mali">🇲🇱 Mali</option>
+              <option value="Mauritania">🇲🇷 Mauritania</option>
+              <option value="Mauritius">🇲🇺 Mauritius</option>
+              <option value="Morocco">🇲🇦 Morocco</option>
+              <option value="Mozambique">🇲🇿 Mozambique</option>
+              <option value="Namibia">🇳🇦 Namibia</option>
+              <option value="Niger">🇳🇪 Niger</option>
+              <option value="Nigeria">🇳🇬 Nigeria</option>
+              <option value="Rwanda">🇷🇼 Rwanda</option>
+              <option value="Sao Tome">🇸🇹 Sao Tome</option>
+              <option value="Senegal">🇸🇳 Senegal</option>
+              <option value="Seychelles">🇸🇨 Seychelles</option>
+              <option value="Sierra Leone">🇸🇱 Sierra Leone</option>
+              <option value="Somalia">🇸🇴 Somalia</option>
+              <option value="South Africa">🇿🇦 South Africa</option>
+              <option value="South Sudan">🇸🇸 South Sudan</option>
+              <option value="Sudan">🇸🇩 Sudan</option>
+              <option value="Swaziland">🇸🇿 Swaziland</option>
+              <option value="Tanzania">🇹🇿 Tanzania</option>
+              <option value="Togo">🇹🇬 Togo</option>
+              <option value="Tunisia">🇹🇳 Tunisia</option>
+              <option value="Uganda">🇺🇬 Uganda</option>
+              <option value="Zambia">🇿🇲 Zambia</option>
+              <option value="Zimbabwe">🇿🇼 Zimbabwe</option>
+            </optgroup>
+            <optgroup label="━━ AMERICAS ━━">
+              <option value="Antigua Barbuda">🇦🇬 Antigua and Barbuda</option>
+              <option value="Argentina">🇦🇷 Argentina</option>
+              <option value="Bahamas">🇧🇸 Bahamas</option>
+              <option value="Barbados">🇧🇧 Barbados</option>
+              <option value="Belize">🇧🇿 Belize</option>
+              <option value="Bolivia">🇧🇴 Bolivia</option>
+              <option value="Brazil">🇧🇷 Brazil</option>
+              <option value="Canada">🇨🇦 Canada</option>
+              <option value="Chile">🇨🇱 Chile</option>
+              <option value="Colombia">🇨🇴 Colombia</option>
+              <option value="Costa Rica">🇨🇷 Costa Rica</option>
+              <option value="Cuba">🇨🇺 Cuba</option>
+              <option value="Dominica">🇩🇲 Dominica</option>
+              <option value="Dominican Republic">🇩🇴 Dominican Republic</option>
+              <option value="Ecuador">🇪🇨 Ecuador</option>
+              <option value="El Salvador">🇸🇻 El Salvador</option>
+              <option value="Grenada">🇬🇩 Grenada</option>
+              <option value="Guatemala">🇬🇹 Guatemala</option>
+              <option value="Guyana">🇬🇾 Guyana</option>
+              <option value="Haiti">🇭🇹 Haiti</option>
+              <option value="Honduras">🇭🇳 Honduras</option>
+              <option value="Jamaica">🇯🇲 Jamaica</option>
+              <option value="Mexico">🇲🇽 Mexico</option>
+              <option value="Nicaragua">🇳🇮 Nicaragua</option>
+              <option value="Panama">🇵🇦 Panama</option>
+              <option value="Paraguay">🇵🇾 Paraguay</option>
+              <option value="Peru">🇵🇪 Peru</option>
+              <option value="Saint Kitts">🇰🇳 Saint Kitts and Nevis</option>
+              <option value="Saint Lucia">🇱🇨 Saint Lucia</option>
+              <option value="Saint Vincent">🇻🇨 Saint Vincent</option>
+              <option value="Suriname">🇸🇷 Suriname</option>
+              <option value="Trinidad Tobago">🇹🇹 Trinidad and Tobago</option>
+              <option value="USA">🇺🇸 United States</option>
+              <option value="Uruguay">🇺🇾 Uruguay</option>
+              <option value="Venezuela">🇻🇪 Venezuela</option>
+            </optgroup>
+            <optgroup label="━━ MIDDLE EAST & CENTRAL ASIA ━━">
+              <option value="Armenia">🇦🇲 Armenia</option>
+              <option value="Azerbaijan">🇦🇿 Azerbaijan</option>
+              <option value="Bahrain">🇧🇭 Bahrain</option>
+              <option value="Georgia">🇬🇪 Georgia</option>
+              <option value="Iran">🇮🇷 Iran</option>
+              <option value="Iraq">🇮🇶 Iraq</option>
+              <option value="Israel">🇮🇱 Israel</option>
+              <option value="Jordan">🇯🇴 Jordan</option>
+              <option value="Kuwait">🇰🇼 Kuwait</option>
+              <option value="Kyrgyzstan">🇰🇬 Kyrgyzstan</option>
+              <option value="Lebanon">🇱🇧 Lebanon</option>
+              <option value="Oman">🇴🇲 Oman</option>
+              <option value="Qatar">🇶🇦 Qatar</option>
+              <option value="Saudi Arabia">🇸🇦 Saudi Arabia</option>
+              <option value="Syria">🇸🇾 Syria</option>
+              <option value="Tajikistan">🇹🇯 Tajikistan</option>
+              <option value="Turkey">🇹🇷 Turkey</option>
+              <option value="Turkmenistan">🇹🇲 Turkmenistan</option>
+              <option value="United Arab Emirates">🇦🇪 United Arab Emirates</option>
+              <option value="Uzbekistan">🇺🇿 Uzbekistan</option>
+              <option value="Yemen">🇾🇪 Yemen</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <!-- State dropdown -->
+        <div class="feed-filter-group" id="feed-state-group"
+             style="display:none">
+          <label class="feed-filter-label">State / Region</label>
+          <select id="feed-state-select"
+                  class="feed-filter-select"
+                  onchange="onFeedStateChange(this.value)">
+            <option value="all">📍 All States</option>
+          </select>
+        </div>
+
+        <!-- Platform dropdown -->
+        <div class="feed-filter-group">
+          <label class="feed-filter-label">Platform</label>
+          <select id="feed-source-select"
+                  class="feed-filter-select"
+                  onchange="onFeedSourceChange(this.value)">
+            <option value="all">📱 All Platforms</option>
+            <option value="WhatsApp">💬 WhatsApp</option>
+            <option value="Facebook">📘 Facebook</option>
+            <option value="Twitter">🐦 Twitter/X</option>
+            <option value="Telegram">✈️ Telegram</option>
+            <option value="Instagram">📸 Instagram</option>
+            <option value="YouTube">▶️ YouTube</option>
+          </select>
+        </div>
+
+        <!-- Category dropdown -->
+        <div class="feed-filter-group">
+          <label class="feed-filter-label">Category</label>
+          <select id="feed-category-select"
+                  class="feed-filter-select"
+                  onchange="onFeedCategoryChange(this.value)">
+            <option value="all">🗂 All Categories</option>
+            <option value="Health">🏥 Health</option>
+            <option value="Politics">🏛 Politics</option>
+            <option value="Finance">💰 Finance</option>
+            <option value="Technology">💻 Technology</option>
+            <option value="International">🌐 International</option>
+            <option value="Local">📍 Local</option>
+          </select>
+        </div>
+
+        <!-- Auto-refresh toggle -->
+        <div class="feed-filter-group feed-toggle-group">
+          <label class="feed-filter-label">Auto-refresh</label>
+          <label class="toggle">
+            <input type="checkbox" id="feed-auto-toggle"
+                   checked onchange="onAutoRefreshToggle(this)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+      </div>
+
+      <!-- Active filter summary line -->
+      <div class="feed-filter-summary" id="feed-filter-summary">
+        Showing: Worldwide · All Platforms · All Categories
+      </div>
+
+      <!-- Feed grid -->
+      <div class="feed-grid" id="feed-grid">
+        <!-- Cards injected by JS -->
+      </div>
+
+      <!-- Load more -->
+      <button class="load-more-btn" id="feed-load-more"
+              onclick="loadMoreFeed()"
+              style="display:none">
+        Load more results
+      </button>
+
+      <!-- Error state -->
+      <div class="feed-error" id="feed-error" style="display:none">
+        ⚠ Feed temporarily unavailable. Please try again later.
+      </div>
+
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
+         HEATMAP
+    ══════════════════════════════════════════════════════ -->
+    <section class="heatmap-section an-card" id="heatmap-section">
+      <div class="heatmap-card-header">
+        <div class="map-title-group">
+          <h1 class="section-title" id="map-main-title">🌐 GLOBAL MISINFORMATION HEATMAP</h1>
+          <span class="country-badge hidden" id="country-badge">
+            Viewing: <span id="badge-country-name">—</span>
+            <button class="x-btn" id="clear-country-btn" title="Back to worldwide" aria-label="Clear country filter">✕</button>
+          </span>
+        </div>
+        <div>
+          <!-- Filter Pills -->
+          <div class="filter-pills" id="filter-pills" role="group" aria-label="Category filter">
+            <button class="pill active" data-filter="overall"  id="pill-overall">Overall Activity</button>
+            <button class="pill" data-filter="health"    id="pill-health">Health Scams</button>
+            <button class="pill" data-filter="politics"  id="pill-politics">Political Propaganda</button>
+            <button class="pill" data-filter="finance"   id="pill-finance">Financial Fraud</button>
+            <button class="pill" data-filter="deepfakes" id="pill-deepfakes">Deepfakes & AI</button>
+          </div>
+          <!-- Region Selector -->
+          <div class="region-row">
+            <span class="region-label">Region:</span>
+            <select class="region-select" id="region-select" aria-label="Region selector">
+              <option value="worldwide">Worldwide ▾</option>
+              <option value="asia-pacific">Asia-Pacific</option>
+              <option value="south-asia">South Asia</option>
+              <option value="europe">Europe</option>
+              <option value="americas">Americas</option>
+              <option value="mea">Middle East & Africa</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div id="map-container">
+        <svg id="world-map"></svg>
+      </div>
+
+      <div class="map-legend">
+        <span>Low</span>
+        <div class="legend-bar"></div>
+        <span>High</span>
+        <span style="margin-left:16px;font-size:.72rem;">Fake News Intensity Index (0–100)</span>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
+         CATEGORY DISTRIBUTION + DONUT
+    ══════════════════════════════════════════════════════ -->
+    <div class="two-col">
+      <div class="an-card">
+        <h2 class="section-title">📊 CATEGORY DISTRIBUTION</h2>
+        <div class="cat-bars" id="cat-bars">
+
+          <div class="cat-row" id="bar-health">
+            <div class="cat-label-row">
+              <span class="cat-name">Health</span>
+              <span class="cat-count" id="cnt-health" style="color:var(--health)">2,847</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" id="fill-health" style="background:var(--health);"></div>
+            </div>
+          </div>
+
+          <div class="cat-row" id="bar-politics">
+            <div class="cat-label-row">
+              <span class="cat-name">Politics</span>
+              <span class="cat-count" id="cnt-politics" style="color:var(--politics)">2,210</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" id="fill-politics" style="background:var(--politics);"></div>
+            </div>
+          </div>
+
+          <div class="cat-row" id="bar-finance">
+            <div class="cat-label-row">
+              <span class="cat-name">Finance</span>
+              <span class="cat-count" id="cnt-finance" style="color:var(--finance)">1,430</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" id="fill-finance" style="background:var(--finance);"></div>
+            </div>
+          </div>
+
+          <div class="cat-row" id="bar-tech">
+            <div class="cat-label-row">
+              <span class="cat-name">Technology</span>
+              <span class="cat-count" id="cnt-tech" style="color:var(--technology)">890</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" id="fill-tech" style="background:var(--technology);"></div>
+            </div>
+          </div>
+
+          <div class="cat-row" id="bar-intl">
+            <div class="cat-label-row">
+              <span class="cat-name">International</span>
+              <span class="cat-count" id="cnt-intl" style="color:var(--intl)">630</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" id="fill-intl" style="background:var(--intl);"></div>
+            </div>
+          </div>
+
+          <div class="cat-row" id="bar-local">
+            <div class="cat-label-row">
+              <span class="cat-name">Local</span>
+              <span class="cat-count" id="cnt-local" style="color:var(--local)">320</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" id="fill-local" style="background:var(--local);"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="an-card">
+        <h2 class="section-title">🔺 VERIFICATION MIX</h2>
+        <div class="donut-wrap">
+          <canvas id="donutChart" width="220" height="220" aria-label="Verification mix donut chart"></canvas>
+          <div class="donut-legend" id="donut-legend">
+            <div class="legend-row"><div class="legend-dot" style="background:var(--health)"></div><span class="legend-name">Health</span><span class="legend-pct" id="l-health">34.2%</span></div>
+            <div class="legend-row"><div class="legend-dot" style="background:var(--politics)"></div><span class="legend-name">Politics</span><span class="legend-pct" id="l-politics">26.5%</span></div>
+            <div class="legend-row"><div class="legend-dot" style="background:var(--finance)"></div><span class="legend-name">Finance</span><span class="legend-pct" id="l-finance">17.2%</span></div>
+            <div class="legend-row"><div class="legend-dot" style="background:var(--technology)"></div><span class="legend-name">Technology</span><span class="legend-pct" id="l-tech">10.7%</span></div>
+            <div class="legend-row"><div class="legend-dot" style="background:var(--intl)"></div><span class="legend-name">International</span><span class="legend-pct" id="l-intl">7.6%</span></div>
+            <div class="legend-row"><div class="legend-dot" style="background:var(--local)"></div><span class="legend-name">Local</span><span class="legend-pct" id="l-local">3.8%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         DEEP THREAT ANALYSIS
+    ══════════════════════════════════════════════════════ -->
+    <section class="radar-section an-card" id="radar-section">
+      <h2 class="section-title">🎯 DEEP THREAT ANALYSIS</h2>
+      <div class="radar-grid">
+
+        <div class="radar-card an-card">
+          <div class="radar-card-title">Threat Profile (MoM)</div>
+          <div class="radar-canvas-wrap">
+            <canvas id="radarChart1" aria-label="Threat profile radar chart"></canvas>
+          </div>
+          <div class="radar-legend">
+            <div class="r-legend-item"><div class="r-legend-line" style="background:#E8453C"></div>This Month</div>
+            <div class="r-legend-item"><div class="r-legend-line" style="background:#4A90D9"></div>Last Month</div>
+          </div>
+        </div>
+
+        <div class="radar-card an-card">
+          <div class="radar-card-title">WhatsApp vs. Social</div>
+          <div class="radar-canvas-wrap">
+            <canvas id="radarChart2" aria-label="WhatsApp vs social platforms radar chart"></canvas>
+          </div>
+          <div class="radar-legend">
+            <div class="r-legend-item"><div class="r-legend-line" style="background:#27AE60"></div>WhatsApp Internal</div>
+            <div class="r-legend-item"><div class="r-legend-line" style="background:#4A90D9"></div>Public Platforms</div>
+          </div>
+        </div>
+
+        <div class="radar-card an-card">
+          <div class="radar-card-title">Vulnerability Index</div>
+          <div class="radar-canvas-wrap">
+            <canvas id="radarChart3" aria-label="Vulnerability index radar chart"></canvas>
+          </div>
+          <div class="radar-legend">
+            <div class="r-legend-item"><div class="r-legend-line" style="background:#7F77DD"></div>Sector-specific Risk Score</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
+         ROW 1 — VELOCITY LINE CHART (full width)
+    ══════════════════════════════════════════════════════ -->
+    <div class="chart-row full-width">
+      <div class="an-card" id="velocity-card">
+        <h2 class="section-title">⚡ FAKE NEWS VELOCITY — Spread Speed (Last 24 hrs)</h2>
+        <div class="chart-canvas-wrap" style="height:280px;">
+          <canvas id="velocityChart" aria-label="Fake news velocity line chart"></canvas>
+        </div>
+        <div class="cust-legend" id="vel-legend">
+          <div class="cust-legend-item"><div class="cust-legend-sq" style="background:#25D366"></div>WhatsApp</div>
+          <div class="cust-legend-item"><div class="cust-legend-sq" style="background:#E8453C"></div>Social Media</div>
+          <div class="cust-legend-item"><div class="cust-legend-sq" style="background:#4A90D9"></div>News Sites</div>
+        </div>
+        <div class="chart-footer" data-chart-id="velocity">Updated just now</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         ROW 2 — BUBBLE MATRIX (Now full width)
+    ══════════════════════════════════════════════════════ -->
+    <div class="chart-row full-width">
+      <!-- Bubble Chart -->
+      <div class="an-card" id="bubble-card">
+        <h2 class="section-title">🫧 VIRALITY vs CREDIBILITY MATRIX</h2>
+        <div class="chart-canvas-wrap" style="height:320px;position:relative;">
+          <canvas id="bubbleChart" aria-label="Virality vs credibility bubble chart"></canvas>
+        </div>
+        <div class="cust-legend" id="bubble-legend">
+          <div class="cust-legend-item"><div class="cust-legend-dot" style="background:#E8453C"></div>Health</div>
+          <div class="cust-legend-item"><div class="cust-legend-dot" style="background:#7F77DD"></div>Politics</div>
+          <div class="cust-legend-item"><div class="cust-legend-dot" style="background:#F5A623"></div>Finance</div>
+          <div class="cust-legend-item"><div class="cust-legend-dot" style="background:#4A90D9"></div>Technology</div>
+          <div class="cust-legend-item"><div class="cust-legend-dot" style="background:#27AE60"></div>International</div>
+          <div class="cust-legend-item"><div class="cust-legend-dot" style="background:#D85A30"></div>Local</div>
+        </div>
+        <div class="chart-footer" data-chart-id="bubble">Updated just now</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         ROW 3 — ACTIVITY HEATMAP (full width)
+    ══════════════════════════════════════════════════════ -->
+    <div class="chart-row full-width">
+      <div class="an-card" id="heatmap-act-card">
+        <h2 class="section-title">🕐 ACTIVITY HEATMAP — Hour vs Day of Week</h2>
+        <div class="hm-col-hdr" id="hm-col-hdr">
+          <div></div>
+          <div class="hm-col-label">Mon</div>
+          <div class="hm-col-label">Tue</div>
+          <div class="hm-col-label">Wed</div>
+          <div class="hm-col-label">Thu</div>
+          <div class="hm-col-label">Fri</div>
+          <div class="hm-col-label">Sat</div>
+          <div class="hm-col-label">Sun</div>
+        </div>
+        <div class="heatmap-act-grid" id="heatmap-act-grid"></div>
+        <div class="hm-legend">
+          <span>Less</span>
+          <div class="hm-legend-sq" style="background:#fef9f9"></div>
+          <div class="hm-legend-sq" style="background:#fcd9d8"></div>
+          <div class="hm-legend-sq" style="background:#f8a8a6"></div>
+          <div class="hm-legend-sq" style="background:#f26b68"></div>
+          <div class="hm-legend-sq" style="background:#E8453C"></div>
+          <span>More</span>
+        </div>
+        <div class="chart-footer" data-chart-id="heatmap">Updated just now</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         ROW 4 — FUNNEL + TREEMAP (two-col)
+    ══════════════════════════════════════════════════════ -->
+    <div class="chart-row two-col">
+      <!-- Funnel -->
+      <div class="an-card" id="funnel-card">
+        <h2 class="section-title">🔍 VERIFICATION PIPELINE FUNNEL</h2>
+        <div class="funnel-wrap" id="funnel-wrap"></div>
+        <div class="chart-footer" data-chart-id="funnel">Updated just now</div>
+      </div>
+      <!-- Treemap -->
+      <div class="an-card" id="treemap-card">
+        <h2 class="section-title">🌳 FAKE NEWS TOPIC CLUSTERS</h2>
+        <div id="treemap-container"></div>
+        <div class="chart-footer" data-chart-id="treemap">Updated just now</div>
+      </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════════════════════════
+         ROW 6 — LIFECYCLE TIMELINE (full width)
+    ══════════════════════════════════════════════════════ -->
+    <div class="chart-row full-width">
+      <div class="an-card" id="lifecycle-card">
+        <h2 class="section-title">📈 MISINFORMATION LIFECYCLE — From Origin to Debunk</h2>
+        <div class="chart-canvas-wrap" style="height:240px;">
+          <canvas id="lifecycleChart" aria-label="Misinformation lifecycle chart"></canvas>
+        </div>
+        <div class="cust-legend">
+          <div class="cust-legend-item"><div class="cust-legend-sq" style="background:#E8453C"></div>Average Fake News</div>
+          <div class="cust-legend-item"><div class="cust-legend-sq" style="background:#27AE60"></div>Fast-Debunked News</div>
+        </div>
+        <div class="chart-footer" data-chart-id="lifecycle">Updated just now</div>
+      </div>
+    </div>
+
+  </div><!-- /.analytics-inner -->
+</main>
+
+<!-- Tooltip -->
+<div class="map-tooltip" id="map-tooltip" style="opacity:0;"></div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="brand-title">The Fake News<br><span>Detector</span></div>
+        <div class="brand-desc">AI-powered verification supporting English, Hindi, Gujarati, Hinglish & Gujlish. Check any claim against live web sources.</div>
+      </div>
+      <div class="footer-col">
+        <h4>Navigate</h4>
+        <ul>
+          <li><a href="/index.html">Home</a></li>
+          <li><a href="/dashboard.html">Dashboard</a></li>
+          <li><a href="/analytics.html">Analytics</a></li>
+          <li><a href="/learn.html">Learn</a></li>
+          <li><a href="/report.html">Report</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Tech Stack</h4>
+        <div class="tech-badges">
+          <span class="tech-badge"><span class="dot"></span>Groq AI</span>
+          <span class="tech-badge"><span class="dot"></span>Flask</span>
+          <span class="tech-badge"><span class="dot"></span>scikit-learn</span>
+          <span class="tech-badge"><span class="dot"></span>DuckDuckGo</span>
+          <span class="tech-badge"><span class="dot"></span>Newspaper3k</span>
+          <span class="tech-badge"><span class="dot"></span>deep-translator</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">&copy; 2025 Fake News Detector &mdash; Open source project. Powered by Groq AI + Live Web Search.</div>
+  </footer>
+
+  <script src="/static/js/config.js"></script>
+  <script src="/static/js/main.js"></script>
+  <script>window.CHATBOT_API_URL = window.CHATBOT_API_URL || "";</script>
+  <script src="/static/js/chatbot-widget.js"></script>
+  <!-- CDN Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+<!-- Shared API Service Layer -->
+<script src="/static/js/api.js"></script>
+
+<!-- Analytics State Management -->
+<script src="/static/js/analytics-state.js"></script>
+
+<!-- Analytics Page Logic -->
+<script src="/static/js/analytics.js"></script>
+
+<!-- Live Misinformation Feed -->
+<script src="/static/js/live-feed.js"></script>
+</body>
+</html>

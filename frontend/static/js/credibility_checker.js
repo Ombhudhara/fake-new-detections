@@ -9,7 +9,7 @@ async function checkCredibilityInline() {
     result.innerHTML     = '⏳ Checking...';
 
     try {
-      const res = await fetch('/api/check-credibility', {
+      const res = await fetch((window.API_BASE_URL || '') + '/api/check-credibility', {
         method: 'POST',
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ domain: val })

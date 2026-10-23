@@ -104,7 +104,7 @@ const LiveFeedManager = {
         category: this.currentFilter.category
       });
 
-      const url = `/api/live-misinformation?${params.toString()}`;
+      const url = `${window.API_BASE_URL || ''}/api/live-misinformation?${params.toString()}`;
       console.log(`[LiveFeed] Fetching from: ${url}`);
 
       const controller = new AbortController();
