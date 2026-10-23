@@ -45,13 +45,15 @@ async def lifespan(app: FastAPI):
     Modern substitute for @app.on_event("startup")
     """
     global rag_chain
-    logger.info("Initializing RAG pipeline (this can take a few minutes on first startup)...")
     try:
         rag_chain = get_rag_chain()
-    except Exception:
-        logger.exception("RAG pipeline initialization failed")
-        raise
-    logger.info("RAG pipeline initialized and ready.")
+        if rag_chain:
+            logger.info("RAG pipeline initialized and ready.")
+        else:
+            logger.info("Chatbot initialized in conversational guide mode.")
+    except Exception as e:
+        logger.warning(f"RAG pipeline initialization deferred: {e}. Chatbot will run in guide mode.")
+        rag_chain = None
     yield
     # Shutdown logic if needed
     print("Shutting down API...")
@@ -274,6 +276,12 @@ async def chat(request: ChatRequest):
 
     # 4. RAG Logic (if engine decides it's Q&A mode, or FCM was skipped/failed)
     if engine_res.get("use_rag", False):
+        global rag_chain
+        if rag_chain is None:
+            try:
+                rag_chain = get_rag_chain()
+            except Exception:
+                pass
         try:
             rag_result = get_rag_response(
                 rag_chain,

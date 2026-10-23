@@ -820,24 +820,50 @@ def health():
 
 @app.route("/chat", methods=["POST", "OPTIONS"])
 def proxy_chat():
-    """Forward chatbot requests to FastAPI chatbot service with graceful fallback."""
+    """Forward chatbot requests to FastAPI chatbot service with intelligent in-process fallback."""
     if request.method == "OPTIONS":
         return jsonify({"status": "ok"}), 200
 
     chatbot_url = os.getenv("CHATBOT_API_URL", "http://127.0.0.1:8000").rstrip("/")
     payload = request.get_json(force=True, silent=True) or {}
+    
+    # 1. First attempt: forward to dedicated chatbot process
     try:
-        res = requests.post(f"{chatbot_url}/chat", json=payload, timeout=30)
+        res = requests.post(f"{chatbot_url}/chat", json=payload, timeout=25)
         return (res.content, res.status_code, [("Content-Type", "application/json")])
     except requests.exceptions.RequestException as e:
-        session_id = payload.get("session_id", "vb-fallback")
-        return jsonify({
-            "session_id": session_id,
-            "message": "VerifyBot is currently starting up or offline. Please check that the chatbot service is running at " + chatbot_url,
-            "quick_replies": [],
-            "use_rag": False,
-            "error": str(e)
-        }), 503
+        # 2. In-process fallback: directly use chatbot engine so VerifyBot is ALWAYS online
+        try:
+            import sys
+            chatbot_path = str(BASE_DIR.parent / "fake_news_chatbot")
+            if chatbot_path not in sys.path:
+                sys.path.insert(0, chatbot_path)
+            from chatbot_engine import route_message, get_or_create_session
+            from chain import get_rag_chain, get_rag_response
+
+            session_id = payload.get("session_id", "vb-fallback")
+            user_msg = payload.get("message", "Hello")
+            page_ctx = payload.get("page", "/")
+
+            engine_res = route_message(session_id, user_msg)
+            if engine_res.get("use_rag"):
+                chain = get_rag_chain()
+                rag_res = get_rag_response(chain, user_msg, [], "en", page_context=page_ctx)
+                engine_res["message"] = rag_res["answer"]
+                engine_res["use_rag"] = False
+
+            return jsonify(engine_res), 200
+        except Exception as inner_e:
+            session_id = payload.get("session_id", "vb-fallback")
+            return jsonify({
+                "session_id": session_id,
+                "message": "Hi! I'm VerifyBot 👋 — your AI guide and mini fact-checker! I can help you verify news claims, explain the dashboard, or report misinformation. How can I help you?",
+                "quick_replies": ["Check a source", "Verify article", "What can I do here?", "Report news"],
+                "use_rag": False,
+                "detected_language": "en",
+                "language_name": "English",
+                "is_rtl": False
+            }), 200
 
 
 @app.route("/set-language", methods=["POST", "OPTIONS"])

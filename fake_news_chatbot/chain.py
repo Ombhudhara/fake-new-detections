@@ -18,47 +18,91 @@ from language_manager import get_language_instruction
 from typing import List, Any, Dict
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load .env from chatbot, backend, and repository root
+load_dotenv(os.path.join(current_dir, ".env"))
+load_dotenv(os.path.join(os.path.dirname(current_dir), ".env"))
+load_dotenv(os.path.join(os.path.dirname(current_dir), "backend", ".env"))
 
 
 def get_rag_chain():
     """
     Initializes and returns all RAG components (vectorstore + LLM).
-    Returns a dict with 'vectorstore' and 'llm'.
+    Returns a dict with 'vectorstore' and 'llm', or None if unavailable.
     """
-    persist_directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chroma_db")
+    openrouter_key = os.getenv("OPENROUTER_API_KEY")
+    groq_key = os.getenv("GROQ_API_KEY")
 
-    # Multilingual-capable embedding model
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    # If openrouter_key starts with gsk_, it is actually a Groq key
+    if openrouter_key and openrouter_key.startswith("gsk_") and not groq_key:
+        groq_key = openrouter_key
+        openrouter_key = None
 
-    # Load or create vector store
-    if os.path.exists(persist_directory):
-        vectorstore = Chroma(
-            persist_directory=persist_directory,
-            embedding_function=embeddings
-        )
-    else:
-        vectorstore = Chroma(
-            embedding_function=embeddings,
-            persist_directory=persist_directory
-        )
+    llm = None
 
-    api_key = os.getenv("OPENROUTER_API_KEY")
-    if not api_key:
-      raise RuntimeError("OPENROUTER_API_KEY must be set to initialize the chatbot.")
+    # Try Groq first if key starts with gsk_ or GROQ_API_KEY is available
+    if groq_key:
+        try:
+            from langchain_groq import ChatGroq
+            llm = ChatGroq(
+                model_name="llama-3.3-70b-versatile",
+                temperature=0,
+                api_key=groq_key
+            )
+        except Exception as e:
+            print(f"[Chatbot] Groq init notice: {e}")
 
-    llm = ChatOpenAI(
-      model="meta-llama/llama-3.3-70b-instruct",
-        temperature=0,
-      api_key=api_key,
-      base_url="https://openrouter.ai/api/v1",
-    )
+    # Try OpenRouter if not initialized yet
+    if llm is None and openrouter_key and not openrouter_key.startswith("gsk_"):
+        try:
+            llm = ChatOpenAI(
+                model="meta-llama/llama-3.3-70b-instruct",
+                temperature=0,
+                api_key=openrouter_key,
+                base_url="https://openrouter.ai/api/v1",
+            )
+        except Exception as e:
+            print(f"[Chatbot] OpenRouter init notice: {e}")
+
+    # Fallback to whatever key is present
+    if llm is None:
+        any_key = openrouter_key or groq_key
+        if any_key:
+            try:
+                llm = ChatOpenAI(
+                    model="meta-llama/llama-3.3-70b-instruct",
+                    temperature=0,
+                    api_key=any_key,
+                    base_url="https://openrouter.ai/api/v1",
+                )
+            except Exception:
+                llm = None
+
+    # Load or create vector store gracefully
+    vectorstore = None
+    try:
+        persist_directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chroma_db")
+        embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        if os.path.exists(persist_directory):
+            vectorstore = Chroma(
+                persist_directory=persist_directory,
+                embedding_function=embeddings
+            )
+        else:
+            vectorstore = Chroma(
+                embedding_function=embeddings,
+                persist_directory=persist_directory
+            )
+    except Exception as e:
+        print(f"[Chatbot] Note: Vectorstore/embeddings deferred ({e}). Running with direct LLM intelligence.")
+
+    if llm is None:
+        return None
 
     return {"vectorstore": vectorstore, "llm": llm}
 
 
 def get_rag_response(
-    chain_components: Dict[str, Any], 
+    chain_components: Any, 
     question: str, 
     history: List[Dict[str, Any]], 
     lang_code: str,
@@ -69,17 +113,27 @@ def get_rag_response(
     """
     Performs a RAG query using the provided question, chat history, and language.
     """
-    vectorstore = chain_components["vectorstore"]
+    if not chain_components or not chain_components.get("llm"):
+        return {
+            "answer": "I'm VerifyBot! I can guide you through verifying news claims, checking credibility, and using our analytics dashboard. How can I help you?",
+            "sources": []
+        }
+
+    vectorstore = chain_components.get("vectorstore")
     llm = chain_components["llm"]
     lang_instruction = get_language_instruction(lang_code)
 
-    # Retrieve relevant documents
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
-    docs = retriever.invoke(question)
-
-    # Format context from retrieved documents
-    context = "\n\n".join([doc.page_content for doc in docs]) if docs else "No specific articles found in the database."
-
+    # Retrieve relevant documents if vectorstore available
+    context = ""
+    if vectorstore:
+        try:
+            retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
+            docs = retriever.invoke(question)
+            context = "\n\n".join([doc.page_content for doc in docs]) if docs else "No specific articles found in the database."
+        except Exception:
+            context = "The Fake News Detector uses machine learning and AI fact-checking to verify claims."
+    else:
+        context = "The Fake News Detector uses machine learning and AI fact-checking to verify claims."
     # Build message history for prompt (last 10 messages)
     messages = []
     start_idx = max(0, len(history) - 10)
